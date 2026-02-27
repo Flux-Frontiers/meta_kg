@@ -507,3 +507,90 @@ class MetaStore:
 
     def __exit__(self, *_: object) -> None:
         self.close()
+
+
+# ---------------------------------------------------------------------------
+# GraphStore — compatibility wrapper for visualization tools
+# ---------------------------------------------------------------------------
+
+
+class GraphStore(MetaStore):
+    """
+    Convenience wrapper around MetaStore with query methods for visualization.
+
+    Provides additional methods compatible with the Streamlit visualization app.
+    """
+
+    def query_nodes(self, *, kind: str | None = None) -> list[dict]:
+        """
+        Query all nodes, optionally filtered by kind.
+
+        :param kind: If provided, only nodes of this kind are returned.
+        :return: List of node dicts.
+        """
+        return self.all_nodes(kind=kind)
+
+    def query_edges(
+        self, *, src: str | None = None, dst: str | None = None
+    ) -> list[dict]:
+        """
+        Query edges, optionally filtered by source or destination.
+
+        :param src: If provided, only edges from this node are returned.
+        :param dst: If provided, only edges to this node are returned.
+        :return: List of edge dicts.
+        """
+        if src and dst:
+            cur = self._conn.execute(
+                "SELECT src, rel, dst, evidence FROM meta_edges WHERE src=? AND dst=?",
+                (src, dst),
+            )
+        elif src:
+            cur = self._conn.execute(
+                "SELECT src, rel, dst, evidence FROM meta_edges WHERE src=?", (src,)
+            )
+        elif dst:
+            cur = self._conn.execute(
+                "SELECT src, rel, dst, evidence FROM meta_edges WHERE dst=?", (dst,)
+            )
+        else:
+            cur = self._conn.execute("SELECT src, rel, dst, evidence FROM meta_edges")
+        return [dict(r) for r in cur.fetchall()]
+
+    def get_node(self, node_id: str) -> dict | None:
+        """
+        Get a single node by ID (alias for :meth:`node`).
+
+        :param node_id: Node identifier.
+        :return: Node dict or ``None`` if not found.
+        """
+        return self.node(node_id)
+
+    def query_semantic(self, query: str, k: int = 10) -> list[dict]:
+        """
+        Perform a semantic search query using LanceDB embeddings.
+
+        This is a simplified stub that returns nodes by name/description match.
+        For full semantic search, integrate with MetaIndex.
+
+        :param query: Query string.
+        :param k: Number of results to return.
+        :return: List of node dicts sorted by relevance.
+        """
+        # Simple text-based search if embeddings are not available
+        query_lower = query.lower()
+        nodes = self.all_nodes()
+        matches = []
+
+        for node in nodes:
+            name = (node.get("name") or "").lower()
+            desc = (node.get("description") or "").lower()
+
+            if query_lower in name:
+                matches.append((node, 2))  # name match scores higher
+            elif query_lower in desc:
+                matches.append((node, 1))
+
+        # Sort by relevance score (descending) and limit results
+        matches.sort(key=lambda x: x[1], reverse=True)
+        return [node for node, _ in matches[:k]]

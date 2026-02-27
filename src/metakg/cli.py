@@ -143,6 +143,40 @@ def mcp_main(argv: list | None = None) -> None:
 
 
 # ---------------------------------------------------------------------------
+# metakg-viz
+# ---------------------------------------------------------------------------
+
+
+def viz_main() -> None:
+    """
+    CLI entry point: ``metakg-viz``.
+
+    Launches the Streamlit metabolic knowledge-graph explorer. Argument parsing
+    is handled by :mod:`metakg.metakg_viz`.
+    """
+    from metakg.metakg_viz import main as viz_main_func
+
+    viz_main_func()
+
+
+# ---------------------------------------------------------------------------
+# metakg-viz3d
+# ---------------------------------------------------------------------------
+
+
+def viz3d_main() -> None:
+    """
+    CLI entry point: ``metakg-viz3d``.
+
+    Launches the 3D PyVista metabolic knowledge-graph visualizer. Argument parsing
+    is handled by :mod:`metakg.metakg_viz3d`.
+    """
+    from metakg.metakg_viz3d import main as viz3d_main_func
+
+    viz3d_main_func()
+
+
+# ---------------------------------------------------------------------------
 # Aliases for pyproject.toml [tool.poetry.scripts]
 # ---------------------------------------------------------------------------
 

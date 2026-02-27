@@ -31,10 +31,36 @@ optional = true
 version  = ">=1.0.0"
 optional = true
 
+[tool.poetry.dependencies.streamlit]
+version  = ">=1.35.0"
+optional = true
+
+[tool.poetry.dependencies.pyvis]
+version  = ">=0.3.2"
+optional = true
+
+[tool.poetry.dependencies.pyvista]
+version  = ">=0.44.0"
+optional = true
+
+[tool.poetry.dependencies.pyvistaqt]
+version  = ">=0.11.0"
+optional = true
+
+[tool.poetry.dependencies.PyQt5]
+version  = ">=5.15.0"
+optional = true
+
+[tool.poetry.dependencies.param]
+version  = ">=2.0.0"
+optional = true
+
 [tool.poetry.extras]
 biopax = ["rdflib"]
 mcp    = ["mcp"]
-all    = ["rdflib", "mcp"]
+viz    = ["streamlit", "pyvis"]
+viz3d  = ["pyvista", "pyvistaqt", "PyQt5", "param"]
+all    = ["rdflib", "mcp", "streamlit", "pyvis", "pyvista", "pyvistaqt", "PyQt5", "param"]
 
 [tool.poetry.group.dev.dependencies]
 pytest     = ">=8.0.0"
@@ -43,8 +69,10 @@ ruff       = ">=0.4.0"
 mypy       = ">=1.10.0"
 
 [tool.poetry.scripts]
-metakg-build = "metakg.cli:build_main"
-metakg-mcp   = "metakg.cli:mcp_main"
+metakg-build   = "metakg.cli:build_main"
+metakg-mcp     = "metakg.cli:mcp_main"
+metakg-viz     = "metakg.cli:viz_main"
+metakg-viz3d   = "metakg.cli:viz3d_main"
 
 [tool.ruff]
 line-length    = 100
