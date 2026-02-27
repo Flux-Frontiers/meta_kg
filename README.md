@@ -23,7 +23,7 @@ A comprehensive, production-ready knowledge graph system for metabolic pathways 
 
 ```bash
 # Clone and navigate to the repository
-git clone https://github.com/Suchanek/meta_kg.git
+git clone https://github.com/flux-frontiers/meta_kg.git
 cd meta_kg
 
 # Create a Python 3.12 virtual environment
@@ -417,11 +417,11 @@ poetry run ruff format src/
 If you use MetaKG in research, please cite:
 
 ```bibtex
-@software{suchanek2024metakg,
+@software{flux_frontiers2024metakg,
   title={MetaKG: Metabolic Pathway Knowledge Graph},
-  author={Suchanek, Eric G.},
+  author={Flux Frontiers Contributors},
   year={2024},
-  url={https://github.com/Suchanek/meta_kg}
+  url={https://github.com/flux-frontiers/meta_kg}
 }
 ```
 
@@ -440,8 +440,8 @@ For commercial licensing inquiries, please contact the author.
 ## Support
 
 - **Documentation** — See docstrings and examples above
-- **Issues** — Report bugs on [GitHub Issues](https://github.com/Suchanek/meta_kg/issues)
-- **Discussions** — Ask questions on [GitHub Discussions](https://github.com/Suchanek/meta_kg/discussions)
+- **Issues** — Report bugs on [GitHub Issues](https://github.com/flux-frontiers/meta_kg/issues)
+- **Discussions** — Ask questions on [GitHub Discussions](https://github.com/flux-frontiers/meta_kg/discussions)
 
 ## Acknowledgments
 
