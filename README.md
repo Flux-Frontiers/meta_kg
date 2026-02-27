@@ -1,6 +1,6 @@
 # MetaKG — Metabolic Pathway Knowledge Graph
 
-A comprehensive, production-ready knowledge graph system for metabolic pathways with semantic search, interactive visualization, and MCP integration.
+A comprehensive, extendable knowledge graph system for metabolic pathways with semantic search, interactive visualization, and MCP integration.
 
 **MetaKG** ingests pathway data from multiple formats (KGML, SBML, BioPAX, CSV), builds a unified semantic knowledge graph, and provides powerful querying and visualization tools for exploring metabolic relationships.
 
