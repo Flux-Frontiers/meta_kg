@@ -1,0 +1,164 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "https://www.genome.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- KEGG PATHWAY: hsa00230 Purine metabolism -->
+<pathway name="path:hsa00230" org="hsa" number="00230"
+         title="Purine metabolism"
+         image="https://www.genome.jp/kegg/pathway/hsa/hsa00230.png"
+         link="https://www.genome.jp/kegg-bin/show_pathway?hsa00230">
+
+  <!-- Key intermediates in purine biosynthesis and salvage -->
+  <entry id="1"  name="cpd:C00002" type="compound"><graphics name="ATP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="100" y="100" width="8" height="8"/></entry>
+  <entry id="2"  name="cpd:C00008" type="compound"><graphics name="ADP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="200" y="100" width="8" height="8"/></entry>
+  <entry id="3"  name="cpd:C00020" type="compound"><graphics name="AMP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="300" y="100" width="8" height="8"/></entry>
+  <entry id="4"  name="cpd:C00044" type="compound"><graphics name="GTP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="100" y="220" width="8" height="8"/></entry>
+  <entry id="5"  name="cpd:C00035" type="compound"><graphics name="GDP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="200" y="220" width="8" height="8"/></entry>
+  <entry id="6"  name="cpd:C00144" type="compound"><graphics name="GMP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="300" y="220" width="8" height="8"/></entry>
+  <entry id="7"  name="cpd:C00242" type="compound"><graphics name="Guanine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="420" y="220" width="8" height="8"/></entry>
+  <entry id="8"  name="cpd:C00147" type="compound"><graphics name="Adenine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="420" y="100" width="8" height="8"/></entry>
+  <entry id="9"  name="cpd:C00385" type="compound"><graphics name="Xanthine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="550" y="220" width="8" height="8"/></entry>
+  <entry id="10" name="cpd:C02350" type="compound"><graphics name="Uric acid" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="680" y="220" width="8" height="8"/></entry>
+  <entry id="11" name="cpd:C00300" type="compound"><graphics name="Creatine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="550" y="100" width="8" height="8"/></entry>
+  <entry id="12" name="cpd:C02403" type="compound"><graphics name="Creatinine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="680" y="100" width="8" height="8"/></entry>
+  <!-- IMP - inosine monophosphate (key junction) -->
+  <entry id="13" name="cpd:C00130" type="compound"><graphics name="IMP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="300" y="160" width="8" height="8"/></entry>
+  <!-- Inosine -->
+  <entry id="14" name="cpd:C00294" type="compound"><graphics name="Inosine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="420" y="160" width="8" height="8"/></entry>
+  <!-- Hypoxanthine -->
+  <entry id="15" name="cpd:C00262" type="compound"><graphics name="Hypoxanthine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="550" y="160" width="8" height="8"/></entry>
+  <!-- Adenosine -->
+  <entry id="16" name="cpd:C00212" type="compound"><graphics name="Adenosine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="420" y="60" width="8" height="8"/></entry>
+  <!-- Guanosine -->
+  <entry id="17" name="cpd:C00387" type="compound"><graphics name="Guanosine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="420" y="280" width="8" height="8"/></entry>
+  <!-- PRPP - 5-Phosphoribosyl-1-pyrophosphate -->
+  <entry id="18" name="cpd:C00119" type="compound"><graphics name="PRPP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="180" y="380" width="8" height="8"/></entry>
+  <!-- 5-Phosphoribosylamine -->
+  <entry id="19" name="cpd:C03090" type="compound"><graphics name="5-Phosphoribosylamine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="300" y="380" width="8" height="8"/></entry>
+  <!-- Intermediates of de novo synthesis (simplified) -->
+  <entry id="20" name="cpd:C00064" type="compound"><graphics name="L-Glutamine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="100" y="380" width="8" height="8"/></entry>
+  <entry id="21" name="cpd:C00009" type="compound"><graphics name="Orthophosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="150" y="60" width="8" height="8"/></entry>
+  <entry id="22" name="cpd:C00013" type="compound"><graphics name="Diphosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="165" y="75" width="8" height="8"/></entry>
+  <entry id="23" name="cpd:C00014" type="compound"><graphics name="Ammonia" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="120" y="395" width="8" height="8"/></entry>
+  <entry id="24" name="cpd:C00001" type="compound"><graphics name="H2O" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="380" y="130" width="8" height="8"/></entry>
+  <entry id="25" name="cpd:C00007" type="compound"><graphics name="Oxygen" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="620" y="180" width="8" height="8"/></entry>
+  <entry id="26" name="cpd:C00011" type="compound"><graphics name="CO2" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="650" y="195" width="8" height="8"/></entry>
+
+  <!-- Enzymes -->
+  <entry id="31" name="hsa:270" type="gene"><graphics name="AMPD1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="250" y="130" width="46" height="17"/></entry>
+  <entry id="32" name="hsa:203" type="gene"><graphics name="ADA" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="380" y="80" width="46" height="17"/></entry>
+  <entry id="33" name="hsa:2956" type="gene"><graphics name="MSH2" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="250" y="190" width="46" height="17"/></entry>
+  <entry id="34" name="hsa:2984 hsa:2986" type="gene"><graphics name="GUCY1A1, GUCY2C" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="250" y="245" width="46" height="17"/></entry>
+  <entry id="35" name="hsa:7498" type="gene"><graphics name="XDH" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="600" y="195" width="46" height="17"/></entry>
+  <entry id="36" name="hsa:2631" type="gene"><graphics name="HPRT1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="475" y="140" width="46" height="17"/></entry>
+  <entry id="37" name="hsa:353" type="gene"><graphics name="APRT" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="475" y="80" width="46" height="17"/></entry>
+  <entry id="38" name="hsa:22948" type="gene"><graphics name="PPAT" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="240" y="380" width="46" height="17"/></entry>
+  <entry id="39" name="hsa:4860" type="gene"><graphics name="NP" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="380" y="200" width="46" height="17"/></entry>
+
+  <!-- Reactions -->
+  <!-- ATP → ADP + Pi (adenylate kinase) -->
+  <reaction id="51" name="rn:R00127" type="reversible">
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00008"/>
+    <product name="cpd:C00009"/>
+  </reaction>
+
+  <!-- AMP → ADP (adenylate kinase) -->
+  <reaction id="52" name="rn:R00128" type="reversible">
+    <substrate name="cpd:C00008"/>
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00020"/>
+    <product name="cpd:C00020"/>
+  </reaction>
+
+  <!-- AMP → IMP + NH3 (AMPD) -->
+  <reaction id="53" name="rn:R01556" type="irreversible">
+    <substrate name="cpd:C00020"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00130"/>
+    <product name="cpd:C00014"/>
+  </reaction>
+
+  <!-- IMP → GMP (IMP dehydrogenase + GMP synthase) -->
+  <reaction id="54" name="rn:R01130" type="irreversible">
+    <substrate name="cpd:C00130"/>
+    <substrate name="cpd:C00003"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00144"/>
+    <product name="cpd:C00004"/>
+  </reaction>
+
+  <!-- GMP → GDP (GMP kinase) -->
+  <reaction id="55" name="rn:R00334" type="reversible">
+    <substrate name="cpd:C00144"/>
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00035"/>
+    <product name="cpd:C00008"/>
+  </reaction>
+
+  <!-- GDP → GTP (nucleoside diphosphate kinase) -->
+  <reaction id="56" name="rn:R00335" type="reversible">
+    <substrate name="cpd:C00035"/>
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00044"/>
+    <product name="cpd:C00008"/>
+  </reaction>
+
+  <!-- Adenine + PRPP → AMP + PPi (APRT) -->
+  <reaction id="57" name="rn:R01875" type="irreversible">
+    <substrate name="cpd:C00147"/>
+    <substrate name="cpd:C00119"/>
+    <product name="cpd:C00020"/>
+    <product name="cpd:C00013"/>
+  </reaction>
+
+  <!-- Hypoxanthine + PRPP → IMP + PPi (HPRT) -->
+  <reaction id="58" name="rn:R01956" type="irreversible">
+    <substrate name="cpd:C00262"/>
+    <substrate name="cpd:C00119"/>
+    <product name="cpd:C00130"/>
+    <product name="cpd:C00013"/>
+  </reaction>
+
+  <!-- Adenosine → Inosine + NH3 (ADA) -->
+  <reaction id="59" name="rn:R01981" type="irreversible">
+    <substrate name="cpd:C00212"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00294"/>
+    <product name="cpd:C00014"/>
+  </reaction>
+
+  <!-- Inosine → Hypoxanthine + Ribose-1P (PNP) -->
+  <reaction id="60" name="rn:R00310" type="reversible">
+    <substrate name="cpd:C00294"/>
+    <substrate name="cpd:C00009"/>
+    <product name="cpd:C00262"/>
+  </reaction>
+
+  <!-- Hypoxanthine + O2 → Xanthine (XO) -->
+  <reaction id="61" name="rn:R02103" type="irreversible">
+    <substrate name="cpd:C00262"/>
+    <substrate name="cpd:C00007"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00385"/>
+    <product name="cpd:C00011"/>
+  </reaction>
+
+  <!-- Xanthine + O2 → Uric acid (XO) -->
+  <reaction id="62" name="rn:R02105" type="irreversible">
+    <substrate name="cpd:C00385"/>
+    <substrate name="cpd:C00007"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C02350"/>
+    <product name="cpd:C00011"/>
+  </reaction>
+
+  <!-- PRPP + Glutamine → 5-Phosphoribosylamine + PPi + Glutamate (de novo step 1) -->
+  <reaction id="63" name="rn:R04566" type="irreversible">
+    <substrate name="cpd:C00119"/>
+    <substrate name="cpd:C00064"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C03090"/>
+    <product name="cpd:C00013"/>
+    <product name="cpd:C00025"/>
+  </reaction>
+
+</pathway>

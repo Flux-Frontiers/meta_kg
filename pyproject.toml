@@ -73,6 +73,7 @@ metakg-build   = "metakg.cli:build_main"
 metakg-mcp     = "metakg.cli:mcp_main"
 metakg-viz     = "metakg.cli:viz_main"
 metakg-viz3d   = "metakg.cli:viz3d_main"
+metakg-analyze = "metakg.cli:analyze_main"
 
 [tool.ruff]
 line-length    = 100

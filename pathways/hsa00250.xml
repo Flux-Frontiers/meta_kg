@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "https://www.genome.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- KEGG PATHWAY: hsa00250 Alanine, aspartate and glutamate metabolism -->
+<pathway name="path:hsa00250" org="hsa" number="00250"
+         title="Alanine, aspartate and glutamate metabolism"
+         image="https://www.genome.jp/kegg/pathway/hsa/hsa00250.png"
+         link="https://www.genome.jp/kegg-bin/show_pathway?hsa00250">
+
+  <!-- Compounds -->
+  <entry id="1"  name="cpd:C00041" type="compound"><graphics name="L-Alanine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="130" y="200" width="8" height="8"/></entry>
+  <entry id="2"  name="cpd:C00022" type="compound"><graphics name="Pyruvate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="260" y="200" width="8" height="8"/></entry>
+  <entry id="3"  name="cpd:C00049" type="compound"><graphics name="L-Aspartate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="130" y="320" width="8" height="8"/></entry>
+  <entry id="4"  name="cpd:C00036" type="compound"><graphics name="Oxaloacetate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="260" y="320" width="8" height="8"/></entry>
+  <entry id="5"  name="cpd:C00025" type="compound"><graphics name="L-Glutamate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="450" y="260" width="8" height="8"/></entry>
+  <entry id="6"  name="cpd:C00026" type="compound"><graphics name="2-Oxoglutarate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="600" y="260" width="8" height="8"/></entry>
+  <entry id="7"  name="cpd:C00064" type="compound"><graphics name="L-Glutamine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="450" y="150" width="8" height="8"/></entry>
+  <entry id="8"  name="cpd:C00014" type="compound"><graphics name="Ammonia" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="580" y="150" width="8" height="8"/></entry>
+  <entry id="9"  name="cpd:C00352" type="compound"><graphics name="D-Glucosamine 6-phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="450" y="80" width="8" height="8"/></entry>
+  <entry id="10" name="cpd:C00002" type="compound"><graphics name="ATP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="380" y="120" width="8" height="8"/></entry>
+  <entry id="11" name="cpd:C00008" type="compound"><graphics name="ADP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="395" y="135" width="8" height="8"/></entry>
+  <entry id="12" name="cpd:C00009" type="compound"><graphics name="Orthophosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="395" y="150" width="8" height="8"/></entry>
+  <entry id="13" name="cpd:C00003" type="compound"><graphics name="NAD+" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="520" y="290" width="8" height="8"/></entry>
+  <entry id="14" name="cpd:C00004" type="compound"><graphics name="NADH" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="535" y="305" width="8" height="8"/></entry>
+  <entry id="15" name="cpd:C00001" type="compound"><graphics name="H2O" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="550" y="280" width="8" height="8"/></entry>
+  <entry id="16" name="cpd:C00122" type="compound"><graphics name="Fumarate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="260" y="430" width="8" height="8"/></entry>
+  <entry id="17" name="cpd:C00168" type="compound"><graphics name="Hydroxypyruvate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="700" y="200" width="8" height="8"/></entry>
+  <entry id="18" name="cpd:C00438" type="compound"><graphics name="N-Carbamoyl-L-aspartate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="130" y="430" width="8" height="8"/></entry>
+  <entry id="19" name="cpd:C00169" type="compound"><graphics name="Carbamoyl phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="130" y="500" width="8" height="8"/></entry>
+  <entry id="20" name="cpd:C00006" type="compound"><graphics name="NADP+" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="530" y="340" width="8" height="8"/></entry>
+  <entry id="21" name="cpd:C00005" type="compound"><graphics name="NADPH" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="545" y="355" width="8" height="8"/></entry>
+
+  <!-- Enzymes -->
+  <entry id="31" name="hsa:2875 hsa:132" type="gene"><graphics name="GPT, GPT2" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="195" y="200" width="46" height="17"/></entry>
+  <entry id="32" name="hsa:440 hsa:441" type="gene"><graphics name="AST1, AST2" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="195" y="320" width="46" height="17"/></entry>
+  <entry id="33" name="hsa:2744" type="gene"><graphics name="GLS" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="525" y="205" width="46" height="17"/></entry>
+  <entry id="34" name="hsa:2746" type="gene"><graphics name="GLUL" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="515" y="150" width="46" height="17"/></entry>
+  <entry id="35" name="hsa:18" type="gene"><graphics name="ABAT" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="660" y="235" width="46" height="17"/></entry>
+  <entry id="36" name="hsa:1372" type="gene"><graphics name="ADSL" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="195" y="430" width="46" height="17"/></entry>
+  <entry id="37" name="hsa:1503" type="gene"><graphics name="CTPS1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="65" y="430" width="46" height="17"/></entry>
+
+  <!-- Reactions -->
+  <!-- Alanine aminotransferase: L-Alanine + 2-OG ↔ Pyruvate + L-Glutamate -->
+  <reaction id="51" name="rn:R00258" type="reversible">
+    <substrate name="cpd:C00041"/>
+    <substrate name="cpd:C00026"/>
+    <product name="cpd:C00022"/>
+    <product name="cpd:C00025"/>
+  </reaction>
+
+  <!-- Aspartate aminotransferase: L-Aspartate + 2-OG ↔ Oxaloacetate + L-Glutamate -->
+  <reaction id="52" name="rn:R00355" type="reversible">
+    <substrate name="cpd:C00049"/>
+    <substrate name="cpd:C00026"/>
+    <product name="cpd:C00036"/>
+    <product name="cpd:C00025"/>
+  </reaction>
+
+  <!-- Glutamate dehydrogenase: L-Glutamate + NAD+ + H2O → 2-OG + NH3 + NADH -->
+  <reaction id="53" name="rn:R00248" type="reversible">
+    <substrate name="cpd:C00025"/>
+    <substrate name="cpd:C00003"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00026"/>
+    <product name="cpd:C00014"/>
+    <product name="cpd:C00004"/>
+  </reaction>
+
+  <!-- Glutamate dehydrogenase (NADP): L-Glutamate + NADP+ + H2O → 2-OG + NH3 + NADPH -->
+  <reaction id="54" name="rn:R00243" type="reversible">
+    <substrate name="cpd:C00025"/>
+    <substrate name="cpd:C00006"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00026"/>
+    <product name="cpd:C00014"/>
+    <product name="cpd:C00005"/>
+  </reaction>
+
+  <!-- Glutamine synthetase: L-Glutamate + NH3 + ATP → L-Glutamine + ADP + Pi -->
+  <reaction id="55" name="rn:R00253" type="irreversible">
+    <substrate name="cpd:C00025"/>
+    <substrate name="cpd:C00014"/>
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00064"/>
+    <product name="cpd:C00008"/>
+    <product name="cpd:C00009"/>
+  </reaction>
+
+  <!-- Glutaminase: L-Glutamine + H2O → L-Glutamate + NH3 -->
+  <reaction id="56" name="rn:R00256" type="irreversible">
+    <substrate name="cpd:C00064"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00025"/>
+    <product name="cpd:C00014"/>
+  </reaction>
+
+  <!-- Aspartate + Carbamoyl phosphate → N-Carbamoyl-aspartate + Pi -->
+  <reaction id="57" name="rn:R01540" type="irreversible">
+    <substrate name="cpd:C00049"/>
+    <substrate name="cpd:C00169"/>
+    <product name="cpd:C00438"/>
+    <product name="cpd:C00009"/>
+  </reaction>
+
+  <!-- Adenylosuccinate lyase: Adenylosuccinate → Fumarate + AMP (in purine cycle) -->
+  <reaction id="58" name="rn:R03878" type="irreversible">
+    <substrate name="cpd:C00049"/>
+    <substrate name="cpd:C00122"/>
+    <product name="cpd:C00438"/>
+    <product name="cpd:C00122"/>
+  </reaction>
+
+</pathway>

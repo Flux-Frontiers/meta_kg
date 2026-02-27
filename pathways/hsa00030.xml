@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "https://www.genome.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- KEGG PATHWAY: hsa00030 Pentose phosphate pathway -->
+<pathway name="path:hsa00030" org="hsa" number="00030"
+         title="Pentose phosphate pathway"
+         image="https://www.genome.jp/kegg/pathway/hsa/hsa00030.png"
+         link="https://www.genome.jp/kegg-bin/show_pathway?hsa00030">
+
+  <!-- Compounds -->
+  <entry id="1"  name="cpd:C00668" type="compound"><graphics name="alpha-D-Glucose 6-phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="130" y="130" width="8" height="8"/></entry>
+  <entry id="2"  name="cpd:C01236" type="compound"><graphics name="D-Glucono-1,5-lactone 6-phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="280" y="130" width="8" height="8"/></entry>
+  <entry id="3"  name="cpd:C00345" type="compound"><graphics name="6-Phospho-D-gluconate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="430" y="130" width="8" height="8"/></entry>
+  <entry id="4"  name="cpd:C00199" type="compound"><graphics name="D-Ribulose 5-phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="580" y="130" width="8" height="8"/></entry>
+  <entry id="5"  name="cpd:C00117" type="compound"><graphics name="D-Ribose 5-phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="700" y="200" width="8" height="8"/></entry>
+  <entry id="6"  name="cpd:C00231" type="compound"><graphics name="D-Xylulose 5-phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="700" y="130" width="8" height="8"/></entry>
+  <entry id="7"  name="cpd:C00280" type="compound"><graphics name="D-Sedoheptulose 7-phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="580" y="280" width="8" height="8"/></entry>
+  <entry id="8"  name="cpd:C00118" type="compound"><graphics name="D-Glyceraldehyde 3-phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="700" y="280" width="8" height="8"/></entry>
+  <entry id="9"  name="cpd:C00279" type="compound"><graphics name="D-Erythrose 4-phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="430" y="280" width="8" height="8"/></entry>
+  <entry id="10" name="cpd:C00085" type="compound"><graphics name="D-Fructose 6-phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="280" y="280" width="8" height="8"/></entry>
+  <entry id="11" name="cpd:C00354" type="compound"><graphics name="D-Fructose 1,6-bisphosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="130" y="280" width="8" height="8"/></entry>
+  <entry id="12" name="cpd:C00006" type="compound"><graphics name="NADP+" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="155" y="155" width="8" height="8"/></entry>
+  <entry id="13" name="cpd:C00005" type="compound"><graphics name="NADPH" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="175" y="170" width="8" height="8"/></entry>
+  <entry id="14" name="cpd:C00001" type="compound"><graphics name="H2O" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="355" y="130" width="8" height="8"/></entry>
+  <entry id="15" name="cpd:C00011" type="compound"><graphics name="CO2" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="505" y="130" width="8" height="8"/></entry>
+  <entry id="16" name="cpd:C00002" type="compound"><graphics name="ATP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="110" y="300" width="8" height="8"/></entry>
+  <entry id="17" name="cpd:C00008" type="compound"><graphics name="ADP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="110" y="315" width="8" height="8"/></entry>
+  <entry id="18" name="cpd:C00009" type="compound"><graphics name="Orthophosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="250" y="295" width="8" height="8"/></entry>
+
+  <!-- Enzymes -->
+  <entry id="31" name="hsa:2539" type="gene"><graphics name="G6PD" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="205" y="130" width="46" height="17"/></entry>
+  <entry id="32" name="hsa:51339" type="gene"><graphics name="H6PD" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="205" y="130" width="46" height="17"/></entry>
+  <entry id="33" name="hsa:5226" type="gene"><graphics name="PGLS" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="355" y="130" width="46" height="17"/></entry>
+  <entry id="34" name="hsa:5236" type="gene"><graphics name="PGD" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="505" y="130" width="46" height="17"/></entry>
+  <entry id="35" name="hsa:22934" type="gene"><graphics name="RPIA" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="640" y="200" width="46" height="17"/></entry>
+  <entry id="36" name="hsa:51116" type="gene"><graphics name="RPE" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="640" y="130" width="46" height="17"/></entry>
+  <entry id="37" name="hsa:6730 hsa:6729" type="gene"><graphics name="TKT, TKTL1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="640" y="280" width="46" height="17"/></entry>
+  <entry id="38" name="hsa:6888" type="gene"><graphics name="TALDO1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="505" y="280" width="46" height="17"/></entry>
+  <entry id="39" name="hsa:5213" type="gene"><graphics name="PFKL" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="205" y="280" width="46" height="17"/></entry>
+
+  <!-- Oxidative branch reactions -->
+  <!-- G6P + NADP+ → D-Gluconolactone 6-phosphate + NADPH -->
+  <reaction id="51" name="rn:R00835" type="irreversible">
+    <substrate name="cpd:C00668"/>
+    <substrate name="cpd:C00006"/>
+    <product name="cpd:C01236"/>
+    <product name="cpd:C00005"/>
+  </reaction>
+
+  <!-- D-Gluconolactone 6-phosphate + H2O → 6-Phosphogluconate -->
+  <reaction id="52" name="rn:R02035" type="irreversible">
+    <substrate name="cpd:C01236"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00345"/>
+  </reaction>
+
+  <!-- 6-Phosphogluconate + NADP+ → D-Ribulose 5-phosphate + CO2 + NADPH -->
+  <reaction id="53" name="rn:R01528" type="irreversible">
+    <substrate name="cpd:C00345"/>
+    <substrate name="cpd:C00006"/>
+    <product name="cpd:C00199"/>
+    <product name="cpd:C00011"/>
+    <product name="cpd:C00005"/>
+  </reaction>
+
+  <!-- Non-oxidative branch -->
+  <!-- D-Ribulose 5-phosphate ↔ D-Ribose 5-phosphate -->
+  <reaction id="54" name="rn:R01056" type="reversible">
+    <substrate name="cpd:C00199"/>
+    <product name="cpd:C00117"/>
+  </reaction>
+
+  <!-- D-Ribulose 5-phosphate ↔ D-Xylulose 5-phosphate -->
+  <reaction id="55" name="rn:R01529" type="reversible">
+    <substrate name="cpd:C00199"/>
+    <product name="cpd:C00231"/>
+  </reaction>
+
+  <!-- Transketolase: D-Xylulose 5-phosphate + D-Ribose 5-phosphate ↔ D-Sedoheptulose 7-phosphate + D-GAP -->
+  <reaction id="56" name="rn:R01641" type="reversible">
+    <substrate name="cpd:C00231"/>
+    <substrate name="cpd:C00117"/>
+    <product name="cpd:C00280"/>
+    <product name="cpd:C00118"/>
+  </reaction>
+
+  <!-- Transaldolase: D-Sedoheptulose 7-phosphate + D-GAP ↔ D-Erythrose 4-phosphate + D-Fructose 6-phosphate -->
+  <reaction id="57" name="rn:R01830" type="reversible">
+    <substrate name="cpd:C00280"/>
+    <substrate name="cpd:C00118"/>
+    <product name="cpd:C00279"/>
+    <product name="cpd:C00085"/>
+  </reaction>
+
+  <!-- Transketolase: D-Xylulose 5-phosphate + D-Erythrose 4-phosphate ↔ D-Fructose 6-phosphate + D-GAP -->
+  <reaction id="58" name="rn:R01829" type="reversible">
+    <substrate name="cpd:C00231"/>
+    <substrate name="cpd:C00279"/>
+    <product name="cpd:C00085"/>
+    <product name="cpd:C00118"/>
+  </reaction>
+
+  <!-- PFK: D-Fructose 6-phosphate + ATP → D-Fructose 1,6-bisphosphate + ADP -->
+  <reaction id="59" name="rn:R00756" type="irreversible">
+    <substrate name="cpd:C00085"/>
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00354"/>
+    <product name="cpd:C00008"/>
+  </reaction>
+
+  <!-- FBPase: D-Fructose 1,6-bisphosphate + H2O → D-Fructose 6-phosphate + Pi -->
+  <reaction id="60" name="rn:R00841" type="irreversible">
+    <substrate name="cpd:C00354"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00085"/>
+    <product name="cpd:C00009"/>
+  </reaction>
+
+</pathway>
