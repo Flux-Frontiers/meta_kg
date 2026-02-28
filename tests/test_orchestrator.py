@@ -3,12 +3,10 @@ Tests for metakg.orchestrator — MetaKG top-level orchestrator and result types
 """
 
 import json
-import tempfile
-from pathlib import Path
 
 import pytest
 
-from metakg import MetaKG, MetabolicRuntimeStats
+from metakg import MetabolicRuntimeStats, MetaKG
 from metakg.primitives import (
     KIND_COMPOUND,
     KIND_ENZYME,

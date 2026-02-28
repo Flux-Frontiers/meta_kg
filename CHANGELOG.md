@@ -44,6 +44,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Pylance Type Checking Issues** — Added `MetaIndex.stats()` method to resolve type errors in `MetaKG.get_stats()`
+  - Returns indexed row count and embedding dimension from LanceDB index
+  - Gracefully handles missing or unavailable index
+
+- **Code Quality & Linting**
+  - Fixed import ordering in `scripts/simulation_demo.py`, `src/metakg/orchestrator.py`, and `tests/test_orchestrator.py` to comply with Ruff I001
+  - Removed f-string prefixes from non-placeholder strings in `scripts/simulation_demo.py` (Ruff F541)
+  - Removed unused imports (`tempfile`, `pathlib.Path`) from `tests/test_orchestrator.py`
+  - All changes pass Ruff linting and mypy type checking
+
 - **Critical Namespace Shadowing Bug** — `src/metakg/metakg.py` was shadowing the metakg package namespace, preventing imports of submodules like `graph.py` and breaking all CLI commands. Resolved by renaming to `orchestrator.py` and updating all import statements.
 
 ### Added

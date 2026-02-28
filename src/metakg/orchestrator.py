@@ -15,7 +15,6 @@ from metakg.graph import MetabolicGraph
 from metakg.index import MetaIndex
 from metakg.store import MetaStore
 
-
 # ---------------------------------------------------------------------------
 # Result types
 # ---------------------------------------------------------------------------

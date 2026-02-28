@@ -182,6 +182,21 @@ class MetaIndex:
             )
         return hits
 
+    def stats(self) -> dict:
+        """
+        Get statistics about the current index.
+
+        :return: Dict with ``indexed_rows`` and ``dim`` keys, or empty dict if index doesn't exist.
+        """
+        try:
+            tbl = self._get_table()
+            return {
+                "indexed_rows": tbl.count_rows(),
+                "dim": self._embedder.dim,
+            }
+        except Exception:
+            return {}
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------

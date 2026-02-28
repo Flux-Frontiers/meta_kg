@@ -13,9 +13,9 @@ Usage:
 This script assumes metakg-build --data ./pathways has been run already.
 """
 
+import json
 import sys
 from pathlib import Path
-import json
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -226,7 +226,7 @@ kg.close()
         print(f"Compounds tracked: {len(concs)}")
 
         if concs:
-            print(f"\nFinal concentrations (first 3):")
+            print("\nFinal concentrations (first 3):")
             for cpd_id in list(concs.keys())[:3]:
                 conc_array = concs[cpd_id]
                 if conc_array:
@@ -306,7 +306,7 @@ kg.close()
 
         delta_fluxes = result.get('delta_fluxes', {})
         if delta_fluxes:
-            print(f"\nTop 3 affected reactions:")
+            print("\nTop 3 affected reactions:")
             deltas = sorted(
                 delta_fluxes.items(),
                 key=lambda x: abs(x[1]),
