@@ -212,12 +212,38 @@ class KGMLParser(PathwayParser):
                     evidence=json.dumps({"stoich": p["stoich"]}),
                 ))
 
-        # --- Wire enzymes to reactions via entry map ---
-        # KGML doesn't explicitly link genes to reactions via child elements;
-        # the convention is that gene entries listed adjacent to a reaction in
-        # the same pathway are its catalysts. We emit CATALYZES edges for gene
-        # entries whose id appears in the reaction's entry attribute (not standard)
-        # or simply leave enzyme wiring to be done by the user's dataset.
-        # Standard KGML does not have a direct gene→reaction link in the XML.
+        # --- Wire enzymes to reactions ---
+        # Strategy A: MetaKG extension — <reaction ... enzyme="N"> references
+        #   the id of a gene entry that catalyses this reaction.
+        # Strategy B: Real KEGG convention — the reaction element's own "id"
+        #   matches the gene entry "id" (one gene entry per reaction).
+        # Both are checked so the parser handles both real KEGG files and
+        # the hand-authored MetaKG sample files.
+        for rxn_elem in root.findall("reaction"):
+            rxn_kegg_id = rxn_elem.attrib.get("name", "").replace("rn:", "").strip()
+            rxn_nid = (
+                node_id(KIND_REACTION, "kegg", rxn_kegg_id)
+                if rxn_kegg_id
+                else synthetic_id(KIND_REACTION, rxn_elem.attrib.get("id", ""))
+            )
+            if rxn_nid not in nodes:
+                continue
+
+            # Check both strategies for the enzyme entry id
+            candidate_ids: list[str] = []
+            enz_attr = rxn_elem.attrib.get("enzyme", "")
+            if enz_attr:
+                candidate_ids.append(enz_attr)
+            rxn_id_attr = rxn_elem.attrib.get("id", "")
+            if rxn_id_attr and rxn_id_attr not in candidate_ids:
+                candidate_ids.append(rxn_id_attr)
+
+            for cand in candidate_ids:
+                if cand not in entry_map:
+                    continue
+                enz_nid = entry_map[cand]
+                if enz_nid in nodes and nodes[enz_nid].kind == KIND_ENZYME:
+                    edges.append(MetaEdge(src=enz_nid, rel=REL_CATALYZES, dst=rxn_nid))
+                    break  # one enzyme entry per reaction is enough
 
         return list(nodes.values()), edges

@@ -40,7 +40,7 @@
 
   <!-- Reactions -->
   <!-- Alanine aminotransferase: L-Alanine + 2-OG ↔ Pyruvate + L-Glutamate -->
-  <reaction id="51" name="rn:R00258" type="reversible">
+  <reaction id="51" name="rn:R00258" type="reversible" enzyme="31">
     <substrate name="cpd:C00041"/>
     <substrate name="cpd:C00026"/>
     <product name="cpd:C00022"/>
@@ -48,7 +48,7 @@
   </reaction>
 
   <!-- Aspartate aminotransferase: L-Aspartate + 2-OG ↔ Oxaloacetate + L-Glutamate -->
-  <reaction id="52" name="rn:R00355" type="reversible">
+  <reaction id="52" name="rn:R00355" type="reversible" enzyme="32">
     <substrate name="cpd:C00049"/>
     <substrate name="cpd:C00026"/>
     <product name="cpd:C00036"/>
@@ -76,7 +76,7 @@
   </reaction>
 
   <!-- Glutamine synthetase: L-Glutamate + NH3 + ATP → L-Glutamine + ADP + Pi -->
-  <reaction id="55" name="rn:R00253" type="irreversible">
+  <reaction id="55" name="rn:R00253" type="irreversible" enzyme="34">
     <substrate name="cpd:C00025"/>
     <substrate name="cpd:C00014"/>
     <substrate name="cpd:C00002"/>
@@ -86,7 +86,7 @@
   </reaction>
 
   <!-- Glutaminase: L-Glutamine + H2O → L-Glutamate + NH3 -->
-  <reaction id="56" name="rn:R00256" type="irreversible">
+  <reaction id="56" name="rn:R00256" type="irreversible" enzyme="33">
     <substrate name="cpd:C00064"/>
     <substrate name="cpd:C00001"/>
     <product name="cpd:C00025"/>
@@ -94,7 +94,7 @@
   </reaction>
 
   <!-- Aspartate + Carbamoyl phosphate → N-Carbamoyl-aspartate + Pi -->
-  <reaction id="57" name="rn:R01540" type="irreversible">
+  <reaction id="57" name="rn:R01540" type="irreversible" enzyme="37">
     <substrate name="cpd:C00049"/>
     <substrate name="cpd:C00169"/>
     <product name="cpd:C00438"/>
@@ -102,7 +102,7 @@
   </reaction>
 
   <!-- Adenylosuccinate lyase: Adenylosuccinate → Fumarate + AMP (in purine cycle) -->
-  <reaction id="58" name="rn:R03878" type="irreversible">
+  <reaction id="58" name="rn:R03878" type="irreversible" enzyme="36">
     <substrate name="cpd:C00049"/>
     <substrate name="cpd:C00122"/>
     <product name="cpd:C00438"/>

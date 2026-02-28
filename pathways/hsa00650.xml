@@ -40,7 +40,7 @@
 
   <!-- Reactions -->
   <!-- 2 Acetyl-CoA → Acetoacetyl-CoA + CoA (ACAT/thiolase) -->
-  <reaction id="51" name="rn:R00238" type="reversible">
+  <reaction id="51" name="rn:R00238" type="reversible" enzyme="31">
     <substrate name="cpd:C00024"/>
     <substrate name="cpd:C00024"/>
     <product name="cpd:C00332"/>
@@ -48,7 +48,7 @@
   </reaction>
 
   <!-- Acetoacetyl-CoA + H2O → Acetoacetate + CoA -->
-  <reaction id="52" name="rn:R01975" type="reversible">
+  <reaction id="52" name="rn:R01975" type="reversible" enzyme="34">
     <substrate name="cpd:C00332"/>
     <substrate name="cpd:C00001"/>
     <product name="cpd:C00109"/>
@@ -63,7 +63,7 @@
   </reaction>
 
   <!-- Acetoacetate + NADH → (R)-3-Hydroxybutanoate + NAD+ (BDH) -->
-  <reaction id="54" name="rn:R01367" type="reversible">
+  <reaction id="54" name="rn:R01367" type="reversible" enzyme="35">
     <substrate name="cpd:C00109"/>
     <substrate name="cpd:C00004"/>
     <product name="cpd:C01089"/>
@@ -71,7 +71,7 @@
   </reaction>
 
   <!-- Acetoacetyl-CoA + Acetyl-CoA + H2O → HMG-CoA + CoA (HMGCS) -->
-  <reaction id="55" name="rn:R00239" type="irreversible">
+  <reaction id="55" name="rn:R00239" type="irreversible" enzyme="32">
     <substrate name="cpd:C00332"/>
     <substrate name="cpd:C00024"/>
     <substrate name="cpd:C00001"/>
@@ -80,14 +80,14 @@
   </reaction>
 
   <!-- HMG-CoA → Acetoacetate + Acetyl-CoA (HMGCL, ketolysis) -->
-  <reaction id="56" name="rn:R00241" type="irreversible">
+  <reaction id="56" name="rn:R00241" type="irreversible" enzyme="33">
     <substrate name="cpd:C00356"/>
     <product name="cpd:C00109"/>
     <product name="cpd:C00024"/>
   </reaction>
 
   <!-- Butanoate + CoA + ATP → Butanoyl-CoA + AMP + PPi -->
-  <reaction id="57" name="rn:R01176" type="irreversible">
+  <reaction id="57" name="rn:R01176" type="irreversible" enzyme="36">
     <substrate name="cpd:C00246"/>
     <substrate name="cpd:C00010"/>
     <substrate name="cpd:C00002"/>

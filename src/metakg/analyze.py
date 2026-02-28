@@ -604,11 +604,21 @@ class PathwayAnalyzer:
             """, (pid,))
             rxn_cnt = rxn_cur.fetchone()[0]
 
+            # Count distinct compounds reachable via reactions in this pathway
+            # (KGML only creates CONTAINS→reaction edges, not CONTAINS→compound)
             cpd_cur = self.conn.execute("""
-                SELECT COUNT(*) FROM meta_edges e
-                JOIN meta_nodes c ON c.id = e.dst AND c.kind = 'compound'
-                WHERE e.src = ? AND e.rel = 'CONTAINS'
-            """, (pid,))
+                SELECT COUNT(DISTINCT cpd_id) FROM (
+                    SELECT cs.src AS cpd_id
+                    FROM   meta_edges pc
+                    JOIN   meta_edges cs ON cs.dst = pc.dst AND cs.rel = 'SUBSTRATE_OF'
+                    WHERE  pc.src = ? AND pc.rel = 'CONTAINS'
+                    UNION
+                    SELECT rp.dst AS cpd_id
+                    FROM   meta_edges pc
+                    JOIN   meta_edges rp ON rp.src = pc.dst AND rp.rel = 'PRODUCT_OF'
+                    WHERE  pc.src = ? AND pc.rel = 'CONTAINS'
+                )
+            """, (pid, pid))
             cpd_cnt = cpd_cur.fetchone()[0]
 
             enz_cur = self.conn.execute("""

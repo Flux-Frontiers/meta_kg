@@ -49,7 +49,7 @@
 
   <!-- Reactions -->
   <!-- Fatty acid + CoA + ATP → Acyl-CoA + AMP + PPi (Fatty acyl-CoA synthetase) -->
-  <reaction id="51" name="rn:R01280" type="irreversible">
+  <reaction id="51" name="rn:R01280" type="irreversible" enzyme="31">
     <substrate name="cpd:C00162"/>
     <substrate name="cpd:C00010"/>
     <substrate name="cpd:C00002"/>
@@ -59,7 +59,7 @@
   </reaction>
 
   <!-- Acyl-CoA + FAD → trans-2-Enoyl-CoA + FADH2 (ACAD) -->
-  <reaction id="52" name="rn:R04224" type="irreversible">
+  <reaction id="52" name="rn:R04224" type="irreversible" enzyme="32">
     <substrate name="cpd:C00040"/>
     <substrate name="cpd:C00016"/>
     <product name="cpd:C00877"/>
@@ -67,14 +67,14 @@
   </reaction>
 
   <!-- trans-2-Enoyl-CoA + H2O → L-3-Hydroxyacyl-CoA (enoyl-CoA hydratase) -->
-  <reaction id="53" name="rn:R04739" type="irreversible">
+  <reaction id="53" name="rn:R04739" type="irreversible" enzyme="33">
     <substrate name="cpd:C00877"/>
     <substrate name="cpd:C00001"/>
     <product name="cpd:C01944"/>
   </reaction>
 
   <!-- L-3-Hydroxyacyl-CoA + NAD+ → 3-Ketoacyl-CoA + NADH (HADH) -->
-  <reaction id="54" name="rn:R04737" type="irreversible">
+  <reaction id="54" name="rn:R04737" type="irreversible" enzyme="34">
     <substrate name="cpd:C01944"/>
     <substrate name="cpd:C00003"/>
     <product name="cpd:C00332"/>
@@ -82,7 +82,7 @@
   </reaction>
 
   <!-- 3-Ketoacyl-CoA + CoA → Acyl-CoA(n-2) + Acetyl-CoA (thiolase) -->
-  <reaction id="55" name="rn:R00238" type="irreversible">
+  <reaction id="55" name="rn:R00238" type="irreversible" enzyme="34">
     <substrate name="cpd:C00332"/>
     <substrate name="cpd:C00010"/>
     <product name="cpd:C00040"/>
@@ -106,7 +106,7 @@
   </reaction>
 
   <!-- (R)-Methylmalonyl-CoA → Succinyl-CoA (methylmalonyl-CoA mutase) -->
-  <reaction id="58" name="rn:R01292" type="irreversible">
+  <reaction id="58" name="rn:R01292" type="irreversible" enzyme="37">
     <substrate name="cpd:C01213"/>
     <product name="cpd:C00091"/>
   </reaction>

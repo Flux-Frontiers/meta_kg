@@ -39,7 +39,7 @@
 
   <!-- Oxidative branch reactions -->
   <!-- G6P + NADP+ → D-Gluconolactone 6-phosphate + NADPH -->
-  <reaction id="51" name="rn:R00835" type="irreversible">
+  <reaction id="51" name="rn:R00835" type="irreversible" enzyme="31">
     <substrate name="cpd:C00668"/>
     <substrate name="cpd:C00006"/>
     <product name="cpd:C01236"/>
@@ -47,14 +47,14 @@
   </reaction>
 
   <!-- D-Gluconolactone 6-phosphate + H2O → 6-Phosphogluconate -->
-  <reaction id="52" name="rn:R02035" type="irreversible">
+  <reaction id="52" name="rn:R02035" type="irreversible" enzyme="33">
     <substrate name="cpd:C01236"/>
     <substrate name="cpd:C00001"/>
     <product name="cpd:C00345"/>
   </reaction>
 
   <!-- 6-Phosphogluconate + NADP+ → D-Ribulose 5-phosphate + CO2 + NADPH -->
-  <reaction id="53" name="rn:R01528" type="irreversible">
+  <reaction id="53" name="rn:R01528" type="irreversible" enzyme="34">
     <substrate name="cpd:C00345"/>
     <substrate name="cpd:C00006"/>
     <product name="cpd:C00199"/>
@@ -64,19 +64,19 @@
 
   <!-- Non-oxidative branch -->
   <!-- D-Ribulose 5-phosphate ↔ D-Ribose 5-phosphate -->
-  <reaction id="54" name="rn:R01056" type="reversible">
+  <reaction id="54" name="rn:R01056" type="reversible" enzyme="35">
     <substrate name="cpd:C00199"/>
     <product name="cpd:C00117"/>
   </reaction>
 
   <!-- D-Ribulose 5-phosphate ↔ D-Xylulose 5-phosphate -->
-  <reaction id="55" name="rn:R01529" type="reversible">
+  <reaction id="55" name="rn:R01529" type="reversible" enzyme="36">
     <substrate name="cpd:C00199"/>
     <product name="cpd:C00231"/>
   </reaction>
 
   <!-- Transketolase: D-Xylulose 5-phosphate + D-Ribose 5-phosphate ↔ D-Sedoheptulose 7-phosphate + D-GAP -->
-  <reaction id="56" name="rn:R01641" type="reversible">
+  <reaction id="56" name="rn:R01641" type="reversible" enzyme="37">
     <substrate name="cpd:C00231"/>
     <substrate name="cpd:C00117"/>
     <product name="cpd:C00280"/>
@@ -84,7 +84,7 @@
   </reaction>
 
   <!-- Transaldolase: D-Sedoheptulose 7-phosphate + D-GAP ↔ D-Erythrose 4-phosphate + D-Fructose 6-phosphate -->
-  <reaction id="57" name="rn:R01830" type="reversible">
+  <reaction id="57" name="rn:R01830" type="reversible" enzyme="38">
     <substrate name="cpd:C00280"/>
     <substrate name="cpd:C00118"/>
     <product name="cpd:C00279"/>
@@ -92,7 +92,7 @@
   </reaction>
 
   <!-- Transketolase: D-Xylulose 5-phosphate + D-Erythrose 4-phosphate ↔ D-Fructose 6-phosphate + D-GAP -->
-  <reaction id="58" name="rn:R01829" type="reversible">
+  <reaction id="58" name="rn:R01829" type="reversible" enzyme="37">
     <substrate name="cpd:C00231"/>
     <substrate name="cpd:C00279"/>
     <product name="cpd:C00085"/>
@@ -100,7 +100,7 @@
   </reaction>
 
   <!-- PFK: D-Fructose 6-phosphate + ATP → D-Fructose 1,6-bisphosphate + ADP -->
-  <reaction id="59" name="rn:R00756" type="irreversible">
+  <reaction id="59" name="rn:R00756" type="irreversible" enzyme="39">
     <substrate name="cpd:C00085"/>
     <substrate name="cpd:C00002"/>
     <product name="cpd:C00354"/>

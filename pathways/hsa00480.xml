@@ -32,7 +32,7 @@
 
   <!-- Reactions -->
   <!-- L-Glu + L-Cys + ATP → gamma-Glu-Cys + ADP + Pi (GCL) -->
-  <reaction id="51" name="rn:R00899" type="irreversible">
+  <reaction id="51" name="rn:R00899" type="irreversible" enzyme="31">
     <substrate name="cpd:C00025"/>
     <substrate name="cpd:C00097"/>
     <substrate name="cpd:C00002"/>
@@ -42,7 +42,7 @@
   </reaction>
 
   <!-- gamma-Glu-Cys + Glycine + ATP → GSH + ADP + Pi (GS) -->
-  <reaction id="52" name="rn:R00894" type="irreversible">
+  <reaction id="52" name="rn:R00894" type="irreversible" enzyme="32">
     <substrate name="cpd:C00669"/>
     <substrate name="cpd:C00037"/>
     <substrate name="cpd:C00002"/>
@@ -52,14 +52,14 @@
   </reaction>
 
   <!-- 2 GSH + H2O2 → GSSG + 2 H2O (GPX) -->
-  <reaction id="53" name="rn:R00274" type="irreversible">
+  <reaction id="53" name="rn:R00274" type="irreversible" enzyme="34">
     <substrate name="cpd:C00051"/>
     <substrate name="cpd:C00001"/>
     <product name="cpd:C00127"/>
   </reaction>
 
   <!-- GSSG + NADPH + H+ → 2 GSH + NADP+ (GR) -->
-  <reaction id="54" name="rn:R00195" type="irreversible">
+  <reaction id="54" name="rn:R00195" type="irreversible" enzyme="33">
     <substrate name="cpd:C00127"/>
     <substrate name="cpd:C00005"/>
     <product name="cpd:C00051"/>
@@ -67,7 +67,7 @@
   </reaction>
 
   <!-- GSH conjugation with electrophile (GST) -->
-  <reaction id="55" name="rn:R02740" type="irreversible">
+  <reaction id="55" name="rn:R02740" type="irreversible" enzyme="35">
     <substrate name="cpd:C00051"/>
     <substrate name="cpd:C00001"/>
     <product name="cpd:C00097"/>
@@ -82,7 +82,7 @@
   </reaction>
 
   <!-- 5-Oxoproline + ATP + H2O → L-Glu + ADP + Pi (5-Oxoprolinase) -->
-  <reaction id="57" name="rn:R00578" type="irreversible">
+  <reaction id="57" name="rn:R00578" type="irreversible" enzyme="36">
     <substrate name="cpd:C05764"/>
     <substrate name="cpd:C00002"/>
     <substrate name="cpd:C00001"/>
