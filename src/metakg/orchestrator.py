@@ -14,6 +14,8 @@ from pathlib import Path
 from metakg.graph import MetabolicGraph
 from metakg.index import MetaIndex
 from metakg.store import MetaStore
+from metakg.simulate import MetabolicSimulator, SimulationConfig, WhatIfScenario
+from metakg.kinetics_fetch import seed_kinetics as _seed_kinetics
 
 # ---------------------------------------------------------------------------
 # Result types
@@ -197,6 +199,7 @@ class MetaKG:
 
         self._store: MetaStore | None = None
         self._index: MetaIndex | None = None
+        self._simulator: MetabolicSimulator | None = None
 
     # ------------------------------------------------------------------
     # Layer accessors (lazy)
@@ -221,6 +224,13 @@ class MetaKG:
                 table=self.table_name,
             )
         return self._index
+
+    @property
+    def simulator(self) -> MetabolicSimulator:
+        """Metabolic simulation engine (lazy)."""
+        if self._simulator is None:
+            self._simulator = MetabolicSimulator(self.store)
+        return self._simulator
 
     # ------------------------------------------------------------------
     # Build
@@ -355,6 +365,222 @@ class MetaKG:
         if not b_id:
             return {"error": f"compound not found: {compound_b!r}"}
         return self.store.find_shortest_path(a_id, b_id, max_hops=max_hops)
+
+    # ------------------------------------------------------------------
+    # Simulation
+    # ------------------------------------------------------------------
+
+    def seed_kinetics(self, force: bool = False) -> dict:
+        """
+        Seed the database with curated kinetic parameters from literature.
+
+        Populates ``kinetic_parameters`` and ``regulatory_interactions`` tables
+        with values from BRENDA, SABIO-RK, and published metabolic models.
+
+        :param force: If ``True``, overwrite existing kinetic parameter rows.
+        :return: Dict with ``kinetic_params_written`` and
+            ``regulatory_interactions_written`` counts.
+        """
+        kp_count, ri_count = _seed_kinetics(self.store, force=force)
+        return {
+            "kinetic_params_written": kp_count,
+            "regulatory_interactions_written": ri_count,
+        }
+
+    def simulate_fba(
+        self,
+        pathway_id: str | None = None,
+        reaction_ids: list[str] | None = None,
+        *,
+        t_end: float = 100.0,
+        t_points: int = 500,
+        initial_concentrations: dict[str, float] | None = None,
+        default_concentration: float = 1.0,
+        objective_reaction: str | None = None,
+        maximize: bool = True,
+        flux_bounds: dict[str, tuple[float, float]] | None = None,
+        vmax_overrides: dict[str, float] | None = None,
+        vmax_factors: dict[str, float] | None = None,
+    ) -> dict:
+        """
+        Run Flux Balance Analysis on the reactions in a pathway.
+
+        :param pathway_id: Pathway node ID to scope reactions (e.g. ``"pwy:kegg:hsa00010"``).
+        :param reaction_ids: Explicit list of reaction node IDs to include.
+        :param objective_reaction: Reaction ID to optimise in FBA.  ``None`` maximises
+            the sum of all fluxes (biomass proxy).
+        :param maximize: If ``True`` (default) maximise the objective; else minimise.
+        :param flux_bounds: Override reaction flux bounds ``{reaction_id: (lb, ub)}``.
+        :return: Dict with ``status``, ``objective_value``, ``fluxes``, ``shadow_prices``, and ``message``.
+        """
+        config = SimulationConfig(
+            pathway_id=pathway_id,
+            reaction_ids=reaction_ids,
+            t_end=t_end,
+            t_points=t_points,
+            initial_concentrations=initial_concentrations or {},
+            default_concentration=default_concentration,
+            objective_reaction=objective_reaction,
+            maximize=maximize,
+            flux_bounds=flux_bounds or {},
+            vmax_overrides=vmax_overrides or {},
+            vmax_factors=vmax_factors or {},
+        )
+        result = self.simulator.run_fba(config)
+        return {
+            "status": result.status,
+            "objective_value": result.objective_value,
+            "fluxes": result.fluxes,
+            "shadow_prices": result.shadow_prices,
+            "message": result.message,
+        }
+
+    def simulate_ode(
+        self,
+        pathway_id: str | None = None,
+        reaction_ids: list[str] | None = None,
+        *,
+        t_end: float = 100.0,
+        t_points: int = 500,
+        initial_concentrations: dict[str, float] | None = None,
+        default_concentration: float = 1.0,
+        initial_concentrations_json: str | None = None,
+        vmax_overrides: dict[str, float] | None = None,
+        vmax_factors: dict[str, float] | None = None,
+    ) -> dict:
+        """
+        Run kinetic ODE simulation using Michaelis-Menten rate equations.
+
+        :param pathway_id: Pathway node ID to scope reactions.
+        :param reaction_ids: Explicit list of reaction node IDs to include.
+        :param t_end: End time for ODE integration (arbitrary time units, default 100).
+        :param t_points: Number of time points to sample in ODE output (default 500).
+        :param initial_concentrations: Map of ``{compound_id: mM}`` for ODE initial conditions.
+        :param default_concentration: Default initial concentration (mM) for ODE runs (default 1.0).
+        :param initial_concentrations_json: JSON string of ``{compound_id: mM}`` (alternative to dict).
+        :param vmax_overrides: Override Vmax for specific reactions.
+        :param vmax_factors: Multiply stored (or default) Vmax by a factor.
+        :return: Dict with ``status``, ``t``, ``concentrations``, and ``message``.
+        """
+        # Parse JSON if provided
+        if initial_concentrations_json:
+            initial_concentrations = json.loads(initial_concentrations_json)
+
+        config = SimulationConfig(
+            pathway_id=pathway_id,
+            reaction_ids=reaction_ids,
+            t_end=t_end,
+            t_points=t_points,
+            initial_concentrations=initial_concentrations or {},
+            default_concentration=default_concentration,
+            vmax_overrides=vmax_overrides or {},
+            vmax_factors=vmax_factors or {},
+        )
+        result = self.simulator.run_ode(config)
+        return {
+            "status": result.status,
+            "t": result.t,
+            "concentrations": result.concentrations,
+            "message": result.message,
+        }
+
+    def simulate_whatif(
+        self,
+        scenario_json: str,
+        pathway_id: str | None = None,
+        reaction_ids: list[str] | None = None,
+        *,
+        mode: str = "fba",
+        initial_concentrations: dict[str, float] | None = None,
+        default_concentration: float = 1.0,
+        t_end: float = 100.0,
+        t_points: int = 500,
+    ) -> dict:
+        """
+        Run baseline and perturbed simulations and return the difference.
+
+        The scenario is a JSON object with optional keys:
+
+        - ``name`` (str): Label for the scenario.
+        - ``enzyme_knockouts`` (list[str]): Enzyme node IDs to silence.
+        - ``enzyme_factors`` (dict[str, float]): Map enzyme ID → activity multiplier.
+        - ``initial_conc_overrides`` (dict[str, float]): Override compound initial
+          concentrations in mM (ODE mode only).
+
+        :param scenario_json: JSON-encoded scenario object (see above).
+        :param pathway_id: Pathway node ID to scope reactions.
+        :param reaction_ids: Explicit list of reaction node IDs to include.
+        :param mode: ``"fba"`` (default) or ``"ode"``.
+        :param initial_concentrations: Map of ``{compound_id: mM}`` for ODE initial conditions.
+        :param default_concentration: Default initial concentration (mM) for ODE runs (default 1.0).
+        :param t_end: End time for ODE integration (default 100).
+        :param t_points: Number of time points to sample (default 500).
+        :return: Dict with ``baseline``, ``perturbed``, ``delta_fluxes``, ``delta_final_conc``, and ``mode``.
+        :raises ValueError: If *mode* is not ``"fba"`` or ``"ode"``.
+        """
+        if mode not in ("fba", "ode"):
+            raise ValueError(f"mode must be 'fba' or 'ode', got {mode!r}")
+
+        scenario_data = json.loads(scenario_json)
+        scenario = WhatIfScenario(
+            name=scenario_data.get("name", "unnamed"),
+            enzyme_knockouts=scenario_data.get("enzyme_knockouts", []),
+            enzyme_factors=scenario_data.get("enzyme_factors", {}),
+            initial_conc_overrides=scenario_data.get("initial_conc_overrides", {}),
+        )
+
+        config = SimulationConfig(
+            pathway_id=pathway_id,
+            reaction_ids=reaction_ids,
+            t_end=t_end,
+            t_points=t_points,
+            initial_concentrations=initial_concentrations or {},
+            default_concentration=default_concentration,
+        )
+
+        result = self.simulator.run_whatif(config, scenario, mode=mode)
+
+        # Convert result to dict
+        baseline_dict = {}
+        perturbed_dict = {}
+
+        if mode == "fba":
+            baseline_dict = {
+                "status": result.baseline.status,
+                "objective_value": result.baseline.objective_value,
+                "fluxes": result.baseline.fluxes,
+                "shadow_prices": result.baseline.shadow_prices,
+                "message": result.baseline.message,
+            }
+            perturbed_dict = {
+                "status": result.perturbed.status,
+                "objective_value": result.perturbed.objective_value,
+                "fluxes": result.perturbed.fluxes,
+                "shadow_prices": result.perturbed.shadow_prices,
+                "message": result.perturbed.message,
+            }
+        else:  # mode == "ode"
+            baseline_dict = {
+                "status": result.baseline.status,
+                "t": result.baseline.t,
+                "concentrations": result.baseline.concentrations,
+                "message": result.baseline.message,
+            }
+            perturbed_dict = {
+                "status": result.perturbed.status,
+                "t": result.perturbed.t,
+                "concentrations": result.perturbed.concentrations,
+                "message": result.perturbed.message,
+            }
+
+        return {
+            "scenario_name": result.scenario_name,
+            "baseline": baseline_dict,
+            "perturbed": perturbed_dict,
+            "delta_fluxes": result.delta_fluxes,
+            "delta_final_conc": result.delta_final_conc,
+            "mode": result.mode,
+        }
 
     def get_stats(self) -> MetabolicRuntimeStats:
         """
