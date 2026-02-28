@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: metakg.aux
+The style file: plainnat.bst
+Database file #1: references.bib
+Warning--can't use both volume and number fields in feng2023kuzu
+You've used 22 entries,
+            2773 wiz_defined-function locations,
+            739 strings with 8823 characters,
+and the built_in function-call counts, 10554 in all, are:
+= -- 966
+> -- 591
+< -- 13
++ -- 206
+- -- 183
+* -- 863
+:= -- 1639
+add.period$ -- 89
+call.type$ -- 22
+change.case$ -- 119
+chr.to.int$ -- 21
+cite$ -- 45
+duplicate$ -- 450
+empty$ -- 863
+format.name$ -- 209
+if$ -- 2213
+int.to.chr$ -- 2
+int.to.str$ -- 1
+missing$ -- 17
+newline$ -- 140
+num.names$ -- 88
+pop$ -- 227
+preamble$ -- 1
+purify$ -- 97
+quote$ -- 0
+skip$ -- 352
+stack$ -- 0
+substring$ -- 420
+swap$ -- 50
+text.length$ -- 3
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 237
+warning$ -- 1
+while$ -- 93
+width$ -- 0
+write$ -- 333
+(There was 1 warning)
