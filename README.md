@@ -4,8 +4,12 @@ A comprehensive, extendable knowledge graph system for metabolic pathways with s
 
 **MetaKG** ingests pathway data from multiple formats (KGML, SBML, BioPAX, CSV), builds a unified semantic knowledge graph, and provides powerful querying and visualization tools for exploring metabolic relationships.
 
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/License-PolyForm%20Noncommercial-orange.svg)](LICENSE)
+**Sister Project:** [CodeKG](https://github.com/flux-frontiers/code_kg) — A codebase knowledge graph system for Python repositories. CodeKG provides the semantic analysis capabilities that make it possible to explore MetaKG's own architecture and implementation.
+
+[![Python 3.10 | 3.11 | 3.12](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://www.python.org/downloads/)
+[![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic%202.0-blue.svg)](https://www.elastic.co/licensing/elastic-license)
+[![Version](https://img.shields.io/badge/Version-0.1.0-blue.svg)](https://github.com/flux-frontiers/meta_kg/releases)
+[![Poetry](https://img.shields.io/badge/Poetry-1.8+-blue.svg)](https://python-poetry.org/)
 
 ## Features
 
@@ -74,6 +78,8 @@ metakg-mcp --transport stdio
 ```
 
 ## Architecture
+
+![MetaKG Architecture Diagram](docs/metaKG_arch.png)
 
 ```
 metakg/
@@ -445,12 +451,13 @@ For commercial licensing inquiries, please contact the author.
 
 ## Acknowledgments
 
+- [CodeKG](https://github.com/flux-frontiers/code_kg) — Provides semantic analysis and knowledge graph capabilities for this codebase
 - Layout algorithms adapted from [repo_vis](https://github.com/Suchanek/repo_vis)
 - KEGG, Reactome, and MetaCyc teams for pathway data standards
 - PyVista, Streamlit, and LanceDB communities for visualization and indexing
 
 ---
 
-**Built with ❤️ for computational biology research**
+**Built with ❤️ for computational biology research -egs- **
 
 *Last updated: February 2026*

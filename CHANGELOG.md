@@ -7,11 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **License Migration to Elastic License 2.0** — Updated from PolyForm Noncommercial to Elastic License 2.0 to align with sister project CodeKG
+  - Updated `pyproject.toml` license field to `Elastic-2.0`
+  - Added `LICENSE` file with complete Elastic License 2.0 terms
+  - Updated README license badge with link to official license page
+
 ### Fixed
 
 - **Critical Namespace Shadowing Bug** — `src/metakg/metakg.py` was shadowing the metakg package namespace, preventing imports of submodules like `graph.py` and breaking all CLI commands. Resolved by renaming to `orchestrator.py` and updating all import statements.
 
 ### Added
+
+- **Consistent Project Badges** — Enhanced README with project status badges matching CodeKG style
+  - Python version badge showing supported versions (3.10, 3.11, 3.12)
+  - Version badge (0.1.0) with link to releases
+  - Poetry dependency manager badge
+  - Updated license badge for Elastic License 2.0
+
+- **CodeKG Sister Project Reference** — Added prominent reference to CodeKG in README
+  - Sister Project section highlighting CodeKG's role in enabling semantic analysis of MetaKG's own codebase
+  - Added CodeKG to Acknowledgments section as primary enabling technology
+
+- **Architecture Diagram in README** — Integrated visual architecture diagram (`docs/metaKG_arch.png`) into the Architecture section
+  - Provides quick visual overview of system components and organization
+  - Complements detailed file structure documentation
 
 - **CodeKG Integration for Codebase Analysis** — MetaKG can now be analyzed using CodeKG's knowledge graph tools
   - Built static analysis graph (SQLite): 3,136 nodes, 2,920 edges across 27 modules

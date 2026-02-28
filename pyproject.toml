@@ -7,7 +7,7 @@ name = "metakg"
 version = "0.1.0"
 description = "Metabolic pathway parser and semantic knowledge graph with MCP support"
 authors = ["Eric G. Suchanek, PhD <suchanek@mac.com>"]
-license = "LicenseRef-PolyForm-Noncommercial-1.0.0"
+license = "Elastic-2.0"
 keywords = ["metabolic-pathways", "knowledge-graph", "bioinformatics", "semantic-search", "mcp"]
 classifiers = [
     "Development Status :: 3 - Alpha",
