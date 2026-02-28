@@ -1,0 +1,60 @@
+feat(visualization): add interactive web and 3D metabolic pathway explorers
+
+## Summary
+
+Integrate comprehensive visualization tools for exploring metabolic knowledge graphs:
+
+- **Interactive Web Explorer** (Streamlit): Graph browser, semantic search, and node details tabs
+- **3D Visualizer** (PyVista): Allium and LayerCake layout strategies for spatial exploration
+- **Layout Algorithms**: Fibonacci-based spatial distribution and node positioning
+- **GraphStore Wrapper**: Convenience API layer for graph querying and visualization
+
+## Key Additions
+
+- `src/metakg/app.py` — Streamlit web interface with pyvis graph visualization
+- `src/metakg/layout3d.py` — 3D layout algorithms adapted from repo_vis
+- `src/metakg/viz3d.py` — PyVista 3D renderer with node/edge rendering
+- `src/metakg/metakg_viz.py` — CLI launcher for web explorer
+- `src/metakg/metakg_viz3d.py` — CLI launcher for 3D visualizer
+- `CHANGELOG.md` — Changelog documenting all visualization features
+- `README.md` — Comprehensive project documentation
+
+## Modified Files
+
+- `src/metakg/cli.py` — Added viz_main() and viz3d_main() entry points
+- `src/metakg/store.py` — Added GraphStore compatibility wrapper with query methods
+- `pyproject.toml` — Added optional visualization dependencies (streamlit, pyvis, pyvista, PyQt5)
+
+## Features
+
+### Web Explorer (metakg-viz)
+- Graph Browser with interactive pyvis visualization and filtering
+- Semantic Search for querying by description/keywords
+- Node Details view with comprehensive metabolic entity information
+- Sidebar controls for database paths, node kind filters, edge relation filters
+
+### 3D Visualizer (metakg-viz3d)
+- Allium Layout: pathways as botanical structures with reaction/compound spheres
+- LayerCake Layout: vertical stratification by node kind
+- Fibonacci spatial utilities for uniform point distribution
+- Export to HTML and PNG formats
+
+### Domain Adaptations
+- Metabolic node types: compound, reaction, enzyme, pathway
+- Metabolic edge relations: SUBSTRATE_OF, PRODUCT_OF, CATALYZES, INHIBITS, ACTIVATES, CONTAINS, XREF
+- Color-coded visualization by metabolic entity type
+- Semantic search with optional LanceDB embedding integration
+
+## Dependencies
+
+Optional extras added to pyproject.toml:
+- `viz`: streamlit, pyvis (web visualization)
+- `viz3d`: pyvista, pyvistaqt, PyQt5, param (3D visualization)
+
+## Documentation
+
+- README.md covers architecture, commands, Python API, supported formats, and configuration
+- Docstrings follow :param: style convention
+- Usage examples for web explorer, 3D visualizer, and programmatic API
+
+Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
