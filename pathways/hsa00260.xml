@@ -41,7 +41,7 @@
 
   <!-- Reactions -->
   <!-- 3-PGA + NAD+ → 3-Phosphohydroxypyruvate + NADH (PHGDH) -->
-  <reaction id="51" name="rn:R02973" type="irreversible">
+  <reaction id="51" name="rn:R02973" type="irreversible" enzyme="31">
     <substrate name="cpd:C00197"/>
     <substrate name="cpd:C00003"/>
     <product name="cpd:C00168"/>
@@ -49,7 +49,7 @@
   </reaction>
 
   <!-- O-Phosphoserine → L-Serine + Pi (PSPH) -->
-  <reaction id="52" name="rn:R04347" type="irreversible">
+  <reaction id="52" name="rn:R04347" type="irreversible" enzyme="33">
     <substrate name="cpd:C01005"/>
     <substrate name="cpd:C00001"/>
     <product name="cpd:C00065"/>
@@ -57,7 +57,7 @@
   </reaction>
 
   <!-- L-Serine + THF → Glycine + 5,10-Methylene-THF + H2O (SHMT) -->
-  <reaction id="53" name="rn:R00372" type="reversible">
+  <reaction id="53" name="rn:R00372" type="reversible" enzyme="34">
     <substrate name="cpd:C00065"/>
     <substrate name="cpd:C00101"/>
     <product name="cpd:C00037"/>
@@ -66,7 +66,7 @@
   </reaction>
 
   <!-- Glycine + THF + NAD+ → CO2 + NH3 + NADH + 5,10-Methylene-THF (Glycine decarboxylase) -->
-  <reaction id="54" name="rn:R01221" type="irreversible">
+  <reaction id="54" name="rn:R01221" type="irreversible" enzyme="35">
     <substrate name="cpd:C00037"/>
     <substrate name="cpd:C00101"/>
     <substrate name="cpd:C00003"/>
@@ -77,14 +77,14 @@
   </reaction>
 
   <!-- L-Threonine → Glycine + Acetaldehyde (threonine aldolase) -->
-  <reaction id="55" name="rn:R01434" type="irreversible">
+  <reaction id="55" name="rn:R01434" type="irreversible" enzyme="36">
     <substrate name="cpd:C00188"/>
     <product name="cpd:C00037"/>
     <product name="cpd:C00084"/>
   </reaction>
 
   <!-- L-Threonine + NAD+ → 2-Amino-3-oxobutanoate + NADH -->
-  <reaction id="56" name="rn:R01432" type="irreversible">
+  <reaction id="56" name="rn:R01432" type="irreversible" enzyme="36">
     <substrate name="cpd:C00188"/>
     <substrate name="cpd:C00003"/>
     <product name="cpd:C00022"/>
@@ -92,7 +92,7 @@
   </reaction>
 
   <!-- L-Serine → Pyruvate + NH3 (serine dehydratase) -->
-  <reaction id="57" name="rn:R00220" type="irreversible">
+  <reaction id="57" name="rn:R00220" type="irreversible" enzyme="37">
     <substrate name="cpd:C00065"/>
     <product name="cpd:C00022"/>
     <product name="cpd:C00014"/>

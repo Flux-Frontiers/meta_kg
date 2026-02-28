@@ -42,7 +42,7 @@
 
   <!-- Reactions -->
   <!-- Pyruvate dehydrogenase: Pyruvate + CoA + NAD+ → Acetyl-CoA + CO2 + NADH -->
-  <reaction id="51" name="rn:R00209" type="irreversible">
+  <reaction id="51" name="rn:R00209" type="irreversible" enzyme="39">
     <substrate name="cpd:C00022"/>
     <substrate name="cpd:C00010"/>
     <substrate name="cpd:C00003"/>
@@ -52,7 +52,7 @@
   </reaction>
 
   <!-- Citrate synthase: Acetyl-CoA + Oxaloacetate + H2O → Citrate + CoA -->
-  <reaction id="52" name="rn:R00351" type="irreversible">
+  <reaction id="52" name="rn:R00351" type="irreversible" enzyme="31">
     <substrate name="cpd:C00024"/>
     <substrate name="cpd:C00036"/>
     <substrate name="cpd:C00001"/>
@@ -61,21 +61,21 @@
   </reaction>
 
   <!-- Aconitase: Citrate ↔ cis-Aconitate + H2O -->
-  <reaction id="53" name="rn:R01325" type="reversible">
+  <reaction id="53" name="rn:R01325" type="reversible" enzyme="32">
     <substrate name="cpd:C00158"/>
     <product name="cpd:C00417"/>
     <product name="cpd:C00001"/>
   </reaction>
 
   <!-- Aconitase: cis-Aconitate + H2O ↔ Isocitrate -->
-  <reaction id="54" name="rn:R01900" type="reversible">
+  <reaction id="54" name="rn:R01900" type="reversible" enzyme="32">
     <substrate name="cpd:C00417"/>
     <substrate name="cpd:C00001"/>
     <product name="cpd:C00311"/>
   </reaction>
 
   <!-- Isocitrate dehydrogenase: Isocitrate + NAD+ → 2-Oxoglutarate + CO2 + NADH -->
-  <reaction id="55" name="rn:R00709" type="irreversible">
+  <reaction id="55" name="rn:R00709" type="irreversible" enzyme="33">
     <substrate name="cpd:C00311"/>
     <substrate name="cpd:C00003"/>
     <product name="cpd:C00026"/>
@@ -84,7 +84,7 @@
   </reaction>
 
   <!-- 2-Oxoglutarate dehydrogenase: 2-OG + CoA + NAD+ → Succinyl-CoA + CO2 + NADH -->
-  <reaction id="56" name="rn:R08549" type="irreversible">
+  <reaction id="56" name="rn:R08549" type="irreversible" enzyme="34">
     <substrate name="cpd:C00026"/>
     <substrate name="cpd:C00010"/>
     <substrate name="cpd:C00003"/>
@@ -94,7 +94,7 @@
   </reaction>
 
   <!-- Succinyl-CoA synthetase: Succinyl-CoA + ADP + Pi → Succinate + CoA + ATP -->
-  <reaction id="57" name="rn:R00405" type="reversible">
+  <reaction id="57" name="rn:R00405" type="reversible" enzyme="35">
     <substrate name="cpd:C00091"/>
     <substrate name="cpd:C00008"/>
     <substrate name="cpd:C00009"/>
@@ -104,7 +104,7 @@
   </reaction>
 
   <!-- Succinate dehydrogenase: Succinate + FAD → Fumarate + FADH2 -->
-  <reaction id="58" name="rn:R02164" type="reversible">
+  <reaction id="58" name="rn:R02164" type="reversible" enzyme="36">
     <substrate name="cpd:C00042"/>
     <substrate name="cpd:C00016"/>
     <product name="cpd:C00122"/>
@@ -112,14 +112,14 @@
   </reaction>
 
   <!-- Fumarase: Fumarate + H2O → L-Malate -->
-  <reaction id="59" name="rn:R01082" type="reversible">
+  <reaction id="59" name="rn:R01082" type="reversible" enzyme="37">
     <substrate name="cpd:C00122"/>
     <substrate name="cpd:C00001"/>
     <product name="cpd:C00149"/>
   </reaction>
 
   <!-- Malate dehydrogenase: L-Malate + NAD+ → Oxaloacetate + NADH -->
-  <reaction id="60" name="rn:R00342" type="reversible">
+  <reaction id="60" name="rn:R00342" type="reversible" enzyme="38">
     <substrate name="cpd:C00149"/>
     <substrate name="cpd:C00003"/>
     <product name="cpd:C00036"/>

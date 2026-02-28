@@ -42,7 +42,7 @@
 
   <!-- Reactions -->
   <!-- L-Lactate + NAD+ → Pyruvate + NADH (LDH) -->
-  <reaction id="51" name="rn:R00703" type="reversible">
+  <reaction id="51" name="rn:R00703" type="reversible" enzyme="31">
     <substrate name="cpd:C00186"/>
     <substrate name="cpd:C00003"/>
     <product name="cpd:C00022"/>
@@ -50,7 +50,7 @@
   </reaction>
 
   <!-- Pyruvate + CoA + NAD+ → Acetyl-CoA + CO2 + NADH (PDH) -->
-  <reaction id="52" name="rn:R00209" type="irreversible">
+  <reaction id="52" name="rn:R00209" type="irreversible" enzyme="32">
     <substrate name="cpd:C00022"/>
     <substrate name="cpd:C00010"/>
     <substrate name="cpd:C00003"/>
@@ -83,7 +83,7 @@
   </reaction>
 
   <!-- Oxaloacetate + GTP → PEP + CO2 + GDP (PEPCK) -->
-  <reaction id="56" name="rn:R00352" type="irreversible">
+  <reaction id="56" name="rn:R00352" type="irreversible" enzyme="34">
     <substrate name="cpd:C00036"/>
     <substrate name="cpd:C00044"/>
     <product name="cpd:C00074"/>
@@ -92,7 +92,7 @@
   </reaction>
 
   <!-- L-Malate + NAD+ → Oxaloacetate + NADH (MDH) -->
-  <reaction id="57" name="rn:R00342" type="reversible">
+  <reaction id="57" name="rn:R00342" type="reversible" enzyme="35">
     <substrate name="cpd:C00149"/>
     <substrate name="cpd:C00003"/>
     <product name="cpd:C00036"/>
@@ -100,7 +100,7 @@
   </reaction>
 
   <!-- Pyruvate + CO2 + ATP → Oxaloacetate + ADP + Pi (PC) -->
-  <reaction id="58" name="rn:R00431" type="irreversible">
+  <reaction id="58" name="rn:R00431" type="irreversible" enzyme="37">
     <substrate name="cpd:C00022"/>
     <substrate name="cpd:C00011"/>
     <substrate name="cpd:C00002"/>
@@ -110,7 +110,7 @@
   </reaction>
 
   <!-- PEP + H2O → Pyruvate + Pi (pyruvate kinase) -->
-  <reaction id="59" name="rn:R00200" type="irreversible">
+  <reaction id="59" name="rn:R00200" type="irreversible" enzyme="36">
     <substrate name="cpd:C00074"/>
     <substrate name="cpd:C00008"/>
     <product name="cpd:C00022"/>
@@ -118,7 +118,7 @@
   </reaction>
 
   <!-- L-Malate + NADP+ → Pyruvate + CO2 + NADPH (Malic enzyme) -->
-  <reaction id="60" name="rn:R00216" type="irreversible">
+  <reaction id="60" name="rn:R00216" type="irreversible" enzyme="38">
     <substrate name="cpd:C00149"/>
     <substrate name="cpd:C00006"/>
     <product name="cpd:C00022"/>

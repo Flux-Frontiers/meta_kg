@@ -31,7 +31,7 @@
 
   <!-- Reactions -->
   <!-- Complex I: NADH + ubiquinone → NAD+ + ubiquinol -->
-  <reaction id="51" name="rn:R02161" type="irreversible">
+  <reaction id="51" name="rn:R02161" type="irreversible" enzyme="31">
     <substrate name="cpd:C00004"/>
     <substrate name="cpd:C00399"/>
     <product name="cpd:C00003"/>
@@ -39,7 +39,7 @@
   </reaction>
 
   <!-- Complex II: FADH2 + ubiquinone → FAD + ubiquinol -->
-  <reaction id="52" name="rn:R02164" type="irreversible">
+  <reaction id="52" name="rn:R02164" type="irreversible" enzyme="32">
     <substrate name="cpd:C01352"/>
     <substrate name="cpd:C00399"/>
     <product name="cpd:C00016"/>
@@ -47,7 +47,7 @@
   </reaction>
 
   <!-- Complex III: Ubiquinol + 2 ferricytochrome c → ubiquinone + 2 ferrocytochrome c -->
-  <reaction id="53" name="rn:R02163" type="irreversible">
+  <reaction id="53" name="rn:R02163" type="irreversible" enzyme="33">
     <substrate name="cpd:C06337"/>
     <substrate name="cpd:C00125"/>
     <product name="cpd:C00399"/>
@@ -55,7 +55,7 @@
   </reaction>
 
   <!-- Complex IV: Ferrocytochrome c + O2 → ferricytochrome c + H2O -->
-  <reaction id="54" name="rn:R00081" type="irreversible">
+  <reaction id="54" name="rn:R00081" type="irreversible" enzyme="34">
     <substrate name="cpd:C05684"/>
     <substrate name="cpd:C00007"/>
     <product name="cpd:C00125"/>
@@ -63,7 +63,7 @@
   </reaction>
 
   <!-- Complex V (ATP synthase): ADP + Pi → ATP + H2O -->
-  <reaction id="55" name="rn:R00086" type="reversible">
+  <reaction id="55" name="rn:R00086" type="reversible" enzyme="35">
     <substrate name="cpd:C00008"/>
     <substrate name="cpd:C00009"/>
     <product name="cpd:C00002"/>
@@ -71,7 +71,7 @@
   </reaction>
 
   <!-- NADH dehydrogenase alternative: NADH + H+ → NAD+ (complex I partial) -->
-  <reaction id="56" name="rn:R03958" type="irreversible">
+  <reaction id="56" name="rn:R03958" type="irreversible" enzyme="31">
     <substrate name="cpd:C00004"/>
     <substrate name="cpd:C00080"/>
     <substrate name="cpd:C00399"/>

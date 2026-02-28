@@ -70,7 +70,7 @@
   </reaction>
 
   <!-- AMP → IMP + NH3 (AMPD) -->
-  <reaction id="53" name="rn:R01556" type="irreversible">
+  <reaction id="53" name="rn:R01556" type="irreversible" enzyme="31">
     <substrate name="cpd:C00020"/>
     <substrate name="cpd:C00001"/>
     <product name="cpd:C00130"/>
@@ -103,7 +103,7 @@
   </reaction>
 
   <!-- Adenine + PRPP → AMP + PPi (APRT) -->
-  <reaction id="57" name="rn:R01875" type="irreversible">
+  <reaction id="57" name="rn:R01875" type="irreversible" enzyme="37">
     <substrate name="cpd:C00147"/>
     <substrate name="cpd:C00119"/>
     <product name="cpd:C00020"/>
@@ -111,7 +111,7 @@
   </reaction>
 
   <!-- Hypoxanthine + PRPP → IMP + PPi (HPRT) -->
-  <reaction id="58" name="rn:R01956" type="irreversible">
+  <reaction id="58" name="rn:R01956" type="irreversible" enzyme="36">
     <substrate name="cpd:C00262"/>
     <substrate name="cpd:C00119"/>
     <product name="cpd:C00130"/>
@@ -119,7 +119,7 @@
   </reaction>
 
   <!-- Adenosine → Inosine + NH3 (ADA) -->
-  <reaction id="59" name="rn:R01981" type="irreversible">
+  <reaction id="59" name="rn:R01981" type="irreversible" enzyme="32">
     <substrate name="cpd:C00212"/>
     <substrate name="cpd:C00001"/>
     <product name="cpd:C00294"/>
@@ -127,14 +127,14 @@
   </reaction>
 
   <!-- Inosine → Hypoxanthine + Ribose-1P (PNP) -->
-  <reaction id="60" name="rn:R00310" type="reversible">
+  <reaction id="60" name="rn:R00310" type="reversible" enzyme="39">
     <substrate name="cpd:C00294"/>
     <substrate name="cpd:C00009"/>
     <product name="cpd:C00262"/>
   </reaction>
 
   <!-- Hypoxanthine + O2 → Xanthine (XO) -->
-  <reaction id="61" name="rn:R02103" type="irreversible">
+  <reaction id="61" name="rn:R02103" type="irreversible" enzyme="35">
     <substrate name="cpd:C00262"/>
     <substrate name="cpd:C00007"/>
     <substrate name="cpd:C00001"/>
@@ -143,7 +143,7 @@
   </reaction>
 
   <!-- Xanthine + O2 → Uric acid (XO) -->
-  <reaction id="62" name="rn:R02105" type="irreversible">
+  <reaction id="62" name="rn:R02105" type="irreversible" enzyme="35">
     <substrate name="cpd:C00385"/>
     <substrate name="cpd:C00007"/>
     <substrate name="cpd:C00001"/>
@@ -152,7 +152,7 @@
   </reaction>
 
   <!-- PRPP + Glutamine → 5-Phosphoribosylamine + PPi + Glutamate (de novo step 1) -->
-  <reaction id="63" name="rn:R04566" type="irreversible">
+  <reaction id="63" name="rn:R04566" type="irreversible" enzyme="38">
     <substrate name="cpd:C00119"/>
     <substrate name="cpd:C00064"/>
     <substrate name="cpd:C00001"/>

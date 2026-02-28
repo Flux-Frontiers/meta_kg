@@ -51,37 +51,37 @@
   <entry id="46" name="hsa:2538" type="gene"><graphics name="G6PC1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="174" y="390" width="46" height="17"/></entry>
 
   <!-- Reactions: Glycolysis -->
-  <reaction id="51" name="rn:R00299" type="irreversible">
+  <reaction id="51" name="rn:R00299" type="irreversible" enzyme="31">
     <substrate name="cpd:C00031"/>
     <substrate name="cpd:C00002"/>
     <product name="cpd:C00668"/>
     <product name="cpd:C00008"/>
   </reaction>
 
-  <reaction id="52" name="rn:R00771" type="reversible">
+  <reaction id="52" name="rn:R00771" type="reversible" enzyme="32">
     <substrate name="cpd:C00668"/>
     <product name="cpd:C00085"/>
   </reaction>
 
-  <reaction id="53" name="rn:R00756" type="irreversible">
+  <reaction id="53" name="rn:R00756" type="irreversible" enzyme="33">
     <substrate name="cpd:C00085"/>
     <substrate name="cpd:C00002"/>
     <product name="cpd:C00354"/>
     <product name="cpd:C00008"/>
   </reaction>
 
-  <reaction id="54" name="rn:R01068" type="reversible">
+  <reaction id="54" name="rn:R01068" type="reversible" enzyme="34">
     <substrate name="cpd:C00354"/>
     <product name="cpd:C00111"/>
     <product name="cpd:C00118"/>
   </reaction>
 
-  <reaction id="55" name="rn:R01015" type="reversible">
+  <reaction id="55" name="rn:R01015" type="reversible" enzyme="35">
     <substrate name="cpd:C00111"/>
     <product name="cpd:C00118"/>
   </reaction>
 
-  <reaction id="56" name="rn:R01061" type="reversible">
+  <reaction id="56" name="rn:R01061" type="reversible" enzyme="36">
     <substrate name="cpd:C00118"/>
     <substrate name="cpd:C00003"/>
     <substrate name="cpd:C00009"/>
@@ -89,25 +89,25 @@
     <product name="cpd:C00004"/>
   </reaction>
 
-  <reaction id="57" name="rn:R01512" type="reversible">
+  <reaction id="57" name="rn:R01512" type="reversible" enzyme="37">
     <substrate name="cpd:C00236"/>
     <substrate name="cpd:C00008"/>
     <product name="cpd:C00197"/>
     <product name="cpd:C00002"/>
   </reaction>
 
-  <reaction id="58" name="rn:R01518" type="reversible">
+  <reaction id="58" name="rn:R01518" type="reversible" enzyme="38">
     <substrate name="cpd:C00197"/>
     <product name="cpd:C00631"/>
   </reaction>
 
-  <reaction id="59" name="rn:R00430" type="reversible">
+  <reaction id="59" name="rn:R00430" type="reversible" enzyme="39">
     <substrate name="cpd:C00631"/>
     <product name="cpd:C00074"/>
     <product name="cpd:C00001"/>
   </reaction>
 
-  <reaction id="60" name="rn:R00200" type="irreversible">
+  <reaction id="60" name="rn:R00200" type="irreversible" enzyme="40">
     <substrate name="cpd:C00074"/>
     <substrate name="cpd:C00008"/>
     <product name="cpd:C00022"/>
@@ -115,7 +115,7 @@
   </reaction>
 
   <!-- Lactate fermentation -->
-  <reaction id="61" name="rn:R00703" type="reversible">
+  <reaction id="61" name="rn:R00703" type="reversible" enzyme="42">
     <substrate name="cpd:C00022"/>
     <substrate name="cpd:C00004"/>
     <product name="cpd:C00186"/>
@@ -130,7 +130,7 @@
   </reaction>
 
   <!-- Acetaldehyde → Ethanol -->
-  <reaction id="63" name="rn:R00754" type="reversible">
+  <reaction id="63" name="rn:R00754" type="reversible" enzyme="41">
     <substrate name="cpd:C00084"/>
     <substrate name="cpd:C00004"/>
     <product name="cpd:C00469"/>
@@ -139,7 +139,7 @@
 
   <!-- Gluconeogenesis specific -->
   <!-- PEP → Oxaloacetate (PEPCK reverse direction) -->
-  <reaction id="64" name="rn:R00352" type="irreversible">
+  <reaction id="64" name="rn:R00352" type="irreversible" enzyme="43">
     <substrate name="cpd:C00036"/>
     <substrate name="cpd:C00044"/>
     <product name="cpd:C00074"/>
@@ -148,7 +148,7 @@
   </reaction>
 
   <!-- Pyruvate → Oxaloacetate (Pyruvate carboxylase) -->
-  <reaction id="65" name="rn:R00431" type="irreversible">
+  <reaction id="65" name="rn:R00431" type="irreversible" enzyme="44">
     <substrate name="cpd:C00022"/>
     <substrate name="cpd:C00011"/>
     <substrate name="cpd:C00002"/>
@@ -158,7 +158,7 @@
   </reaction>
 
   <!-- FBPase: F1,6BP → F6P -->
-  <reaction id="66" name="rn:R00841" type="irreversible">
+  <reaction id="66" name="rn:R00841" type="irreversible" enzyme="45">
     <substrate name="cpd:C00354"/>
     <substrate name="cpd:C00001"/>
     <product name="cpd:C00085"/>
@@ -166,7 +166,7 @@
   </reaction>
 
   <!-- G6Pase: G6P → Glucose -->
-  <reaction id="67" name="rn:R00306" type="irreversible">
+  <reaction id="67" name="rn:R00306" type="irreversible" enzyme="46">
     <substrate name="cpd:C00668"/>
     <substrate name="cpd:C00001"/>
     <product name="cpd:C00031"/>
