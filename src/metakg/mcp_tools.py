@@ -28,7 +28,7 @@ import json
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from metakg.metakg import MetaKG
+    from metakg.orchestrator import MetaKG
 
 
 def register_tools(mcp, metakg: MetaKG) -> None:
@@ -36,7 +36,7 @@ def register_tools(mcp, metakg: MetaKG) -> None:
     Register all MetaKG MCP tools on *mcp*.
 
     :param mcp: A ``FastMCP`` instance (from ``mcp.server.fastmcp``).
-    :param metakg: Initialised :class:`~metakg.metakg.MetaKG` instance.
+    :param metakg: Initialised :class:`~metakg.orchestrator.MetaKG` instance.
     """
 
     @mcp.tool()
@@ -102,7 +102,7 @@ def create_server(metakg: MetaKG, *, name: str = "metakg"):
     """
     Create a standalone FastMCP server with all MetaKG tools registered.
 
-    :param metakg: Initialised :class:`~metakg.metakg.MetaKG` instance.
+    :param metakg: Initialised :class:`~metakg.orchestrator.MetaKG` instance.
     :param name: Server name advertised to MCP clients.
     :return: Configured ``FastMCP`` instance ready to ``.run()``.
     """

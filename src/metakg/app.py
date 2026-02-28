@@ -192,7 +192,7 @@ def _build_pyvis(
     :param physics_on: Whether to enable physics simulation.
     :return: HTML string for embedding in Streamlit.
     """
-    net = Network(directed=True, height=height, physics=physics_on)
+    net = Network(directed=True, height=height)
 
     for node in nodes:
         node_id = node["id"]
@@ -210,7 +210,9 @@ def _build_pyvis(
         net.add_edge(src, dst, label=rel, color=color)
 
     net.toggle_physics(physics_on)
-    return net.show(f"temp_{id(net)}.html")
+    net.show(f"temp_{id(net)}.html")
+    with open(f"temp_{id(net)}.html") as f:
+        return f.read()
 
 
 # ---------------------------------------------------------------------------

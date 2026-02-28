@@ -75,6 +75,16 @@ metakg-viz     = "metakg.cli:viz_main"
 metakg-viz3d   = "metakg.cli:viz3d_main"
 metakg-analyze = "metakg.cli:analyze_main"
 
+codekg-build-sqlite  = "code_kg.build_codekg_sqlite:main"
+codekg-build-lancedb = "code_kg.build_codekg_lancedb:main"
+codekg-query         = "code_kg.codekg_query:main"
+codekg-pack          = "code_kg.codekg_snippet_packer:main"
+codekg-viz           = "code_kg.codekg_viz:main"
+codekg-mcp           = "code_kg.mcp_server:main"
+codekg-analyze       = "code_kg.codekg_thorough_analysis:cli"
+codekg-viz3d         = "code_kg.codekg_viz3d:main"
+
+
 [tool.ruff]
 line-length    = 100
 target-version = "py310"

@@ -7,28 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- **Critical Namespace Shadowing Bug** — `src/metakg/metakg.py` was shadowing the metakg package namespace, preventing imports of submodules like `graph.py` and breaking all CLI commands. Resolved by renaming to `orchestrator.py` and updating all import statements.
-
 ### Added
-
-- **CodeKG Integration for Codebase Analysis** — MetaKG can now be analyzed using CodeKG's knowledge graph tools
-  - Built static analysis graph (SQLite): 3,136 nodes, 2,920 edges across 27 modules
-  - Built semantic vector index (LanceDB): 290 vectors with 384-dimensional embeddings
-  - Configured MCP servers for Claude Code, GitHub Copilot, Kilo Code, and Cline
-  - Enables tools like `query_codebase`, `pack_snippets`, `callers` for code exploration
-
-- **Comprehensive CLI Documentation** — Added `CLAUDE.md` with complete reference for both MetaKG and CodeKG commands
-  - MetaKG commands: `metakg-build`, `metakg-analyze`, `metakg-viz`, `metakg-viz3d`, `metakg-mcp`
-  - CodeKG commands: `codekg-build-sqlite`, `codekg-build-lancedb`, `codekg-query`, `codekg-mcp`
-  - MCP tool documentation with usage examples and query strategies
-  - Typical workflows and combined MetaKG + CodeKG usage patterns
-  - All examples include `poetry run` activation for virtual environment
-
-- **MCP Server Configuration** — Added MCP server definitions for multiple clients
-  - `.mcp.json` for Claude Code and Kilo Code
-  - `.vscode/mcp.json` for GitHub Copilot integration
 
 - **Interactive Web Visualization** — Streamlit-based metabolic knowledge graph explorer
   - Graph Browser tab for visualizing pathways, reactions, compounds, and enzymes
@@ -70,9 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Orchestrator Class** — Renamed `MetaKG` source file from `metakg.py` to `orchestrator.py` for clarity and to eliminate namespace shadowing
-- **Import Paths** — Updated all references from `metakg.metakg` to `metakg.orchestrator` in `__init__.py`, `mcp_tools.py`, and `app.py`
-- **pyproject.toml** — Added optional visualization dependencies and `viz` + `viz3d` extras, plus CodeKG CLI entry points
+- **pyproject.toml** — Added optional visualization dependencies and `viz` + `viz3d` extras
 - **src/metakg/cli.py** — Added `viz_main()` and `viz3d_main()` entry points for new CLI commands
 - **src/metakg/store.py** — Extended with GraphStore compatibility wrapper class
 
