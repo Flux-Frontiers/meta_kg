@@ -19,10 +19,12 @@ from pathlib import Path
 
 from metakg.primitives import (
     DEFAULT_RELS,
+    KineticParam,
     MetaEdge,
     MetaNode,
     REL_PRODUCT_OF,
     REL_SUBSTRATE_OF,
+    RegulatoryInteraction,
 )
 
 # ---------------------------------------------------------------------------
@@ -62,6 +64,41 @@ CREATE TABLE IF NOT EXISTS xref_index (
     PRIMARY KEY (db_name, ext_id)
 );
 
+CREATE TABLE IF NOT EXISTS kinetic_parameters (
+    id                   TEXT PRIMARY KEY,
+    enzyme_id            TEXT,
+    reaction_id          TEXT,
+    substrate_id         TEXT,
+    km                   REAL,
+    kcat                 REAL,
+    vmax                 REAL,
+    ki                   REAL,
+    hill_coefficient     REAL,
+    delta_g_prime        REAL,
+    equilibrium_constant REAL,
+    ph                   REAL,
+    temperature_celsius  REAL,
+    ionic_strength       REAL,
+    source_database      TEXT,
+    literature_reference TEXT,
+    organism             TEXT,
+    tissue               TEXT,
+    confidence_score     REAL,
+    measurement_error    REAL
+);
+
+CREATE TABLE IF NOT EXISTS regulatory_interactions (
+    id               TEXT PRIMARY KEY,
+    enzyme_id        TEXT NOT NULL,
+    compound_id      TEXT NOT NULL,
+    interaction_type TEXT NOT NULL,
+    ki_allosteric    REAL,
+    hill_coefficient REAL,
+    site             TEXT,
+    organism         TEXT,
+    source_database  TEXT
+);
+
 CREATE INDEX IF NOT EXISTS idx_meta_nodes_kind  ON meta_nodes(kind);
 CREATE INDEX IF NOT EXISTS idx_meta_nodes_name  ON meta_nodes(name);
 CREATE INDEX IF NOT EXISTS idx_meta_nodes_ec    ON meta_nodes(ec_number);
@@ -69,6 +106,10 @@ CREATE INDEX IF NOT EXISTS idx_meta_edges_src   ON meta_edges(src);
 CREATE INDEX IF NOT EXISTS idx_meta_edges_dst   ON meta_edges(dst);
 CREATE INDEX IF NOT EXISTS idx_meta_edges_rel   ON meta_edges(rel);
 CREATE INDEX IF NOT EXISTS idx_xref_node        ON xref_index(node_id);
+CREATE INDEX IF NOT EXISTS idx_kp_enzyme        ON kinetic_parameters(enzyme_id);
+CREATE INDEX IF NOT EXISTS idx_kp_reaction      ON kinetic_parameters(reaction_id);
+CREATE INDEX IF NOT EXISTS idx_ri_enzyme        ON regulatory_interactions(enzyme_id);
+CREATE INDEX IF NOT EXISTS idx_ri_compound      ON regulatory_interactions(compound_id);
 """
 
 
@@ -492,6 +533,184 @@ class MetaStore:
             )
         else:
             cur = self._conn.execute("SELECT * FROM meta_nodes")
+        return [dict(r) for r in cur.fetchall()]
+
+    # ------------------------------------------------------------------
+    # Kinetic parameters
+    # ------------------------------------------------------------------
+
+    def upsert_kinetic_param(self, param: KineticParam) -> None:
+        """
+        Insert or replace a :class:`~metakg.primitives.KineticParam` row.
+
+        :param param: KineticParam instance to persist.
+        """
+        self._conn.execute(
+            """
+            INSERT OR REPLACE INTO kinetic_parameters
+            (id, enzyme_id, reaction_id, substrate_id,
+             km, kcat, vmax, ki, hill_coefficient,
+             delta_g_prime, equilibrium_constant,
+             ph, temperature_celsius, ionic_strength,
+             source_database, literature_reference,
+             organism, tissue, confidence_score, measurement_error)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                param.id, param.enzyme_id, param.reaction_id, param.substrate_id,
+                param.km, param.kcat, param.vmax, param.ki, param.hill_coefficient,
+                param.delta_g_prime, param.equilibrium_constant,
+                param.ph, param.temperature_celsius, param.ionic_strength,
+                param.source_database, param.literature_reference,
+                param.organism, param.tissue, param.confidence_score, param.measurement_error,
+            ),
+        )
+        self._conn.commit()
+
+    def upsert_kinetic_params(self, params: list[KineticParam]) -> int:
+        """
+        Bulk insert/replace a list of :class:`~metakg.primitives.KineticParam` rows.
+
+        :param params: List of KineticParam instances.
+        :return: Number of rows written.
+        """
+        rows = [
+            (
+                p.id, p.enzyme_id, p.reaction_id, p.substrate_id,
+                p.km, p.kcat, p.vmax, p.ki, p.hill_coefficient,
+                p.delta_g_prime, p.equilibrium_constant,
+                p.ph, p.temperature_celsius, p.ionic_strength,
+                p.source_database, p.literature_reference,
+                p.organism, p.tissue, p.confidence_score, p.measurement_error,
+            )
+            for p in params
+        ]
+        self._conn.executemany(
+            """
+            INSERT OR REPLACE INTO kinetic_parameters
+            (id, enzyme_id, reaction_id, substrate_id,
+             km, kcat, vmax, ki, hill_coefficient,
+             delta_g_prime, equilibrium_constant,
+             ph, temperature_celsius, ionic_strength,
+             source_database, literature_reference,
+             organism, tissue, confidence_score, measurement_error)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            rows,
+        )
+        self._conn.commit()
+        return len(rows)
+
+    def kinetic_params_for_reaction(self, reaction_id: str) -> list[dict]:
+        """
+        Fetch all kinetic parameter rows for a reaction node.
+
+        :param reaction_id: Reaction node ID.
+        :return: List of row dicts.
+        """
+        cur = self._conn.execute(
+            "SELECT * FROM kinetic_parameters WHERE reaction_id=?", (reaction_id,)
+        )
+        return [dict(r) for r in cur.fetchall()]
+
+    def kinetic_params_for_enzyme(self, enzyme_id: str) -> list[dict]:
+        """
+        Fetch all kinetic parameter rows for an enzyme node.
+
+        :param enzyme_id: Enzyme node ID.
+        :return: List of row dicts.
+        """
+        cur = self._conn.execute(
+            "SELECT * FROM kinetic_parameters WHERE enzyme_id=?", (enzyme_id,)
+        )
+        return [dict(r) for r in cur.fetchall()]
+
+    def all_kinetic_params(self) -> list[dict]:
+        """Return every row in kinetic_parameters."""
+        cur = self._conn.execute("SELECT * FROM kinetic_parameters")
+        return [dict(r) for r in cur.fetchall()]
+
+    # ------------------------------------------------------------------
+    # Regulatory interactions
+    # ------------------------------------------------------------------
+
+    def upsert_regulatory_interaction(self, ri: RegulatoryInteraction) -> None:
+        """
+        Insert or replace a :class:`~metakg.primitives.RegulatoryInteraction` row.
+
+        :param ri: RegulatoryInteraction instance to persist.
+        """
+        self._conn.execute(
+            """
+            INSERT OR REPLACE INTO regulatory_interactions
+            (id, enzyme_id, compound_id, interaction_type,
+             ki_allosteric, hill_coefficient, site, organism, source_database)
+            VALUES (?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                ri.id, ri.enzyme_id, ri.compound_id, ri.interaction_type,
+                ri.ki_allosteric, ri.hill_coefficient, ri.site,
+                ri.organism, ri.source_database,
+            ),
+        )
+        self._conn.commit()
+
+    def upsert_regulatory_interactions(self, interactions: list[RegulatoryInteraction]) -> int:
+        """
+        Bulk insert/replace regulatory interaction rows.
+
+        :param interactions: List of RegulatoryInteraction instances.
+        :return: Number of rows written.
+        """
+        rows = [
+            (
+                ri.id, ri.enzyme_id, ri.compound_id, ri.interaction_type,
+                ri.ki_allosteric, ri.hill_coefficient, ri.site,
+                ri.organism, ri.source_database,
+            )
+            for ri in interactions
+        ]
+        self._conn.executemany(
+            """
+            INSERT OR REPLACE INTO regulatory_interactions
+            (id, enzyme_id, compound_id, interaction_type,
+             ki_allosteric, hill_coefficient, site, organism, source_database)
+            VALUES (?,?,?,?,?,?,?,?,?)
+            """,
+            rows,
+        )
+        self._conn.commit()
+        return len(rows)
+
+    def regulatory_interactions_for_enzyme(self, enzyme_id: str) -> list[dict]:
+        """
+        Fetch all regulatory interactions for an enzyme.
+
+        :param enzyme_id: Enzyme node ID.
+        :return: List of row dicts.
+        """
+        cur = self._conn.execute(
+            "SELECT * FROM regulatory_interactions WHERE enzyme_id=?", (enzyme_id,)
+        )
+        return [dict(r) for r in cur.fetchall()]
+
+    def regulatory_interactions_for_reaction(self, reaction_id: str) -> list[dict]:
+        """
+        Fetch regulatory interactions affecting any enzyme that catalyses a reaction.
+
+        :param reaction_id: Reaction node ID.
+        :return: List of row dicts joined with enzyme info.
+        """
+        cur = self._conn.execute(
+            """
+            SELECT ri.*
+            FROM regulatory_interactions ri
+            WHERE ri.enzyme_id IN (
+                SELECT src FROM meta_edges WHERE rel='CATALYZES' AND dst=?
+            )
+            """,
+            (reaction_id,),
+        )
         return [dict(r) for r in cur.fetchall()]
 
     # ------------------------------------------------------------------

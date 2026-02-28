@@ -189,3 +189,121 @@ class MetaEdge:
             return json.loads(self.evidence)
         except (json.JSONDecodeError, TypeError):
             return {}
+
+
+# ---------------------------------------------------------------------------
+# KineticParam
+# ---------------------------------------------------------------------------
+
+
+def _kp_id(enzyme_id: str, reaction_id: str | None, substrate_id: str | None, source: str | None) -> str:
+    """Build a deterministic ID for a KineticParam row."""
+    key = f"{enzyme_id}|{reaction_id or ''}|{substrate_id or ''}|{source or ''}"
+    return "kp_" + hashlib.sha1(key.encode()).hexdigest()[:12]
+
+
+@dataclass
+class KineticParam:
+    """
+    Kinetic and thermodynamic parameters for an enzyme-catalysed reaction.
+
+    :param id: Deterministic hash ID (use :func:`_kp_id` to construct).
+    :param enzyme_id: Node ID of the catalysing enzyme (FK → meta_nodes).
+    :param reaction_id: Node ID of the reaction (FK → meta_nodes).
+    :param substrate_id: Node ID of the specific substrate this Km applies to.
+    :param km: Michaelis constant (mM).
+    :param kcat: Catalytic rate constant (1/s).
+    :param vmax: Maximum velocity (mM/s, normalised to 1 mg/mL enzyme).
+    :param ki: Inhibition constant for a competitive inhibitor (mM).
+    :param hill_coefficient: Hill coefficient *n* for cooperative kinetics.
+    :param delta_g_prime: Standard transformed Gibbs free energy ΔG°' (kJ/mol).
+    :param equilibrium_constant: Thermodynamic equilibrium constant *Keq*.
+    :param ph: pH at which parameters were measured.
+    :param temperature_celsius: Temperature (°C) at measurement.
+    :param ionic_strength: Ionic strength (M) at measurement.
+    :param source_database: Provenance tag (``"brenda"``, ``"sabio"``, ``"literature"``, ``"default"``).
+    :param literature_reference: PubMed ID or DOI string.
+    :param organism: Organism taxon (e.g. ``"Homo sapiens"``).
+    :param tissue: Tissue or cell-type context.
+    :param confidence_score: Numeric confidence 0–1.
+    :param measurement_error: Reported measurement uncertainty (same units as parameter).
+    """
+
+    id: str
+    enzyme_id: str | None
+    reaction_id: str | None = None
+    substrate_id: str | None = None
+
+    # Enzyme kinetics
+    km: float | None = None
+    kcat: float | None = None
+    vmax: float | None = None
+    ki: float | None = None
+    hill_coefficient: float | None = None
+
+    # Thermodynamics
+    delta_g_prime: float | None = None
+    equilibrium_constant: float | None = None
+
+    # Measurement conditions
+    ph: float | None = None
+    temperature_celsius: float | None = None
+    ionic_strength: float | None = None
+
+    # Provenance
+    source_database: str | None = None
+    literature_reference: str | None = None
+    organism: str | None = None
+    tissue: str | None = None
+    confidence_score: float | None = None
+    measurement_error: float | None = None
+
+    def as_dict(self) -> dict:
+        """Return all fields as a plain dict."""
+        from dataclasses import asdict
+        return asdict(self)
+
+
+# ---------------------------------------------------------------------------
+# RegulatoryInteraction
+# ---------------------------------------------------------------------------
+
+
+def _ri_id(enzyme_id: str, compound_id: str, interaction_type: str) -> str:
+    """Build a deterministic ID for a RegulatoryInteraction row."""
+    key = f"{enzyme_id}|{compound_id}|{interaction_type}"
+    return "ri_" + hashlib.sha1(key.encode()).hexdigest()[:12]
+
+
+@dataclass
+class RegulatoryInteraction:
+    """
+    Allosteric or covalent regulatory relationship between a compound and an enzyme.
+
+    :param id: Deterministic hash ID (use :func:`_ri_id` to construct).
+    :param enzyme_id: Regulated enzyme node ID (FK → meta_nodes).
+    :param compound_id: Effector compound node ID (FK → meta_nodes).
+    :param interaction_type: One of ``"allosteric_inhibitor"``, ``"allosteric_activator"``,
+        ``"feedback_inhibitor"``, ``"competitive_inhibitor"``.
+    :param ki_allosteric: Half-saturation concentration of effector (mM).
+    :param hill_coefficient: Hill coefficient for cooperative effector binding.
+    :param site: Binding site tag (``"active"`` or ``"regulatory"``).
+    :param organism: Organism taxon.
+    :param source_database: Provenance tag.
+    """
+
+    id: str
+    enzyme_id: str
+    compound_id: str
+    interaction_type: str
+
+    ki_allosteric: float | None = None
+    hill_coefficient: float | None = None
+    site: str | None = None
+    organism: str | None = None
+    source_database: str | None = None
+
+    def as_dict(self) -> dict:
+        """Return all fields as a plain dict."""
+        from dataclasses import asdict
+        return asdict(self)

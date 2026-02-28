@@ -1,12 +1,24 @@
 """
 mcp_tools.py — MCP tool registrations for MetaKG.
 
-Exposes four tools on a FastMCP instance:
+Exposes tools on a FastMCP instance:
 
     query_pathway(name, k)                      — semantic pathway search
     get_compound(id)                            — compound + connected reactions
     get_reaction(id)                            — full stoichiometric detail
     find_path(compound_a, compound_b, max_hops) — shortest metabolic path
+
+    simulate_fba(pathway_id, objective_reaction, maximize)
+        — Flux Balance Analysis on a pathway
+    simulate_ode(pathway_id, t_end, t_points, initial_concentrations_json,
+                 default_concentration)
+        — ODE kinetic simulation; returns concentration time-courses
+    simulate_whatif(pathway_id, scenario_json, mode)
+        — Perturbation analysis: baseline vs. modified enzyme/substrate scenario
+    get_kinetic_params(reaction_id)
+        — Retrieve stored kinetic parameters for a reaction
+    seed_kinetics(force)
+        — Populate kinetic parameters from curated literature values
 
 Register via::
 
@@ -97,6 +109,304 @@ def register_tools(mcp, metakg: MetaKG) -> None:
         result = metakg.find_path(compound_a, compound_b, max_hops=max_hops)
         return json.dumps(result, indent=2, default=str)
 
+    @mcp.tool()
+    def simulate_fba(
+        pathway_id: str,
+        objective_reaction: str = "",
+        maximize: bool = True,
+    ) -> str:
+        """
+        Run Flux Balance Analysis (FBA) on a metabolic pathway.
+
+        Builds a stoichiometric linear programme (S·v = 0) and finds the
+        optimal steady-state flux distribution.  No kinetic parameters are
+        required; only the structural graph (stoichiometry + reversibility).
+
+        :param pathway_id: Pathway node ID or name (e.g. ``"pwy:kegg:hsa00010"``
+            or ``"Glycolysis"``).
+        :param objective_reaction: Reaction ID to optimise.  Leave blank to
+            maximise the sum of all forward fluxes (biomass proxy).
+        :param maximize: If ``True`` (default) maximise; else minimise.
+        :return: JSON with ``status``, ``objective_value``, ``fluxes`` dict, and
+            ``shadow_prices`` dict.
+        """
+        from metakg.simulate import MetabolicSimulator, SimulationConfig
+
+        store = metakg.store
+        pwy_id = store.resolve_id(pathway_id) if pathway_id else None
+        config = SimulationConfig(
+            pathway_id=pwy_id,
+            objective_reaction=objective_reaction or None,
+            maximize=maximize,
+        )
+        sim = MetabolicSimulator(store)
+        result = sim.run_fba(config)
+
+        # Enrich flux dict with reaction names
+        enriched_fluxes = {}
+        for rxn_id, flux in result.fluxes.items():
+            node = store.node(rxn_id)
+            name = node["name"] if node else rxn_id
+            enriched_fluxes[rxn_id] = {"name": name, "flux": flux}
+
+        return json.dumps({
+            "status": result.status,
+            "objective_value": result.objective_value,
+            "message": result.message,
+            "fluxes": enriched_fluxes,
+            "shadow_prices": result.shadow_prices,
+        }, indent=2, default=str)
+
+    @mcp.tool()
+    def simulate_ode(
+        pathway_id: str,
+        t_end: float = 100.0,
+        t_points: int = 200,
+        initial_concentrations_json: str = "{}",
+        default_concentration: float = 1.0,
+    ) -> str:
+        """
+        Run a kinetic ODE simulation using Michaelis-Menten rate equations.
+
+        Requires kinetic parameters to be seeded via ``seed_kinetics`` first.
+        Falls back to normalised defaults (Km=0.5 mM, Vmax=1.0 mM/s) for
+        reactions without stored parameters.
+
+        :param pathway_id: Pathway node ID or name.
+        :param t_end: End time for integration (arbitrary units, default 100).
+        :param t_points: Number of output time points (default 200).
+        :param initial_concentrations_json: JSON object mapping compound IDs to
+            initial concentrations in mM, e.g.
+            ``'{"cpd:kegg:C00031": 5.0, "cpd:kegg:C00002": 3.0}'``.
+        :param default_concentration: Fallback initial concentration in mM (default 1.0).
+        :return: JSON with ``status``, ``message``, ``t`` (time array), and
+            ``concentrations`` (compound_id → [mM, ...]).
+        """
+        from metakg.simulate import MetabolicSimulator, SimulationConfig
+
+        try:
+            init_concs: dict[str, float] = json.loads(initial_concentrations_json)
+        except (json.JSONDecodeError, TypeError):
+            init_concs = {}
+
+        store = metakg.store
+        pwy_id = store.resolve_id(pathway_id) if pathway_id else None
+        config = SimulationConfig(
+            pathway_id=pwy_id,
+            t_end=t_end,
+            t_points=t_points,
+            initial_concentrations=init_concs,
+            default_concentration=default_concentration,
+        )
+        sim = MetabolicSimulator(store)
+        result = sim.run_ode(config)
+
+        # Enrich concentrations with compound names and summary stats
+        summary: list[dict] = []
+        for cpd_id, concs in result.concentrations.items():
+            node = store.node(cpd_id)
+            name = node["name"] if node else cpd_id
+            summary.append({
+                "id": cpd_id,
+                "name": name,
+                "initial_mM": concs[0] if concs else None,
+                "final_mM": concs[-1] if concs else None,
+            })
+        summary.sort(key=lambda x: (x["final_mM"] or 0.0), reverse=True)
+
+        return json.dumps({
+            "status": result.status,
+            "message": result.message,
+            "t": result.t,
+            "concentrations": result.concentrations,
+            "summary": summary,
+        }, indent=2, default=str)
+
+    @mcp.tool()
+    def simulate_whatif(
+        pathway_id: str,
+        scenario_json: str,
+        mode: str = "fba",
+    ) -> str:
+        """
+        Run a perturbation (what-if) analysis: baseline vs. modified scenario.
+
+        The scenario is a JSON object with optional keys:
+
+        - ``name`` (str): Label for the scenario.
+        - ``enzyme_knockouts`` (list[str]): Enzyme node IDs to silence.
+        - ``enzyme_factors`` (dict[str, float]): Map enzyme ID → activity multiplier
+          (0.5 halves activity, 2.0 doubles it).
+        - ``initial_conc_overrides`` (dict[str, float]): Override compound initial
+          concentrations in mM (ODE mode only).
+
+        Example ``scenario_json``::
+
+            {
+              "name": "hexokinase_50pct",
+              "enzyme_factors": {"enz:kegg:hsa:2538": 0.5}
+            }
+
+        :param pathway_id: Pathway node ID or name.
+        :param scenario_json: JSON-encoded scenario object (see above).
+        :param mode: ``"fba"`` (default) or ``"ode"``.
+        :return: JSON with baseline result, perturbed result, delta_fluxes (FBA)
+            or delta_final_conc (ODE), and a ranked change summary.
+        """
+        from metakg.simulate import (
+            MetabolicSimulator,
+            SimulationConfig,
+            WhatIfScenario,
+        )
+
+        try:
+            scenario_dict: dict = json.loads(scenario_json)
+        except (json.JSONDecodeError, TypeError):
+            return json.dumps({"error": f"Invalid scenario_json: {scenario_json!r}"})
+
+        store = metakg.store
+        pwy_id = store.resolve_id(pathway_id) if pathway_id else None
+        config = SimulationConfig(pathway_id=pwy_id)
+
+        # Resolve enzyme IDs in scenario
+        knockouts = [
+            store.resolve_id(e) or e
+            for e in scenario_dict.get("enzyme_knockouts", [])
+        ]
+        factors = scenario_dict.get("enzyme_factors", {})
+        resolved_factors = {}
+        for enz_id, factor in factors.items():
+            resolved = store.resolve_id(enz_id) or enz_id
+            resolved_factors[resolved] = float(factor)
+
+        scenario = WhatIfScenario(
+            name=scenario_dict.get("name", "whatif"),
+            enzyme_knockouts=knockouts,
+            enzyme_factors=resolved_factors,
+            initial_conc_overrides={
+                k: float(v)
+                for k, v in scenario_dict.get("initial_conc_overrides", {}).items()
+            },
+        )
+
+        sim = MetabolicSimulator(store)
+        result = sim.run_whatif(config, scenario, mode=mode)
+
+        # Build top-changes summary
+        if mode == "fba":
+            changes = sorted(
+                [
+                    {
+                        "id": rxn_id,
+                        "name": (store.node(rxn_id) or {}).get("name", rxn_id),
+                        "baseline_flux": (result.baseline.fluxes or {}).get(rxn_id, 0.0),  # type: ignore[union-attr]
+                        "perturbed_flux": (result.perturbed.fluxes or {}).get(rxn_id, 0.0),  # type: ignore[union-attr]
+                        "delta": delta,
+                    }
+                    for rxn_id, delta in result.delta_fluxes.items()
+                    if abs(delta) > 1e-8
+                ],
+                key=lambda x: abs(x["delta"]),
+                reverse=True,
+            )
+        else:
+            changes = sorted(
+                [
+                    {
+                        "id": cpd_id,
+                        "name": (store.node(cpd_id) or {}).get("name", cpd_id),
+                        "baseline_final_mM": (result.baseline.concentrations or {}).get(cpd_id, [0.0])[-1],  # type: ignore[union-attr]
+                        "perturbed_final_mM": (result.perturbed.concentrations or {}).get(cpd_id, [0.0])[-1],  # type: ignore[union-attr]
+                        "delta_mM": delta,
+                    }
+                    for cpd_id, delta in result.delta_final_conc.items()
+                    if abs(delta) > 1e-8
+                ],
+                key=lambda x: abs(x["delta_mM"]),
+                reverse=True,
+            )
+
+        baseline_obj = getattr(result.baseline, "objective_value", None)
+        perturbed_obj = getattr(result.perturbed, "objective_value", None)
+
+        return json.dumps({
+            "scenario_name": result.scenario_name,
+            "mode": result.mode,
+            "baseline_status": result.baseline.status,
+            "perturbed_status": result.perturbed.status,
+            "baseline_objective": baseline_obj,
+            "perturbed_objective": perturbed_obj,
+            "top_changes": changes[:25],
+        }, indent=2, default=str)
+
+    @mcp.tool()
+    def get_kinetic_params(reaction_id: str) -> str:
+        """
+        Retrieve stored kinetic parameters for a reaction.
+
+        Returns all rows from ``kinetic_parameters`` associated with the given
+        reaction, enriched with enzyme and substrate names.
+
+        :param reaction_id: Reaction node ID, shorthand, or name.
+        :return: JSON list of kinetic parameter rows, or ``{"error": ...}``.
+        """
+        store = metakg.store
+        resolved = store.resolve_id(reaction_id)
+        if resolved is None:
+            return json.dumps({"error": f"Reaction not found: {reaction_id!r}"})
+
+        rows = store.kinetic_params_for_reaction(resolved)
+        enriched = []
+        for row in rows:
+            r = dict(row)
+            if r.get("enzyme_id"):
+                enz = store.node(r["enzyme_id"])
+                r["enzyme_name"] = enz["name"] if enz else r["enzyme_id"]
+            if r.get("substrate_id"):
+                sub = store.node(r["substrate_id"])
+                r["substrate_name"] = sub["name"] if sub else r["substrate_id"]
+            enriched.append(r)
+
+        regs = store.regulatory_interactions_for_reaction(resolved)
+        for reg in regs:
+            cpd = store.node(reg["compound_id"])
+            reg["compound_name"] = cpd["name"] if cpd else reg["compound_id"]
+
+        return json.dumps({
+            "reaction_id": resolved,
+            "kinetic_params": enriched,
+            "regulatory_interactions": regs,
+        }, indent=2, default=str)
+
+    @mcp.tool()
+    def seed_kinetics(force: bool = False) -> str:
+        """
+        Seed the database with curated literature kinetic parameters.
+
+        Populates ``kinetic_parameters`` and ``regulatory_interactions`` tables
+        for the reactions present in the loaded pathway graph.  Values are drawn
+        from BRENDA, SABIO-RK, and published metabolic models (see
+        ``kinetics_fetch.py`` for full provenance).
+
+        Safe to call multiple times — existing rows are skipped unless
+        ``force=True``.
+
+        :param force: If ``True``, overwrite existing kinetic parameter rows.
+        :return: JSON with ``kinetic_params_written`` and
+            ``regulatory_interactions_written`` counts.
+        """
+        from metakg.kinetics_fetch import seed_kinetics as _seed
+
+        n_kp, n_ri = _seed(metakg.store, force=force)
+        return json.dumps({
+            "kinetic_params_written": n_kp,
+            "regulatory_interactions_written": n_ri,
+            "message": (
+                f"Seeded {n_kp} kinetic parameter row(s) and "
+                f"{n_ri} regulatory interaction row(s)."
+            ),
+        }, indent=2)
+
 
 def create_server(metakg: MetaKG, *, name: str = "metakg"):
     """
@@ -118,7 +428,12 @@ def create_server(metakg: MetaKG, *, name: str = "metakg"):
         instructions=(
             "MetaKG gives you semantic access to a metabolic pathway knowledge graph. "
             "Use query_pathway to find pathways, get_compound/get_reaction for entity "
-            "detail, and find_path to trace biochemical routes between compounds."
+            "detail, and find_path to trace biochemical routes between compounds. "
+            "For simulation: call seed_kinetics once to populate kinetic parameters, "
+            "then use simulate_fba for steady-state flux analysis, simulate_ode for "
+            "kinetic time-course simulation, and simulate_whatif for perturbation "
+            "analysis (enzyme knockouts, activity changes, substrate overrides). "
+            "Use get_kinetic_params to inspect stored Km/Vmax/kcat values."
         ),
     )
     register_tools(server, metakg)

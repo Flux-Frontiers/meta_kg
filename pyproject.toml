@@ -23,6 +23,10 @@ lancedb    = ">=0.29.0"
 numpy      = ">=1.24.0"
 sentence-transformers = ">=2.7.0"
 
+[tool.poetry.dependencies.scipy]
+version  = ">=1.11.0"
+optional = true
+
 [tool.poetry.dependencies.rdflib]
 version  = ">=6.0.0"
 optional = true
@@ -56,11 +60,12 @@ version  = ">=2.0.0"
 optional = true
 
 [tool.poetry.extras]
-biopax = ["rdflib"]
-mcp    = ["mcp"]
-viz    = ["streamlit", "pyvis"]
-viz3d  = ["pyvista", "pyvistaqt", "PyQt5", "param"]
-all    = ["rdflib", "mcp", "streamlit", "pyvis", "pyvista", "pyvistaqt", "PyQt5", "param"]
+biopax   = ["rdflib"]
+mcp      = ["mcp"]
+simulate = ["scipy"]
+viz      = ["streamlit", "pyvis"]
+viz3d    = ["pyvista", "pyvistaqt", "PyQt5", "param"]
+all      = ["rdflib", "mcp", "scipy", "streamlit", "pyvis", "pyvista", "pyvistaqt", "PyQt5", "param"]
 
 [tool.poetry.group.dev.dependencies]
 pytest     = ">=8.0.0"
@@ -69,11 +74,12 @@ ruff       = ">=0.4.0"
 mypy       = ">=1.10.0"
 
 [tool.poetry.scripts]
-metakg-build   = "metakg.cli:build_main"
-metakg-mcp     = "metakg.cli:mcp_main"
-metakg-viz     = "metakg.cli:viz_main"
-metakg-viz3d   = "metakg.cli:viz3d_main"
-metakg-analyze = "metakg.cli:analyze_main"
+metakg-build    = "metakg.cli:build_main"
+metakg-mcp      = "metakg.cli:mcp_main"
+metakg-viz      = "metakg.cli:viz_main"
+metakg-viz3d    = "metakg.cli:viz3d_main"
+metakg-analyze  = "metakg.cli:analyze_main"
+metakg-simulate = "metakg.cli:simulate_main"
 
 codekg-build-sqlite  = "code_kg.build_codekg_sqlite:main"
 codekg-build-lancedb = "code_kg.build_codekg_lancedb:main"
