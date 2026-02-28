@@ -7,7 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Public Statistics API** — New `MetabolicRuntimeStats` dataclass and `MetaKG.get_stats()` method for clean, type-safe access to knowledge graph statistics
+  - Encapsulates total nodes/edges, node counts by kind, edge counts by relation
+  - Includes optional vector index statistics (indexed rows and embedding dimension)
+  - Provides `__str__()` for nicely formatted output and `to_dict()` for serialization
+  - Eliminates internal `.store` exposure in public API
+  - Exported in `metakg` module for public use
+
+- **Comprehensive Unit Tests for Orchestrator** — 14 new tests for `MetabolicRuntimeStats` and `MetaKG.get_stats()`
+  - Tests basic construction, serialization, and string representation
+  - Tests stats accuracy with real data (node/edge counts)
+  - Tests edge cases (empty database, multiple calls consistency)
+  - Tests API cleanliness (no internal implementation exposure)
+
+- **Simulation Demo Script** — `scripts/simulation_demo.py` demonstrating metabolic pathway simulations
+  - Example 1: Seeding kinetic parameters from literature (BRENDA/SABIO-RK)
+  - Example 2: Flux Balance Analysis (FBA) for steady-state flux prediction
+  - Example 3: FBA with custom objective reaction
+  - Example 4: Kinetic ODE simulation for time-course dynamics
+  - Example 5: Enzyme knockout perturbation analysis
+  - Example 6: Enzyme partial inhibition (50%) perturbation analysis
+
 ### Changed
+
+- **Article Examples API Cleanup** — Updated `scripts/article_examples.py` to use public `kg.get_stats()` instead of internal `kg.store.stats()`
+  - Uses typed `MetabolicRuntimeStats` object with attribute access instead of dict access
+  - Gracefully handles optional index statistics with `.get()` calls
+  - Demonstrates proper API usage patterns for users
 
 - **License Migration to Elastic License 2.0** — Updated from PolyForm Noncommercial to Elastic License 2.0 to align with sister project CodeKG
   - Updated `pyproject.toml` license field to `Elastic-2.0`

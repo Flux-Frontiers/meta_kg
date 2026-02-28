@@ -17,6 +17,11 @@ Quick start::
     path = kg.find_path("glucose", "pyruvate")
 """
 
-from metakg.orchestrator import MetaKG, MetabolicBuildStats, MetabolicQueryResult
+from metakg.orchestrator import (
+    MetaKG,
+    MetabolicBuildStats,
+    MetabolicRuntimeStats,
+    MetabolicQueryResult,
+)
 
-__all__ = ["MetaKG", "MetabolicBuildStats", "MetabolicQueryResult"]
+__all__ = ["MetaKG", "MetabolicBuildStats", "MetabolicRuntimeStats", "MetabolicQueryResult"]

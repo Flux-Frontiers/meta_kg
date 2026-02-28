@@ -31,19 +31,13 @@ def example_1_building():
 
     # Get actual stats from database
     kg = MetaKG()
-    stats = kg.store.stats()
+    stats = kg.get_stats()
 
-    print(f"nodes       : {stats['total_nodes']:6d}  {stats['node_counts']}")
-    print(f"edges       : {stats['total_edges']:6d}  {stats['edge_counts']}")
+    print(f"nodes       : {stats.total_nodes:6d}  {stats.node_counts}")
+    print(f"edges       : {stats.total_edges:6d}  {stats.edge_counts}")
 
-    # Index stats
-    if hasattr(kg, "index") and kg.index:
-        indexed = (
-            stats["node_counts"]["compound"]
-            + stats["node_counts"]["enzyme"]
-            + stats["node_counts"]["pathway"]
-        )
-        print(f"indexed     : {indexed:6d} vectors  dim=384")
+    if stats.indexed_rows is not None:
+        print(f"indexed     : {stats.indexed_rows:6d} vectors  dim={stats.index_dim}")
 
     kg.close()
 

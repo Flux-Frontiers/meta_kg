@@ -4877,13 +4877,14 @@ files = [
 ]
 
 [extras]
-all = ["PyQt5", "mcp", "param", "pyvis", "pyvista", "pyvistaqt", "rdflib", "streamlit"]
+all = ["PyQt5", "mcp", "param", "pyvis", "pyvista", "pyvistaqt", "rdflib", "scipy", "streamlit"]
 biopax = ["rdflib"]
 mcp = ["mcp"]
+simulate = ["scipy"]
 viz = ["pyvis", "streamlit"]
 viz3d = ["PyQt5", "param", "pyvista", "pyvistaqt"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "084e0ec2f94af070b80243b80f48683422f7fc15e5754c3763274e3ffc910136"
+content-hash = "612b9924307dd086ff031e09dbda401aae5b25b88d776a438d3773d48eefb4ef"

@@ -80,6 +80,49 @@ class MetabolicBuildStats:
 
 
 @dataclass
+class MetabolicRuntimeStats:
+    """
+    Statistics for the current state of the knowledge graph.
+
+    :param total_nodes: Total nodes in the database.
+    :param total_edges: Total edges in the database.
+    :param node_counts: Node counts by kind.
+    :param edge_counts: Edge counts by relation.
+    :param indexed_rows: Number of nodes embedded in the vector index (if built).
+    :param index_dim: Embedding dimension (if index exists).
+    """
+
+    total_nodes: int
+    total_edges: int
+    node_counts: dict[str, int]
+    edge_counts: dict[str, int]
+    indexed_rows: int | None = None
+    index_dim: int | None = None
+
+    def to_dict(self) -> dict:
+        """Serialise to a plain dict."""
+        return {
+            "total_nodes": self.total_nodes,
+            "total_edges": self.total_edges,
+            "node_counts": self.node_counts,
+            "edge_counts": self.edge_counts,
+            "indexed_rows": self.indexed_rows,
+            "index_dim": self.index_dim,
+        }
+
+    def __str__(self) -> str:
+        node_str = ", ".join(f"{k}={v}" for k, v in sorted(self.node_counts.items()))
+        edge_str = ", ".join(f"{k}={v}" for k, v in sorted(self.edge_counts.items()))
+        lines = [
+            f"nodes       : {self.total_nodes}  ({node_str})",
+            f"edges       : {self.total_edges}  ({edge_str})",
+        ]
+        if self.indexed_rows is not None:
+            lines.append(f"indexed     : {self.indexed_rows} vectors  dim={self.index_dim}")
+        return "\n".join(lines)
+
+
+@dataclass
 class MetabolicQueryResult:
     """
     Result of a :meth:`MetaKG.query_pathway` search.
@@ -314,9 +357,34 @@ class MetaKG:
             return {"error": f"compound not found: {compound_b!r}"}
         return self.store.find_shortest_path(a_id, b_id, max_hops=max_hops)
 
-    def stats(self) -> dict:
-        """Return store statistics."""
-        return self.store.stats()
+    def get_stats(self) -> MetabolicRuntimeStats:
+        """
+        Get current knowledge graph statistics.
+
+        :return: :class:`MetabolicRuntimeStats` with node/edge/index counts.
+        """
+        s = self.store.stats()
+
+        indexed_rows: int | None = None
+        index_dim: int | None = None
+
+        # Get index stats if available
+        if self._index is not None or (self.lancedb_dir / "data" / "index" / ".lance").exists():
+            try:
+                idx_stats = self.index.stats()
+                indexed_rows = idx_stats.get("indexed_rows")
+                index_dim = idx_stats.get("dim")
+            except Exception:
+                pass  # Index not available or error reading stats
+
+        return MetabolicRuntimeStats(
+            total_nodes=s["total_nodes"],
+            total_edges=s["total_edges"],
+            node_counts=s["node_counts"],
+            edge_counts=s["edge_counts"],
+            indexed_rows=indexed_rows,
+            index_dim=index_dim,
+        )
 
     # ------------------------------------------------------------------
     # Lifecycle
