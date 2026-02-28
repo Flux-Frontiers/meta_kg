@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "https://www.genome.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- KEGG PATHWAY: hsa00650 Butanoate metabolism -->
+<pathway name="path:hsa00650" org="hsa" number="00650"
+         title="Butanoate metabolism"
+         image="https://www.genome.jp/kegg/pathway/hsa/hsa00650.png"
+         link="https://www.genome.jp/kegg-bin/show_pathway?hsa00650">
+
+  <entry id="1"  name="cpd:C00024" type="compound"><graphics name="Acetyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="150" y="200" width="8" height="8"/></entry>
+  <entry id="2"  name="cpd:C00332" type="compound"><graphics name="Acetoacetyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="300" y="200" width="8" height="8"/></entry>
+  <entry id="3"  name="cpd:C00109" type="compound"><graphics name="Acetoacetate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="450" y="200" width="8" height="8"/></entry>
+  <entry id="4"  name="cpd:C01089" type="compound"><graphics name="(R)-3-Hydroxybutanoate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="450" y="300" width="8" height="8"/></entry>
+  <entry id="5"  name="cpd:C00136" type="compound"><graphics name="Butanoyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="600" y="200" width="8" height="8"/></entry>
+  <entry id="6"  name="cpd:C00078" type="compound"><graphics name="L-Tryptophan" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="600" y="100" width="8" height="8"/></entry>
+  <entry id="7"  name="cpd:C00164" type="compound"><graphics name="Acetoacetate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="300" y="320" width="8" height="8"/></entry>
+  <entry id="8"  name="cpd:C01011" type="compound"><graphics name="(S)-3-Hydroxy-3-methylglutaryl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="150" y="350" width="8" height="8"/></entry>
+  <entry id="9"  name="cpd:C00356" type="compound"><graphics name="(S)-3-Hydroxy-3-methylglutaryl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="150" y="320" width="8" height="8"/></entry>
+  <entry id="10" name="cpd:C00010" type="compound"><graphics name="CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="225" y="175" width="8" height="8"/></entry>
+  <entry id="11" name="cpd:C00001" type="compound"><graphics name="H2O" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="370" y="170" width="8" height="8"/></entry>
+  <entry id="12" name="cpd:C00011" type="compound"><graphics name="CO2" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="470" y="140" width="8" height="8"/></entry>
+  <entry id="13" name="cpd:C00003" type="compound"><graphics name="NAD+" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="420" y="270" width="8" height="8"/></entry>
+  <entry id="14" name="cpd:C00004" type="compound"><graphics name="NADH" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="435" y="285" width="8" height="8"/></entry>
+  <!-- Butanoate / butyrate (short-chain FA) -->
+  <entry id="15" name="cpd:C00246" type="compound"><graphics name="Butanoate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="600" y="300" width="8" height="8"/></entry>
+  <entry id="16" name="cpd:C00002" type="compound"><graphics name="ATP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="560" y="250" width="8" height="8"/></entry>
+  <entry id="17" name="cpd:C00008" type="compound"><graphics name="ADP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="575" y="265" width="8" height="8"/></entry>
+  <entry id="18" name="cpd:C00009" type="compound"><graphics name="Orthophosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="560" y="280" width="8" height="8"/></entry>
+  <!-- Propanoyl-CoA -->
+  <entry id="19" name="cpd:C00100" type="compound"><graphics name="Propanoyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="300" y="100" width="8" height="8"/></entry>
+  <!-- Beta-hydroxybutyrate dehydrogenase prod -->
+  <entry id="20" name="cpd:C02232" type="compound"><graphics name="(R)-Acetoin" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="450" y="380" width="8" height="8"/></entry>
+
+  <!-- Enzymes -->
+  <entry id="31" name="hsa:38" type="gene"><graphics name="ACAT1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="225" y="200" width="46" height="17"/></entry>
+  <entry id="32" name="hsa:3155 hsa:3157" type="gene"><graphics name="HMGCS1, HMGCS2" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="225" y="280" width="46" height="17"/></entry>
+  <entry id="33" name="hsa:3155" type="gene"><graphics name="HMGCL" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="225" y="350" width="46" height="17"/></entry>
+  <entry id="34" name="hsa:159" type="gene"><graphics name="AACS" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="375" y="200" width="46" height="17"/></entry>
+  <entry id="35" name="hsa:247" type="gene"><graphics name="BDH1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="450" y="250" width="46" height="17"/></entry>
+  <entry id="36" name="hsa:8609" type="gene"><graphics name="ACSS2" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="525" y="250" width="46" height="17"/></entry>
+
+  <!-- Reactions -->
+  <!-- 2 Acetyl-CoA → Acetoacetyl-CoA + CoA (ACAT/thiolase) -->
+  <reaction id="51" name="rn:R00238" type="reversible">
+    <substrate name="cpd:C00024"/>
+    <substrate name="cpd:C00024"/>
+    <product name="cpd:C00332"/>
+    <product name="cpd:C00010"/>
+  </reaction>
+
+  <!-- Acetoacetyl-CoA + H2O → Acetoacetate + CoA -->
+  <reaction id="52" name="rn:R01975" type="reversible">
+    <substrate name="cpd:C00332"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00109"/>
+    <product name="cpd:C00010"/>
+  </reaction>
+
+  <!-- Acetoacetate → Acetone + CO2 (spontaneous decarboxylation) -->
+  <reaction id="53" name="rn:R00626" type="irreversible">
+    <substrate name="cpd:C00109"/>
+    <product name="cpd:C00207"/>
+    <product name="cpd:C00011"/>
+  </reaction>
+
+  <!-- Acetoacetate + NADH → (R)-3-Hydroxybutanoate + NAD+ (BDH) -->
+  <reaction id="54" name="rn:R01367" type="reversible">
+    <substrate name="cpd:C00109"/>
+    <substrate name="cpd:C00004"/>
+    <product name="cpd:C01089"/>
+    <product name="cpd:C00003"/>
+  </reaction>
+
+  <!-- Acetoacetyl-CoA + Acetyl-CoA + H2O → HMG-CoA + CoA (HMGCS) -->
+  <reaction id="55" name="rn:R00239" type="irreversible">
+    <substrate name="cpd:C00332"/>
+    <substrate name="cpd:C00024"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00356"/>
+    <product name="cpd:C00010"/>
+  </reaction>
+
+  <!-- HMG-CoA → Acetoacetate + Acetyl-CoA (HMGCL, ketolysis) -->
+  <reaction id="56" name="rn:R00241" type="irreversible">
+    <substrate name="cpd:C00356"/>
+    <product name="cpd:C00109"/>
+    <product name="cpd:C00024"/>
+  </reaction>
+
+  <!-- Butanoate + CoA + ATP → Butanoyl-CoA + AMP + PPi -->
+  <reaction id="57" name="rn:R01176" type="irreversible">
+    <substrate name="cpd:C00246"/>
+    <substrate name="cpd:C00010"/>
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00136"/>
+    <product name="cpd:C00020"/>
+    <product name="cpd:C00013"/>
+  </reaction>
+
+</pathway>

@@ -1,0 +1,176 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "https://www.genome.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- KEGG PATHWAY: hsa00010 Glycolysis / Gluconeogenesis -->
+<pathway name="path:hsa00010" org="hsa" number="00010"
+         title="Glycolysis / Gluconeogenesis"
+         image="https://www.genome.jp/kegg/pathway/hsa/hsa00010.png"
+         link="https://www.genome.jp/kegg-bin/show_pathway?hsa00010">
+
+  <!-- Compounds -->
+  <entry id="1"  name="cpd:C00031" type="compound"><graphics name="D-Glucose" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="132" y="449" width="8" height="8"/></entry>
+  <entry id="2"  name="cpd:C00668" type="compound"><graphics name="alpha-D-Glucose 6-phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="216" y="449" width="8" height="8"/></entry>
+  <entry id="3"  name="cpd:C00085" type="compound"><graphics name="D-Fructose 6-phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="300" y="449" width="8" height="8"/></entry>
+  <entry id="4"  name="cpd:C00354" type="compound"><graphics name="D-Fructose 1,6-bisphosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="384" y="449" width="8" height="8"/></entry>
+  <entry id="5"  name="cpd:C00111" type="compound"><graphics name="Glycerone phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="468" y="385" width="8" height="8"/></entry>
+  <entry id="6"  name="cpd:C00118" type="compound"><graphics name="D-Glyceraldehyde 3-phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="468" y="449" width="8" height="8"/></entry>
+  <entry id="7"  name="cpd:C00236" type="compound"><graphics name="3-Phospho-D-glyceroyl phosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="552" y="449" width="8" height="8"/></entry>
+  <entry id="8"  name="cpd:C00197" type="compound"><graphics name="3-Phospho-D-glycerate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="636" y="449" width="8" height="8"/></entry>
+  <entry id="9"  name="cpd:C00631" type="compound"><graphics name="2-Phospho-D-glycerate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="720" y="449" width="8" height="8"/></entry>
+  <entry id="10" name="cpd:C00074" type="compound"><graphics name="Phosphoenolpyruvate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="804" y="449" width="8" height="8"/></entry>
+  <entry id="11" name="cpd:C00022" type="compound"><graphics name="Pyruvate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="888" y="449" width="8" height="8"/></entry>
+  <entry id="12" name="cpd:C00186" type="compound"><graphics name="L-Lactate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="888" y="537" width="8" height="8"/></entry>
+  <entry id="13" name="cpd:C00084" type="compound"><graphics name="Acetaldehyde" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="972" y="449" width="8" height="8"/></entry>
+  <entry id="14" name="cpd:C00469" type="compound"><graphics name="Ethanol" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="972" y="537" width="8" height="8"/></entry>
+  <entry id="15" name="cpd:C00002" type="compound"><graphics name="ATP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="160" y="390" width="8" height="8"/></entry>
+  <entry id="16" name="cpd:C00008" type="compound"><graphics name="ADP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="160" y="415" width="8" height="8"/></entry>
+  <entry id="17" name="cpd:C00003" type="compound"><graphics name="NAD+" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="510" y="390" width="8" height="8"/></entry>
+  <entry id="18" name="cpd:C00004" type="compound"><graphics name="NADH" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="510" y="415" width="8" height="8"/></entry>
+  <entry id="19" name="cpd:C00009" type="compound"><graphics name="Orthophosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="510" y="365" width="8" height="8"/></entry>
+  <entry id="20" name="cpd:C00001" type="compound"><graphics name="H2O" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="730" y="390" width="8" height="8"/></entry>
+  <entry id="21" name="cpd:C00036" type="compound"><graphics name="Oxaloacetate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="888" y="350" width="8" height="8"/></entry>
+  <entry id="22" name="cpd:C00011" type="compound"><graphics name="CO2" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="888" y="300" width="8" height="8"/></entry>
+  <entry id="23" name="cpd:C00044" type="compound"><graphics name="GTP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="840" y="300" width="8" height="8"/></entry>
+  <entry id="24" name="cpd:C00035" type="compound"><graphics name="GDP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="840" y="320" width="8" height="8"/></entry>
+
+  <!-- Enzyme genes -->
+  <entry id="31" name="hsa:3098 hsa:3099 hsa:2645" type="gene"><graphics name="HK1, HK2, GCK" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="174" y="449" width="46" height="17"/></entry>
+  <entry id="32" name="hsa:2821" type="gene"><graphics name="GPI" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="258" y="449" width="46" height="17"/></entry>
+  <entry id="33" name="hsa:5213 hsa:5214 hsa:5215" type="gene"><graphics name="PFKL, PFKM, PFKP" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="342" y="449" width="46" height="17"/></entry>
+  <entry id="34" name="hsa:226 hsa:229 hsa:230" type="gene"><graphics name="ALDOA, ALDOB, ALDOC" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="426" y="449" width="46" height="17"/></entry>
+  <entry id="35" name="hsa:7167" type="gene"><graphics name="TPI1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="468" y="417" width="46" height="17"/></entry>
+  <entry id="36" name="hsa:2597 hsa:26330" type="gene"><graphics name="GAPDH, GAPDHS" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="510" y="449" width="46" height="17"/></entry>
+  <entry id="37" name="hsa:5230 hsa:5232" type="gene"><graphics name="PGK1, PGK2" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="594" y="449" width="46" height="17"/></entry>
+  <entry id="38" name="hsa:5223 hsa:5224" type="gene"><graphics name="PGAM1, PGAM2" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="678" y="449" width="46" height="17"/></entry>
+  <entry id="39" name="hsa:2023 hsa:2024 hsa:2026" type="gene"><graphics name="ENO1, ENO2, ENO3" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="762" y="449" width="46" height="17"/></entry>
+  <entry id="40" name="hsa:5313 hsa:5315" type="gene"><graphics name="PKLR, PKM" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="846" y="449" width="46" height="17"/></entry>
+  <entry id="41" name="hsa:10327" type="gene"><graphics name="AKR1A1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="888" y="493" width="46" height="17"/></entry>
+  <entry id="42" name="hsa:3939 hsa:3945 hsa:3948" type="gene"><graphics name="LDHA, LDHB, LDHC" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="888" y="493" width="46" height="17"/></entry>
+  <entry id="43" name="hsa:5106" type="gene"><graphics name="PCK1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="846" y="350" width="46" height="17"/></entry>
+  <entry id="44" name="hsa:5105" type="gene"><graphics name="PC" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="888" y="400" width="46" height="17"/></entry>
+  <entry id="45" name="hsa:8789" type="gene"><graphics name="FBP1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="342" y="390" width="46" height="17"/></entry>
+  <entry id="46" name="hsa:2538" type="gene"><graphics name="G6PC1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="174" y="390" width="46" height="17"/></entry>
+
+  <!-- Reactions: Glycolysis -->
+  <reaction id="51" name="rn:R00299" type="irreversible">
+    <substrate name="cpd:C00031"/>
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00668"/>
+    <product name="cpd:C00008"/>
+  </reaction>
+
+  <reaction id="52" name="rn:R00771" type="reversible">
+    <substrate name="cpd:C00668"/>
+    <product name="cpd:C00085"/>
+  </reaction>
+
+  <reaction id="53" name="rn:R00756" type="irreversible">
+    <substrate name="cpd:C00085"/>
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00354"/>
+    <product name="cpd:C00008"/>
+  </reaction>
+
+  <reaction id="54" name="rn:R01068" type="reversible">
+    <substrate name="cpd:C00354"/>
+    <product name="cpd:C00111"/>
+    <product name="cpd:C00118"/>
+  </reaction>
+
+  <reaction id="55" name="rn:R01015" type="reversible">
+    <substrate name="cpd:C00111"/>
+    <product name="cpd:C00118"/>
+  </reaction>
+
+  <reaction id="56" name="rn:R01061" type="reversible">
+    <substrate name="cpd:C00118"/>
+    <substrate name="cpd:C00003"/>
+    <substrate name="cpd:C00009"/>
+    <product name="cpd:C00236"/>
+    <product name="cpd:C00004"/>
+  </reaction>
+
+  <reaction id="57" name="rn:R01512" type="reversible">
+    <substrate name="cpd:C00236"/>
+    <substrate name="cpd:C00008"/>
+    <product name="cpd:C00197"/>
+    <product name="cpd:C00002"/>
+  </reaction>
+
+  <reaction id="58" name="rn:R01518" type="reversible">
+    <substrate name="cpd:C00197"/>
+    <product name="cpd:C00631"/>
+  </reaction>
+
+  <reaction id="59" name="rn:R00430" type="reversible">
+    <substrate name="cpd:C00631"/>
+    <product name="cpd:C00074"/>
+    <product name="cpd:C00001"/>
+  </reaction>
+
+  <reaction id="60" name="rn:R00200" type="irreversible">
+    <substrate name="cpd:C00074"/>
+    <substrate name="cpd:C00008"/>
+    <product name="cpd:C00022"/>
+    <product name="cpd:C00002"/>
+  </reaction>
+
+  <!-- Lactate fermentation -->
+  <reaction id="61" name="rn:R00703" type="reversible">
+    <substrate name="cpd:C00022"/>
+    <substrate name="cpd:C00004"/>
+    <product name="cpd:C00186"/>
+    <product name="cpd:C00003"/>
+  </reaction>
+
+  <!-- Pyruvate → Acetaldehyde (alcohol fermentation) -->
+  <reaction id="62" name="rn:R00014" type="irreversible">
+    <substrate name="cpd:C00022"/>
+    <product name="cpd:C00084"/>
+    <product name="cpd:C00011"/>
+  </reaction>
+
+  <!-- Acetaldehyde → Ethanol -->
+  <reaction id="63" name="rn:R00754" type="reversible">
+    <substrate name="cpd:C00084"/>
+    <substrate name="cpd:C00004"/>
+    <product name="cpd:C00469"/>
+    <product name="cpd:C00003"/>
+  </reaction>
+
+  <!-- Gluconeogenesis specific -->
+  <!-- PEP → Oxaloacetate (PEPCK reverse direction) -->
+  <reaction id="64" name="rn:R00352" type="irreversible">
+    <substrate name="cpd:C00036"/>
+    <substrate name="cpd:C00044"/>
+    <product name="cpd:C00074"/>
+    <product name="cpd:C00011"/>
+    <product name="cpd:C00035"/>
+  </reaction>
+
+  <!-- Pyruvate → Oxaloacetate (Pyruvate carboxylase) -->
+  <reaction id="65" name="rn:R00431" type="irreversible">
+    <substrate name="cpd:C00022"/>
+    <substrate name="cpd:C00011"/>
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00036"/>
+    <product name="cpd:C00008"/>
+    <product name="cpd:C00009"/>
+  </reaction>
+
+  <!-- FBPase: F1,6BP → F6P -->
+  <reaction id="66" name="rn:R00841" type="irreversible">
+    <substrate name="cpd:C00354"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00085"/>
+    <product name="cpd:C00009"/>
+  </reaction>
+
+  <!-- G6Pase: G6P → Glucose -->
+  <reaction id="67" name="rn:R00306" type="irreversible">
+    <substrate name="cpd:C00668"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00031"/>
+    <product name="cpd:C00009"/>
+  </reaction>
+
+</pathway>

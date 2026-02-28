@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "https://www.genome.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- KEGG PATHWAY: hsa00020 Citrate cycle (TCA cycle) -->
+<pathway name="path:hsa00020" org="hsa" number="00020"
+         title="Citrate cycle (TCA cycle)"
+         image="https://www.genome.jp/kegg/pathway/hsa/hsa00020.png"
+         link="https://www.genome.jp/kegg-bin/show_pathway?hsa00020">
+
+  <!-- Compounds -->
+  <entry id="1"  name="cpd:C00024" type="compound"><graphics name="Acetyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="130" y="300" width="8" height="8"/></entry>
+  <entry id="2"  name="cpd:C00036" type="compound"><graphics name="Oxaloacetate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="220" y="180" width="8" height="8"/></entry>
+  <entry id="3"  name="cpd:C00158" type="compound"><graphics name="Citrate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="350" y="130" width="8" height="8"/></entry>
+  <entry id="4"  name="cpd:C00417" type="compound"><graphics name="cis-Aconitate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="480" y="130" width="8" height="8"/></entry>
+  <entry id="5"  name="cpd:C00311" type="compound"><graphics name="Isocitrate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="580" y="180" width="8" height="8"/></entry>
+  <entry id="6"  name="cpd:C00026" type="compound"><graphics name="2-Oxoglutarate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="620" y="300" width="8" height="8"/></entry>
+  <entry id="7"  name="cpd:C00091" type="compound"><graphics name="Succinyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="580" y="420" width="8" height="8"/></entry>
+  <entry id="8"  name="cpd:C00042" type="compound"><graphics name="Succinate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="480" y="480" width="8" height="8"/></entry>
+  <entry id="9"  name="cpd:C00122" type="compound"><graphics name="Fumarate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="350" y="480" width="8" height="8"/></entry>
+  <entry id="10" name="cpd:C00149" type="compound"><graphics name="L-Malate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="220" y="420" width="8" height="8"/></entry>
+  <entry id="11" name="cpd:C00001" type="compound"><graphics name="H2O" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="200" y="200" width="8" height="8"/></entry>
+  <entry id="12" name="cpd:C00003" type="compound"><graphics name="NAD+" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="550" y="240" width="8" height="8"/></entry>
+  <entry id="13" name="cpd:C00004" type="compound"><graphics name="NADH" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="575" y="255" width="8" height="8"/></entry>
+  <entry id="14" name="cpd:C00011" type="compound"><graphics name="CO2" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="610" y="240" width="8" height="8"/></entry>
+  <entry id="15" name="cpd:C00010" type="compound"><graphics name="CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="160" y="280" width="8" height="8"/></entry>
+  <entry id="16" name="cpd:C00008" type="compound"><graphics name="ADP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="540" y="420" width="8" height="8"/></entry>
+  <entry id="17" name="cpd:C00009" type="compound"><graphics name="Orthophosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="540" y="440" width="8" height="8"/></entry>
+  <entry id="18" name="cpd:C00002" type="compound"><graphics name="ATP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="525" y="405" width="8" height="8"/></entry>
+  <entry id="19" name="cpd:C00016" type="compound"><graphics name="FAD" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="415" y="460" width="8" height="8"/></entry>
+  <entry id="20" name="cpd:C01352" type="compound"><graphics name="FADH2" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="415" y="480" width="8" height="8"/></entry>
+  <entry id="21" name="cpd:C00022" type="compound"><graphics name="Pyruvate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="80" y="300" width="8" height="8"/></entry>
+
+  <!-- Enzymes -->
+  <entry id="31" name="hsa:1431" type="gene"><graphics name="CS" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="200" y="220" width="46" height="17"/></entry>
+  <entry id="32" name="hsa:50" type="gene"><graphics name="ACO2" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="415" y="130" width="46" height="17"/></entry>
+  <entry id="33" name="hsa:3417 hsa:3418 hsa:3419" type="gene"><graphics name="IDH1, IDH2, IDH3A" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="600" y="240" width="46" height="17"/></entry>
+  <entry id="34" name="hsa:1737 hsa:1738 hsa:8549" type="gene"><graphics name="DLST, DLD, OGDH" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="610" y="360" width="46" height="17"/></entry>
+  <entry id="35" name="hsa:8801 hsa:8802" type="gene"><graphics name="SUCLA2, SUCLG1" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="530" y="460" width="46" height="17"/></entry>
+  <entry id="36" name="hsa:6391 hsa:6392 hsa:6395" type="gene"><graphics name="SDHA, SDHB, SDHC" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="415" y="500" width="46" height="17"/></entry>
+  <entry id="37" name="hsa:2271" type="gene"><graphics name="FH" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="285" y="480" width="46" height="17"/></entry>
+  <entry id="38" name="hsa:4190" type="gene"><graphics name="MDH2" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="220" y="360" width="46" height="17"/></entry>
+  <entry id="39" name="hsa:5160 hsa:5161 hsa:5162" type="gene"><graphics name="PDHA1, PDHB, DLAT" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="105" y="300" width="46" height="17"/></entry>
+
+  <!-- Reactions -->
+  <!-- Pyruvate dehydrogenase: Pyruvate + CoA + NAD+ → Acetyl-CoA + CO2 + NADH -->
+  <reaction id="51" name="rn:R00209" type="irreversible">
+    <substrate name="cpd:C00022"/>
+    <substrate name="cpd:C00010"/>
+    <substrate name="cpd:C00003"/>
+    <product name="cpd:C00024"/>
+    <product name="cpd:C00011"/>
+    <product name="cpd:C00004"/>
+  </reaction>
+
+  <!-- Citrate synthase: Acetyl-CoA + Oxaloacetate + H2O → Citrate + CoA -->
+  <reaction id="52" name="rn:R00351" type="irreversible">
+    <substrate name="cpd:C00024"/>
+    <substrate name="cpd:C00036"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00158"/>
+    <product name="cpd:C00010"/>
+  </reaction>
+
+  <!-- Aconitase: Citrate ↔ cis-Aconitate + H2O -->
+  <reaction id="53" name="rn:R01325" type="reversible">
+    <substrate name="cpd:C00158"/>
+    <product name="cpd:C00417"/>
+    <product name="cpd:C00001"/>
+  </reaction>
+
+  <!-- Aconitase: cis-Aconitate + H2O ↔ Isocitrate -->
+  <reaction id="54" name="rn:R01900" type="reversible">
+    <substrate name="cpd:C00417"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00311"/>
+  </reaction>
+
+  <!-- Isocitrate dehydrogenase: Isocitrate + NAD+ → 2-Oxoglutarate + CO2 + NADH -->
+  <reaction id="55" name="rn:R00709" type="irreversible">
+    <substrate name="cpd:C00311"/>
+    <substrate name="cpd:C00003"/>
+    <product name="cpd:C00026"/>
+    <product name="cpd:C00011"/>
+    <product name="cpd:C00004"/>
+  </reaction>
+
+  <!-- 2-Oxoglutarate dehydrogenase: 2-OG + CoA + NAD+ → Succinyl-CoA + CO2 + NADH -->
+  <reaction id="56" name="rn:R08549" type="irreversible">
+    <substrate name="cpd:C00026"/>
+    <substrate name="cpd:C00010"/>
+    <substrate name="cpd:C00003"/>
+    <product name="cpd:C00091"/>
+    <product name="cpd:C00011"/>
+    <product name="cpd:C00004"/>
+  </reaction>
+
+  <!-- Succinyl-CoA synthetase: Succinyl-CoA + ADP + Pi → Succinate + CoA + ATP -->
+  <reaction id="57" name="rn:R00405" type="reversible">
+    <substrate name="cpd:C00091"/>
+    <substrate name="cpd:C00008"/>
+    <substrate name="cpd:C00009"/>
+    <product name="cpd:C00042"/>
+    <product name="cpd:C00010"/>
+    <product name="cpd:C00002"/>
+  </reaction>
+
+  <!-- Succinate dehydrogenase: Succinate + FAD → Fumarate + FADH2 -->
+  <reaction id="58" name="rn:R02164" type="reversible">
+    <substrate name="cpd:C00042"/>
+    <substrate name="cpd:C00016"/>
+    <product name="cpd:C00122"/>
+    <product name="cpd:C01352"/>
+  </reaction>
+
+  <!-- Fumarase: Fumarate + H2O → L-Malate -->
+  <reaction id="59" name="rn:R01082" type="reversible">
+    <substrate name="cpd:C00122"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00149"/>
+  </reaction>
+
+  <!-- Malate dehydrogenase: L-Malate + NAD+ → Oxaloacetate + NADH -->
+  <reaction id="60" name="rn:R00342" type="reversible">
+    <substrate name="cpd:C00149"/>
+    <substrate name="cpd:C00003"/>
+    <product name="cpd:C00036"/>
+    <product name="cpd:C00004"/>
+  </reaction>
+
+</pathway>

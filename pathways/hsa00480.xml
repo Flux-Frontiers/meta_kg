@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "https://www.genome.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- KEGG PATHWAY: hsa00480 Glutathione metabolism -->
+<pathway name="path:hsa00480" org="hsa" number="00480"
+         title="Glutathione metabolism"
+         image="https://www.genome.jp/kegg/pathway/hsa/hsa00480.png"
+         link="https://www.genome.jp/kegg-bin/show_pathway?hsa00480">
+
+  <entry id="1"  name="cpd:C00025" type="compound"><graphics name="L-Glutamate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="100" y="200" width="8" height="8"/></entry>
+  <entry id="2"  name="cpd:C00037" type="compound"><graphics name="Glycine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="300" y="320" width="8" height="8"/></entry>
+  <entry id="3"  name="cpd:C00097" type="compound"><graphics name="L-Cysteine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="100" y="320" width="8" height="8"/></entry>
+  <entry id="4"  name="cpd:C00669" type="compound"><graphics name="gamma-L-Glutamyl-L-cysteine" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="220" y="260" width="8" height="8"/></entry>
+  <entry id="5"  name="cpd:C00051" type="compound"><graphics name="Glutathione (GSH)" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="400" y="260" width="8" height="8"/></entry>
+  <entry id="6"  name="cpd:C00127" type="compound"><graphics name="Glutathione disulfide (GSSG)" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="550" y="260" width="8" height="8"/></entry>
+  <entry id="7"  name="cpd:C00002" type="compound"><graphics name="ATP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="130" y="240" width="8" height="8"/></entry>
+  <entry id="8"  name="cpd:C00008" type="compound"><graphics name="ADP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="145" y="255" width="8" height="8"/></entry>
+  <entry id="9"  name="cpd:C00009" type="compound"><graphics name="Orthophosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="145" y="270" width="8" height="8"/></entry>
+  <entry id="10" name="cpd:C00005" type="compound"><graphics name="NADPH" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="620" y="240" width="8" height="8"/></entry>
+  <entry id="11" name="cpd:C00006" type="compound"><graphics name="NADP+" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="620" y="260" width="8" height="8"/></entry>
+  <entry id="12" name="cpd:C00001" type="compound"><graphics name="H2O" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="490" y="340" width="8" height="8"/></entry>
+  <entry id="13" name="cpd:C00014" type="compound"><graphics name="Ammonia" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="160" y="380" width="8" height="8"/></entry>
+  <entry id="14" name="cpd:C05764" type="compound"><graphics name="5-Oxoproline" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="100" y="400" width="8" height="8"/></entry>
+  <entry id="15" name="cpd:C00131" type="compound"><graphics name="dATP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="300" y="200" width="8" height="8"/></entry>
+
+  <!-- Enzymes -->
+  <entry id="31" name="hsa:2729" type="gene"><graphics name="GCLC" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="160" y="220" width="46" height="17"/></entry>
+  <entry id="32" name="hsa:2928" type="gene"><graphics name="GSS" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="330" y="280" width="46" height="17"/></entry>
+  <entry id="33" name="hsa:2936" type="gene"><graphics name="GSR" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="585" y="260" width="46" height="17"/></entry>
+  <entry id="34" name="hsa:2876 hsa:2878" type="gene"><graphics name="GPX1, GPX4" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="475" y="260" width="46" height="17"/></entry>
+  <entry id="35" name="hsa:2937" type="gene"><graphics name="GST (various)" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="475" y="340" width="46" height="17"/></entry>
+  <entry id="36" name="hsa:2729" type="gene"><graphics name="OPLAH" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="100" y="440" width="46" height="17"/></entry>
+
+  <!-- Reactions -->
+  <!-- L-Glu + L-Cys + ATP → gamma-Glu-Cys + ADP + Pi (GCL) -->
+  <reaction id="51" name="rn:R00899" type="irreversible">
+    <substrate name="cpd:C00025"/>
+    <substrate name="cpd:C00097"/>
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00669"/>
+    <product name="cpd:C00008"/>
+    <product name="cpd:C00009"/>
+  </reaction>
+
+  <!-- gamma-Glu-Cys + Glycine + ATP → GSH + ADP + Pi (GS) -->
+  <reaction id="52" name="rn:R00894" type="irreversible">
+    <substrate name="cpd:C00669"/>
+    <substrate name="cpd:C00037"/>
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00051"/>
+    <product name="cpd:C00008"/>
+    <product name="cpd:C00009"/>
+  </reaction>
+
+  <!-- 2 GSH + H2O2 → GSSG + 2 H2O (GPX) -->
+  <reaction id="53" name="rn:R00274" type="irreversible">
+    <substrate name="cpd:C00051"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00127"/>
+  </reaction>
+
+  <!-- GSSG + NADPH + H+ → 2 GSH + NADP+ (GR) -->
+  <reaction id="54" name="rn:R00195" type="irreversible">
+    <substrate name="cpd:C00127"/>
+    <substrate name="cpd:C00005"/>
+    <product name="cpd:C00051"/>
+    <product name="cpd:C00006"/>
+  </reaction>
+
+  <!-- GSH conjugation with electrophile (GST) -->
+  <reaction id="55" name="rn:R02740" type="irreversible">
+    <substrate name="cpd:C00051"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00097"/>
+    <product name="cpd:C00025"/>
+  </reaction>
+
+  <!-- L-Glu → 5-Oxoproline + NH3 (spontaneous/GGT) -->
+  <reaction id="56" name="rn:R01147" type="irreversible">
+    <substrate name="cpd:C00025"/>
+    <product name="cpd:C05764"/>
+    <product name="cpd:C00014"/>
+  </reaction>
+
+  <!-- 5-Oxoproline + ATP + H2O → L-Glu + ADP + Pi (5-Oxoprolinase) -->
+  <reaction id="57" name="rn:R00578" type="irreversible">
+    <substrate name="cpd:C05764"/>
+    <substrate name="cpd:C00002"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C00025"/>
+    <product name="cpd:C00008"/>
+    <product name="cpd:C00009"/>
+  </reaction>
+
+</pathway>

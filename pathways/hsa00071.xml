@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "https://www.genome.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- KEGG PATHWAY: hsa00071 Fatty acid degradation -->
+<pathway name="path:hsa00071" org="hsa" number="00071"
+         title="Fatty acid degradation"
+         image="https://www.genome.jp/kegg/pathway/hsa/hsa00071.png"
+         link="https://www.genome.jp/kegg-bin/show_pathway?hsa00071">
+
+  <!-- Compounds: beta-oxidation cycle -->
+  <entry id="1"  name="cpd:C00010" type="compound"><graphics name="CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="100" y="100" width="8" height="8"/></entry>
+  <entry id="2"  name="cpd:C00002" type="compound"><graphics name="ATP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="100" y="140" width="8" height="8"/></entry>
+  <entry id="3"  name="cpd:C00020" type="compound"><graphics name="AMP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="100" y="160" width="8" height="8"/></entry>
+  <entry id="4"  name="cpd:C00013" type="compound"><graphics name="Diphosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="100" y="180" width="8" height="8"/></entry>
+  <!-- Generic acyl-CoA (varies by chain length) -->
+  <entry id="5"  name="cpd:C00040" type="compound"><graphics name="Acyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="260" y="100" width="8" height="8"/></entry>
+  <entry id="6"  name="cpd:C00016" type="compound"><graphics name="FAD" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="350" y="80" width="8" height="8"/></entry>
+  <entry id="7"  name="cpd:C01352" type="compound"><graphics name="FADH2" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="370" y="95" width="8" height="8"/></entry>
+  <!-- trans-2-Enoyl-CoA -->
+  <entry id="8"  name="cpd:C00877" type="compound"><graphics name="trans-2-Enoyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="450" y="100" width="8" height="8"/></entry>
+  <entry id="9"  name="cpd:C00001" type="compound"><graphics name="H2O" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="530" y="80" width="8" height="8"/></entry>
+  <!-- L-3-Hydroxyacyl-CoA -->
+  <entry id="10" name="cpd:C01944" type="compound"><graphics name="L-3-Hydroxyacyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="620" y="100" width="8" height="8"/></entry>
+  <entry id="11" name="cpd:C00003" type="compound"><graphics name="NAD+" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="700" y="80" width="8" height="8"/></entry>
+  <entry id="12" name="cpd:C00004" type="compound"><graphics name="NADH" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="720" y="95" width="8" height="8"/></entry>
+  <!-- 3-Ketoacyl-CoA -->
+  <entry id="13" name="cpd:C00332" type="compound"><graphics name="Acetoacetyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="800" y="100" width="8" height="8"/></entry>
+  <!-- Shortened acyl-CoA (n-2) -->
+  <entry id="14" name="cpd:C00024" type="compound"><graphics name="Acetyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="800" y="200" width="8" height="8"/></entry>
+  <!-- Fatty acid (free) -->
+  <entry id="15" name="cpd:C00162" type="compound"><graphics name="Fatty acid" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="130" y="60" width="8" height="8"/></entry>
+  <!-- Specific fatty acids -->
+  <entry id="16" name="cpd:C00116" type="compound"><graphics name="Glycerol" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="130" y="220" width="8" height="8"/></entry>
+  <entry id="17" name="cpd:C00033" type="compound"><graphics name="Acetate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="800" y="280" width="8" height="8"/></entry>
+  <!-- Propanoyl-CoA (from odd-chain FA) -->
+  <entry id="18" name="cpd:C00100" type="compound"><graphics name="Propanoyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="680" y="200" width="8" height="8"/></entry>
+  <entry id="19" name="cpd:C00683" type="compound"><graphics name="(S)-Methylmalonyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="560" y="200" width="8" height="8"/></entry>
+  <entry id="20" name="cpd:C01213" type="compound"><graphics name="(R)-Methylmalonyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="440" y="200" width="8" height="8"/></entry>
+  <entry id="21" name="cpd:C00091" type="compound"><graphics name="Succinyl-CoA" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="320" y="200" width="8" height="8"/></entry>
+  <entry id="22" name="cpd:C00011" type="compound"><graphics name="CO2" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="500" y="220" width="8" height="8"/></entry>
+
+  <!-- Enzymes -->
+  <entry id="31" name="hsa:208 hsa:209" type="gene"><graphics name="ACSL1, ACSL4" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="190" y="80" width="60" height="17"/></entry>
+  <entry id="32" name="hsa:1632 hsa:1629" type="gene"><graphics name="ACADM, ACADL" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="350" y="100" width="60" height="17"/></entry>
+  <entry id="33" name="hsa:3030 hsa:3033" type="gene"><graphics name="HADH, HADHB" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="530" y="100" width="60" height="17"/></entry>
+  <entry id="34" name="hsa:3033" type="gene"><graphics name="HADHB" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="710" y="100" width="60" height="17"/></entry>
+  <entry id="35" name="hsa:1579" type="gene"><graphics name="CYP4A11" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="190" y="140" width="60" height="17"/></entry>
+  <entry id="36" name="hsa:4967" type="gene"><graphics name="OGDH" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="620" y="200" width="46" height="17"/></entry>
+  <entry id="37" name="hsa:5019" type="gene"><graphics name="MUT" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="380" y="200" width="46" height="17"/></entry>
+
+  <!-- Reactions -->
+  <!-- Fatty acid + CoA + ATP → Acyl-CoA + AMP + PPi (Fatty acyl-CoA synthetase) -->
+  <reaction id="51" name="rn:R01280" type="irreversible">
+    <substrate name="cpd:C00162"/>
+    <substrate name="cpd:C00010"/>
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00040"/>
+    <product name="cpd:C00020"/>
+    <product name="cpd:C00013"/>
+  </reaction>
+
+  <!-- Acyl-CoA + FAD → trans-2-Enoyl-CoA + FADH2 (ACAD) -->
+  <reaction id="52" name="rn:R04224" type="irreversible">
+    <substrate name="cpd:C00040"/>
+    <substrate name="cpd:C00016"/>
+    <product name="cpd:C00877"/>
+    <product name="cpd:C01352"/>
+  </reaction>
+
+  <!-- trans-2-Enoyl-CoA + H2O → L-3-Hydroxyacyl-CoA (enoyl-CoA hydratase) -->
+  <reaction id="53" name="rn:R04739" type="irreversible">
+    <substrate name="cpd:C00877"/>
+    <substrate name="cpd:C00001"/>
+    <product name="cpd:C01944"/>
+  </reaction>
+
+  <!-- L-3-Hydroxyacyl-CoA + NAD+ → 3-Ketoacyl-CoA + NADH (HADH) -->
+  <reaction id="54" name="rn:R04737" type="irreversible">
+    <substrate name="cpd:C01944"/>
+    <substrate name="cpd:C00003"/>
+    <product name="cpd:C00332"/>
+    <product name="cpd:C00004"/>
+  </reaction>
+
+  <!-- 3-Ketoacyl-CoA + CoA → Acyl-CoA(n-2) + Acetyl-CoA (thiolase) -->
+  <reaction id="55" name="rn:R00238" type="irreversible">
+    <substrate name="cpd:C00332"/>
+    <substrate name="cpd:C00010"/>
+    <product name="cpd:C00040"/>
+    <product name="cpd:C00024"/>
+  </reaction>
+
+  <!-- Propanoyl-CoA + CO2 + ATP → (S)-Methylmalonyl-CoA + ADP + Pi (propionyl-CoA carboxylase) -->
+  <reaction id="56" name="rn:R01859" type="irreversible">
+    <substrate name="cpd:C00100"/>
+    <substrate name="cpd:C00011"/>
+    <substrate name="cpd:C00002"/>
+    <product name="cpd:C00683"/>
+    <product name="cpd:C00008"/>
+    <product name="cpd:C00009"/>
+  </reaction>
+
+  <!-- (S)-Methylmalonyl-CoA ↔ (R)-Methylmalonyl-CoA (methylmalonyl-CoA epimerase) -->
+  <reaction id="57" name="rn:R02765" type="reversible">
+    <substrate name="cpd:C00683"/>
+    <product name="cpd:C01213"/>
+  </reaction>
+
+  <!-- (R)-Methylmalonyl-CoA → Succinyl-CoA (methylmalonyl-CoA mutase) -->
+  <reaction id="58" name="rn:R01292" type="irreversible">
+    <substrate name="cpd:C01213"/>
+    <product name="cpd:C00091"/>
+  </reaction>
+
+</pathway>

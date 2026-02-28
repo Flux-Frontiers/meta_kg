@@ -3,8 +3,9 @@ cli.py — Command-line entry points for MetaKG.
 
 Commands
 --------
-metakg-build   Build the knowledge graph from a directory of pathway files.
-metakg-mcp     Start the MCP server.
+metakg-build     Build the knowledge graph from a directory of pathway files.
+metakg-mcp       Start the MCP server.
+metakg-analyze   Run the thorough pathway analysis report.
 """
 
 from __future__ import annotations
@@ -174,6 +175,74 @@ def viz3d_main() -> None:
     from metakg.metakg_viz3d import main as viz3d_main_func
 
     viz3d_main_func()
+
+
+# ---------------------------------------------------------------------------
+# metakg-analyze
+# ---------------------------------------------------------------------------
+
+
+def _analyze_args(argv: list | None = None) -> argparse.Namespace:
+    p = argparse.ArgumentParser(
+        prog="metakg-analyze",
+        description=(
+            "Thorough metabolic pathway analysis for a MetaKG database. "
+            "Identifies hub metabolites, complex reactions, cross-pathway connections, "
+            "pathway coupling, dead-end metabolites, and top enzymes."
+        ),
+    )
+    p.add_argument(
+        "--db", default=".metakg/meta.sqlite",
+        help="Path to MetaKG SQLite database (default: .metakg/meta.sqlite)",
+    )
+    p.add_argument(
+        "--output", "-o", default=None,
+        metavar="FILE",
+        help="Write the Markdown report to FILE (default: print to stdout)",
+    )
+    p.add_argument(
+        "--top", type=int, default=20,
+        metavar="N",
+        help="Number of items in each ranked list (default: 20)",
+    )
+    p.add_argument(
+        "--plain", action="store_true",
+        help="Plain-text output instead of Markdown",
+    )
+    return p.parse_args(argv)
+
+
+def analyze_main(argv: list | None = None) -> None:
+    """
+    CLI entry point: ``metakg-analyze``.
+
+    :param argv: Argument list; defaults to ``sys.argv[1:]``.
+    """
+    args = _analyze_args(argv)
+    db_path = Path(args.db)
+
+    if not db_path.exists():
+        print(
+            f"ERROR: database not found: {db_path}\n"
+            "Run 'metakg-build' first.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    from metakg.analyze import PathwayAnalyzer, render_report
+
+    print(f"Analysing {db_path} ...", file=sys.stderr)
+    with PathwayAnalyzer(db_path, top_n=args.top) as analyzer:
+        report = analyzer.run()
+
+    text = render_report(report, markdown=not args.plain)
+
+    if args.output:
+        out_path = Path(args.output)
+        out_path.write_text(text, encoding="utf-8")
+        print(f"Report written to {out_path}", file=sys.stderr)
+    else:
+        print(text)
 
 
 # ---------------------------------------------------------------------------

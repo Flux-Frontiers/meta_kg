@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<!DOCTYPE pathway SYSTEM "https://www.genome.jp/kegg/xml/KGML_v0.7.2_.dtd">
+<!-- KEGG PATHWAY: hsa00190 Oxidative phosphorylation -->
+<pathway name="path:hsa00190" org="hsa" number="00190"
+         title="Oxidative phosphorylation"
+         image="https://www.genome.jp/kegg/pathway/hsa/hsa00190.png"
+         link="https://www.genome.jp/kegg-bin/show_pathway?hsa00190">
+
+  <!-- Compounds -->
+  <entry id="1"  name="cpd:C00004" type="compound"><graphics name="NADH" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="100" y="200" width="8" height="8"/></entry>
+  <entry id="2"  name="cpd:C00003" type="compound"><graphics name="NAD+" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="200" y="200" width="8" height="8"/></entry>
+  <entry id="3"  name="cpd:C01352" type="compound"><graphics name="FADH2" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="100" y="280" width="8" height="8"/></entry>
+  <entry id="4"  name="cpd:C00016" type="compound"><graphics name="FAD" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="200" y="280" width="8" height="8"/></entry>
+  <entry id="5"  name="cpd:C00007" type="compound"><graphics name="Oxygen" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="600" y="200" width="8" height="8"/></entry>
+  <entry id="6"  name="cpd:C00001" type="compound"><graphics name="H2O" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="700" y="200" width="8" height="8"/></entry>
+  <entry id="7"  name="cpd:C00008" type="compound"><graphics name="ADP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="400" y="360" width="8" height="8"/></entry>
+  <entry id="8"  name="cpd:C00009" type="compound"><graphics name="Orthophosphate" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="420" y="375" width="8" height="8"/></entry>
+  <entry id="9"  name="cpd:C00002" type="compound"><graphics name="ATP" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="500" y="360" width="8" height="8"/></entry>
+  <entry id="10" name="cpd:C00080" type="compound"><graphics name="H+" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="300" y="160" width="8" height="8"/></entry>
+  <entry id="11" name="cpd:C06337" type="compound"><graphics name="Ubiquinol" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="300" y="240" width="8" height="8"/></entry>
+  <entry id="12" name="cpd:C00399" type="compound"><graphics name="Ubiquinone" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="400" y="240" width="8" height="8"/></entry>
+  <entry id="13" name="cpd:C05684" type="compound"><graphics name="Cytochrome c (reduced)" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="500" y="200" width="8" height="8"/></entry>
+  <entry id="14" name="cpd:C00125" type="compound"><graphics name="Ferricytochrome c" fgcolor="#000000" bgcolor="#FFFFFF" type="circle" x="550" y="160" width="8" height="8"/></entry>
+
+  <!-- Enzyme complexes -->
+  <entry id="31" name="hsa:4535 hsa:4536 hsa:4537 hsa:4538" type="gene"><graphics name="NADH dehydrogenase (Complex I)" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="150" y="200" width="80" height="17"/></entry>
+  <entry id="32" name="hsa:6390 hsa:6391 hsa:6392 hsa:6395" type="gene"><graphics name="Succinate dehydrogenase (Complex II)" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="150" y="280" width="80" height="17"/></entry>
+  <entry id="33" name="hsa:1537 hsa:1538 hsa:1539" type="gene"><graphics name="Cytochrome bc1 (Complex III)" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="350" y="200" width="80" height="17"/></entry>
+  <entry id="34" name="hsa:1345 hsa:1346 hsa:1347 hsa:1350" type="gene"><graphics name="Cytochrome c oxidase (Complex IV)" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="525" y="200" width="80" height="17"/></entry>
+  <entry id="35" name="hsa:498 hsa:506 hsa:513 hsa:514 hsa:516" type="gene"><graphics name="ATP synthase (Complex V)" fgcolor="#000000" bgcolor="#BFFFBF" type="rectangle" x="450" y="360" width="80" height="17"/></entry>
+
+  <!-- Reactions -->
+  <!-- Complex I: NADH + ubiquinone → NAD+ + ubiquinol -->
+  <reaction id="51" name="rn:R02161" type="irreversible">
+    <substrate name="cpd:C00004"/>
+    <substrate name="cpd:C00399"/>
+    <product name="cpd:C00003"/>
+    <product name="cpd:C06337"/>
+  </reaction>
+
+  <!-- Complex II: FADH2 + ubiquinone → FAD + ubiquinol -->
+  <reaction id="52" name="rn:R02164" type="irreversible">
+    <substrate name="cpd:C01352"/>
+    <substrate name="cpd:C00399"/>
+    <product name="cpd:C00016"/>
+    <product name="cpd:C06337"/>
+  </reaction>
+
+  <!-- Complex III: Ubiquinol + 2 ferricytochrome c → ubiquinone + 2 ferrocytochrome c -->
+  <reaction id="53" name="rn:R02163" type="irreversible">
+    <substrate name="cpd:C06337"/>
+    <substrate name="cpd:C00125"/>
+    <product name="cpd:C00399"/>
+    <product name="cpd:C05684"/>
+  </reaction>
+
+  <!-- Complex IV: Ferrocytochrome c + O2 → ferricytochrome c + H2O -->
+  <reaction id="54" name="rn:R00081" type="irreversible">
+    <substrate name="cpd:C05684"/>
+    <substrate name="cpd:C00007"/>
+    <product name="cpd:C00125"/>
+    <product name="cpd:C00001"/>
+  </reaction>
+
+  <!-- Complex V (ATP synthase): ADP + Pi → ATP + H2O -->
+  <reaction id="55" name="rn:R00086" type="reversible">
+    <substrate name="cpd:C00008"/>
+    <substrate name="cpd:C00009"/>
+    <product name="cpd:C00002"/>
+    <product name="cpd:C00001"/>
+  </reaction>
+
+  <!-- NADH dehydrogenase alternative: NADH + H+ → NAD+ (complex I partial) -->
+  <reaction id="56" name="rn:R03958" type="irreversible">
+    <substrate name="cpd:C00004"/>
+    <substrate name="cpd:C00080"/>
+    <substrate name="cpd:C00399"/>
+    <product name="cpd:C00003"/>
+    <product name="cpd:C06337"/>
+  </reaction>
+
+</pathway>
