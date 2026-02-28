@@ -1,6 +1,12 @@
 # MetaKG generated database and index (build artifacts)
 .metakg/
 
+# Claude Code project configuration (lives in .claude/, not the repo root)
+agents/
+commands/
+skills/
+settings.local.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
