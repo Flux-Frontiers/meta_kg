@@ -102,7 +102,9 @@ efficient structural graph traversal and LanceDB for semantic similarity search
 via dense vector embeddings. The core innovation is that \textsc{MetaKG}
 combines four orthogonal query modalities---structural neighbourhood traversal,
 breadth-first shortest-path search, natural-language semantic similarity, and
-full stoichiometric detail assembly---all through a unified Python API, CLI,
+full stoichiometric detail assembly---together with a built-in metabolic
+simulation engine supporting Flux Balance Analysis, kinetic ODE integration,
+and what-if perturbation analysis, all through a unified Python API, CLI,
 and Model~Context~Protocol server interface. The system requires no external
 services or database servers; queries run entirely on local machine after
 building a snapshot graph from input files. A stable URI-style identifier
@@ -236,11 +238,12 @@ The remainder of this paper is organised as follows. Section~\ref{sec:design}
 describes the data model and system architecture. Section~\ref{sec:parsers}
 covers the format-specific parsers. Section~\ref{sec:storage} details the
 storage and indexing layers. Section~\ref{sec:query} describes the query API.
-Section~\ref{sec:viz} covers the visualisation components.
-Section~\ref{sec:mcp} describes the MCP server. Section~\ref{sec:usage}
-walks through a complete worked example. Section~\ref{sec:discussion}
-discusses limitations and future directions, and Section~\ref{sec:conclusion}
-concludes.
+Section~\ref{sec:simulation} presents the metabolic simulation engine (FBA,
+ODE, and what-if analysis). Section~\ref{sec:viz} covers the visualisation
+components. Section~\ref{sec:mcp} describes the MCP server.
+Section~\ref{sec:usage} walks through a complete worked example.
+Section~\ref{sec:discussion} discusses limitations and future directions,
+and Section~\ref{sec:conclusion} concludes.
 
 % ---------------------------------------------------------------------------
 \section{Data Model and Architecture}
@@ -554,6 +557,166 @@ case-insensitive name search in \texttt{meta\_nodes}. This allows the same
 user-facing functions to accept identifiers from any source database.
 
 % ---------------------------------------------------------------------------
+\section{Metabolic Simulation Engine}
+\label{sec:simulation}
+% ---------------------------------------------------------------------------
+
+\textsc{MetaKG} includes a built-in simulation engine (\texttt{metakg.simulate})
+that transforms the knowledge graph from a static query substrate into an
+executable metabolic model. Three complementary modes are available, all
+backed by the stoichiometric data stored in \texttt{MetaStore}:
+
+\begin{description}[leftmargin=*,itemsep=3pt]
+  \item[Flux Balance Analysis (FBA)] A steady-state linear programme that
+    returns an optimal flux distribution across all reactions in a pathway
+    scope. Requires only the structural graph (stoichiometry and reaction
+    reversibility flags); no kinetic parameters are needed.
+  \item[Kinetic ODE simulation] A time-course integration using
+    Michaelis-Menten rate equations. Uses curated kinetic parameters
+    ($K_m$, $V_{\max}$) stored in the \texttt{kinetic\_parameters} table,
+    falling back to normalised defaults when parameters are absent.
+  \item[What-if perturbation analysis] Runs a baseline simulation and a
+    perturbed scenario side-by-side, returning the difference in fluxes
+    (FBA mode) or final compound concentrations (ODE mode). Supports enzyme
+    knockouts, activity scaling factors, and substrate concentration
+    overrides.
+\end{description}
+
+\subsection{Flux Balance Analysis}
+
+FBA frames metabolic steady-state as a linear
+programme~\citep{orth2010fba}:
+
+\begin{equation}
+  \min_{\mathbf{v}}\; \mathbf{c}^{\top}\mathbf{v}
+  \quad\text{s.t.}\quad S\mathbf{v} = \mathbf{0},\quad
+  \mathbf{lb} \le \mathbf{v} \le \mathbf{ub}
+  \label{eq:fba}
+\end{equation}
+
+\noindent where $S \in \mathbb{R}^{m \times n}$ is the stoichiometric matrix
+($m$ compounds, $n$ reactions), $\mathbf{v}$ is the flux vector, and
+$\mathbf{c}$ encodes the objective. \textsc{MetaKG} constructs $S$ directly
+from the \texttt{SUBSTRATE\_OF} and \texttt{PRODUCT\_OF} edges stored in
+SQLite, applying a sign convention of $-1$ for substrate participation and
+$+1$ for product participation. The linear programme is solved using
+\texttt{scipy.optimize.linprog} with the HiGHS backend~\citep{huangfu2018highs}.
+
+Irreversible reactions are assigned flux bounds $(0,\,1000)$; reversible
+reactions receive $(-1000,\,1000)$; both are overridable via
+\texttt{SimulationConfig.flux\_bounds}. When no objective reaction is
+specified, the default objective maximises the sum of irreversible forward
+fluxes---a biomass proxy suitable for exploratory analysis.
+
+The solver returns an \texttt{FBAResult} containing the optimal objective
+value, a per-reaction flux dictionary, and shadow prices (dual values) for
+each metabolite, quantifying the opportunity cost of relaxing each
+steady-state mass-balance constraint.
+
+\subsection{Kinetic ODE Simulation}
+
+The ODE engine integrates compound concentrations over time using
+Michaelis-Menten rate laws~\citep{michaelis1913kinetics}:
+
+\begin{equation}
+  \frac{d[\mathrm{C}_i]}{dt}
+  = \sum_{j=1}^{n} s_{ij}\, v_j(\mathbf{y},t)
+  \label{eq:ode}
+\end{equation}
+
+\noindent where $s_{ij}$ is the stoichiometric coefficient of compound $i$
+in reaction $j$, and $v_j$ is the Michaelis-Menten rate:
+
+\begin{equation}
+  v_j = V_{\max,j}\prod_{i \in \mathrm{sub}(j)}
+        \frac{[\mathrm{C}_i]}{K_{m,ij} + [\mathrm{C}_i]}
+  \label{eq:mm}
+\end{equation}
+
+Reversible reactions additionally include a Haldane-relationship back-flux
+term to respect thermodynamic constraints via the equilibrium constant
+$K_{\mathrm{eq}}$.
+
+Kinetic parameters ($K_m$, $V_{\max}$, $K_{\mathrm{eq}}$,
+$\Delta G^{\circ\prime}$) are drawn from the \texttt{kinetic\_parameters}
+table, which is pre-seeded with curated literature values for human central
+carbon metabolism reactions from the BRENDA enzyme
+database~\citep{schomburg2004brenda}, Mulquiney and
+Kuchel~\citep{mulquiney1999glycolysis}, and
+Fell~\citep{fell1997metabolism}---covering glycolysis, the TCA cycle, the
+pentose phosphate pathway, and fatty-acid degradation. When parameters are
+absent for a reaction, the engine falls back to normalised defaults
+($V_{\max} = 1.0$~mM/s, $K_m = 0.5$~mM). Integration uses
+\texttt{scipy.integrate.solve\_ivp} with the RK45 adaptive-step method.
+
+The result is an \texttt{ODEResult} containing a list of sampled time points
+and a per-compound concentration time-course dictionary.
+
+\subsection{What-If Perturbation Analysis}
+
+The \texttt{MetabolicSimulator.run\_whatif} method runs a baseline
+simulation followed by a perturbed scenario described by a
+\texttt{WhatIfScenario}:
+
+\begin{description}[leftmargin=*,itemsep=2pt]
+  \item[Enzyme knockouts] Set all reactions catalysed by an enzyme to zero
+    flux (FBA: upper bound $\to 0$; ODE: $V_{\max} \to 0$).
+  \item[Activity scaling] Multiply flux bounds or $V_{\max}$ by a
+    real-valued factor (e.g.\ $0.5$ for 50\,\% activity, $2.0$ for
+    over-expression).
+  \item[Substrate overrides] Replace initial compound concentrations for
+    ODE runs, modelling substrate pulse or depletion experiments.
+\end{description}
+
+The returned \texttt{WhatIfResult} carries both results as well as delta
+maps: $\Delta v_j = v_j^{\text{pert}} - v_j^{\text{base}}$ (FBA) or
+$\Delta[\mathrm{C}_i]_{t_{\mathrm{end}}}$ (ODE), enabling rapid
+identification of the reactions and metabolites most sensitive to each
+perturbation.
+
+\subsection{Simulation API}
+
+\begin{lstlisting}[style=python,
+  caption={FBA and what-if analysis on the glycolysis pathway.}]
+from metakg.store import MetaStore
+from metakg.simulate import (
+    MetabolicSimulator, SimulationConfig, WhatIfScenario)
+
+store = MetaStore(".metakg/meta.sqlite")
+sim   = MetabolicSimulator(store)
+
+# --- Flux Balance Analysis ---
+config = SimulationConfig(pathway_id="pwy:kegg:hsa00010")
+fba    = sim.run_fba(config)
+print(f"Status:    {fba.status}")
+print(f"Objective: {fba.objective_value:.4f}")
+
+# --- What-if: knock out hexokinase ---
+scenario = WhatIfScenario(
+    name="HK_knockout",
+    enzyme_knockouts=["enz:kegg:hsa:2538"],
+)
+wi = sim.run_whatif(config, scenario, mode="fba")
+changes = sorted(wi.delta_fluxes.items(),
+                 key=lambda x: abs(x[1]), reverse=True)
+for rxn_id, delta in changes[:5]:
+    print(f"  {rxn_id}: {delta:+.4f}")
+\end{lstlisting}
+
+\begin{lstlisting}[style=python,
+  caption={ODE kinetic simulation with custom initial conditions.}]
+config_ode = SimulationConfig(
+    pathway_id="pwy:kegg:hsa00010",
+    t_end=100.0,
+    t_points=500,
+    initial_concentrations={"cpd:kegg:C00031": 5.0},  # 5 mM glucose
+)
+ode = sim.run_ode(config_ode)
+# ode.t              -> list of 500 time points
+# ode.concentrations -> {compound_id: [conc_0, ..., conc_T]}
+\end{lstlisting}
+
+% ---------------------------------------------------------------------------
 \section{Visualisation}
 \label{sec:viz}
 % ---------------------------------------------------------------------------
@@ -608,7 +771,7 @@ Both layouts export to HTML (for inclusion in web reports) and PNG
 The Model Context Protocol (MCP)~\citep{anthropic2024mcp} is a
 lightweight JSON-RPC standard that allows large-language-model assistants to
 call typed tool functions. \textsc{MetaKG} implements an MCP server that
-exposes the knowledge graph through four tools:
+exposes the knowledge graph and simulation engine through nine tools:
 
 \begin{description}[leftmargin=*,itemsep=2pt]
   \item[\texttt{query\_pathway(name, k)}] Semantic pathway search. Returns
@@ -620,6 +783,19 @@ exposes the knowledge graph through four tools:
     one reaction.
   \item[\texttt{find\_path(a, b, max\_hops)}] Returns the shortest metabolic
     path between two compounds.
+  \item[\texttt{simulate\_fba(pathway\_id, \ldots)}] Runs Flux Balance
+    Analysis on a pathway and returns a formatted flux report.
+  \item[\texttt{simulate\_ode(pathway\_id, \ldots)}] Runs an ODE kinetic
+    simulation and returns compound concentration time-courses.
+  \item[\texttt{simulate\_whatif(pathway\_id, scenario\_json, mode)}]
+    Runs perturbation analysis (enzyme knockouts, activity scaling,
+    substrate overrides) and returns delta flux or concentration maps.
+  \item[\texttt{get\_kinetic\_params(reaction\_id)}] Retrieves stored
+    kinetic parameters ($K_m$, $V_{\max}$, $\Delta G^{\circ\prime}$) for
+    a reaction.
+  \item[\texttt{seed\_kinetics(force)}] Populates the
+    \texttt{kinetic\_parameters} table from the bundled curated literature
+    dataset.
 \end{description}
 
 The server is started with:
@@ -768,6 +944,32 @@ ATP, NAD$^{+}$, coenzyme~A, and pyruvate appear as the top hub metabolites
 by degree, consistent with their known roles as central energy and carbon
 carriers.
 
+\subsection{Simulation and Perturbation Analysis}
+
+The simulation engine works directly from the built knowledge graph.
+Running FBA on glycolysis and then simulating a hexokinase knockout
+requires no additional model files:
+
+\begin{lstlisting}[style=python, caption={Hexokinase knockout via FBA what-if.}]
+from metakg.store import MetaStore
+from metakg.simulate import (
+    MetabolicSimulator, SimulationConfig, WhatIfScenario)
+
+store = MetaStore(".metakg/meta.sqlite")
+sim   = MetabolicSimulator(store)
+
+config   = SimulationConfig(pathway_id="pwy:kegg:hsa00010")
+baseline = sim.run_fba(config)
+print(f"Baseline objective: {baseline.objective_value:.4f}")
+
+wi = sim.run_whatif(config,
+                    WhatIfScenario(name="HK_KO",
+                                   enzyme_knockouts=["enz:kegg:hsa:2538"]),
+                    mode="fba")
+changed = {r: d for r, d in wi.delta_fluxes.items() if abs(d) > 1e-4}
+print(f"{len(changed)} reactions affected by HK knockout")
+\end{lstlisting}
+
 \subsection{Mixed-Format Ingestion}
 
 To illustrate multi-format ingestion, one may combine KGML files with a
@@ -796,10 +998,12 @@ through the xref index.
 \textbf{Dependencies.} The core package requires Python 3.10--3.12,
 \texttt{lancedb$\,\geq\,$0.29}, \texttt{numpy$\,\geq\,$1.24}, and
 \texttt{sentence-transformers$\,\geq\,$2.7}. No network connection is required
-at run time once the embedding model has been downloaded. BioPAX support
-requires the optional \texttt{rdflib} package; the 2D and 3D visualisers
-require optional extras installed via \texttt{poetry install --extras viz}
-or \texttt{--extras viz3d}.
+at run time once the embedding model has been downloaded. The FBA and ODE
+simulation engines additionally require \texttt{scipy$\,\geq\,$1.11}, which
+provides the HiGHS linear-programming solver (\texttt{linprog}) and the RK45
+ODE integrator (\texttt{solve\_ivp}). BioPAX support requires the optional
+\texttt{rdflib} package; the 2D and 3D visualisers require optional extras
+installed via \texttt{poetry install --extras viz} or \texttt{--extras viz3d}.
 
 \textbf{Installation.}
 
@@ -893,18 +1097,25 @@ not be automatically merged. More complete reconciliation would require
 integration with a name normalisation service such as
 MetaNetX~\citep{moretti2021metanetx} or UMLS~\citep{bodenreider2004umls}.
 
-\textbf{Stoichiometric models.} \textsc{MetaKG} stores stoichiometric
-coefficients but does not solve flux-balance or steady-state equations.
-Analysts requiring constraint-based modelling should combine \textsc{MetaKG}
-with COBRApy~\citep{ebrahim2013cobrapy} or a similar package; the SBML parser
-preserves all information needed to reconstruct a COBRApy model.
+\textbf{Simulation scope and fidelity.} The built-in FBA and ODE engines
+are designed for exploratory hypothesis generation, not for publication-grade
+constraint-based reconstruction. The stoichiometric matrix is drawn directly
+from the parsed graph without gap-filling or charge-balance curation; the
+kinetic parameter table covers only the bundled central carbon metabolism
+reactions. Analysts requiring genome-scale modelling or rigorous flux
+variability analysis should combine \textsc{MetaKG} with
+COBRApy~\citep{ebrahim2013cobrapy}; the SBML parser preserves all information
+needed to reconstruct a COBRApy model, and the what-if perturbation interface
+provides a lightweight complement to full sensitivity analyses.
 
 \textbf{Future directions.} Planned extensions include: centralised measures
 (betweenness, closeness, eigenvector centrality) implemented with NetworkX
 for hub ranking; a GraphQL query endpoint; integration with the UniProt and
 ChEBI REST APIs for on-demand annotation; differential pathway analysis
-across two or more organisms; and export to Cytoscape~\citep{shannon2003cytoscape}
-JSON for interoperability with the broader network biology ecosystem.
+across two or more organisms; expanding the curated kinetic parameter
+database to additional pathways and organisms; and export to
+Cytoscape~\citep{shannon2003cytoscape} JSON for interoperability with
+the broader network biology ecosystem.
 
 % ---------------------------------------------------------------------------
 \section{Conclusion}
@@ -925,9 +1136,13 @@ The core contributions are: (1)~a stable, deterministic identifier scheme that
 enables reproducible cross-format merging without external services; (2)~a
 dual-layer storage architecture (SQLite + LanceDB) that avoids the false choice
 between relational precision and semantic expressivity; (3)~four unified query
-modalities accessible to analysts at all levels of programming expertise; and
-(4)~a forward-looking MCP server that makes metabolic knowledge graphs
-first-class data sources for AI assistants.
+modalities accessible to analysts at all levels of programming expertise;
+(4)~a built-in metabolic simulation engine supporting Flux Balance Analysis,
+kinetic ODE integration with curated Michaelis-Menten parameters, and what-if
+perturbation analysis---all driven directly from the knowledge graph without
+additional model files; and (5)~a forward-looking MCP server that makes
+metabolic knowledge graphs and simulation results first-class data sources for
+AI assistants.
 
 The design philosophy---local-first, self-contained, snapshot-based---is
 intentional and represents a clean separation from live database mirrors. This
