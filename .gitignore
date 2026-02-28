@@ -1,6 +1,10 @@
 # MetaKG generated database and index (build artifacts)
 .metakg/
 
+# SQLite WAL-mode temp files (appear alongside any .sqlite file)
+*.sqlite-shm
+*.sqlite-wal
+
 # Claude Code project configuration (lives in .claude/, not the repo root)
 agents/
 commands/
