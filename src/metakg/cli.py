@@ -247,13 +247,14 @@ def analyze_main(argv: list | None = None) -> None:
         )
         sys.exit(1)
 
-    from metakg.analyze import PathwayAnalyzer, render_report
+    from metakg.analyze import PathwayAnalyzer
+    from metakg.thorough_analysis import render_thorough_report
 
     print(f"Analysing {db_path} ...", file=sys.stderr)
     with PathwayAnalyzer(db_path, top_n=args.top) as analyzer:
         report = analyzer.run()
 
-    text = render_report(report, markdown=not args.plain)
+    text = render_thorough_report(report, markdown=not args.plain)
 
     if args.output:
         out_path = Path(args.output)

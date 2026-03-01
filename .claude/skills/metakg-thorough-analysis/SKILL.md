@@ -185,13 +185,14 @@ metakg-analyze --db .metakg/meta.sqlite --plain
 ### Python API
 
 ```python
-from metakg.analyze import PathwayAnalyzer, render_report
+from metakg.analyze import PathwayAnalyzer
+from metakg.thorough_analysis import render_thorough_report
 
 with PathwayAnalyzer(".metakg/meta.sqlite", top_n=20) as analyzer:
     report = analyzer.run()
 
-# Print Markdown
-print(render_report(report))
+# Print polished Markdown report
+print(render_thorough_report(report))
 
 # Access structured data
 for hub in report.hub_metabolites[:5]:

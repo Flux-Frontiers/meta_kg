@@ -9,7 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Polished MetaKG Thorough Analysis Report** — New `src/metakg/thorough_analysis.py` module providing CodeKG-style formatted analysis output
+  - Executive Summary with 5-minute KPI overview
+  - Emoji-enhanced section headers (📊 📈 🔥 ⚡ 🔗 📦 🧬 🧪 ⚠️ ✅ 💡)
+  - Risk level indicators (🟢 LOW 🟡 MED 🔴 HIGH) for metabolite hubs and complex reactions
+  - Network Health Issues section identifying data quality signals
+  - Metabolic Network Strengths section highlighting well-designed patterns
+  - Structured Biological Insights & Recommendations with 3-tier action plan (Immediate, Medium-term, Long-term)
+  - Full Appendix with complete isolated nodes and dead-end metabolite lists
+  - Seamless CLI integration: `metakg-analyze` now generates the polished report
+
+- **Claude Slash Command** — New `.claude/commands/metakg-analyze.md` for quick pathway analysis invocation with `/metakg-analyze`
+
 ### Changed
+
+- **`metakg-analyze` CLI Command** — Updated `src/metakg/cli.py:analyze_main()` to use new `render_thorough_report()` from `thorough_analysis.py`
+  - Same CLI interface and flags (`--db`, `--output`, `--top`, `--plain`)
+  - Richer Markdown output with polished sections and emoji headers
+  - Backward compatible: plain-text mode (`--plain`) still works
+
+- **MetaKG Thorough Analysis Skill** — Updated `.claude/skills/metakg-thorough-analysis/SKILL.md` Python API section to import and use `render_thorough_report()`
 
 ### Removed
 
