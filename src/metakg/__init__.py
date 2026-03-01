@@ -15,13 +15,22 @@ Quick start::
     result = kg.query_pathway("glycolysis")
     rxn = kg.get_reaction("rxn:kegg:R00200")
     path = kg.find_path("glucose", "pyruvate")
+
+Author: Eric G. Suchanek, PhD
+Last Revision: 2026-02-28 20:55:28
+
 """
 
 from metakg.orchestrator import (
-    MetaKG,
     MetabolicBuildStats,
-    MetabolicRuntimeStats,
     MetabolicQueryResult,
+    MetabolicRuntimeStats,
+    MetaKG,
 )
 
-__all__ = ["MetaKG", "MetabolicBuildStats", "MetabolicRuntimeStats", "MetabolicQueryResult"]
+__all__ = [
+    "MetaKG",
+    "MetabolicBuildStats",
+    "MetabolicRuntimeStats",
+    "MetabolicQueryResult",
+]

@@ -10,6 +10,10 @@ Interactive metabolic pathway explorer with:
 
 Run with:
     poetry run metakg-viz
+
+Author: Eric G. Suchanek, PhD
+Last Revision: 2026-02-28 20:56:39
+
 """
 
 from __future__ import annotations
@@ -19,9 +23,12 @@ import os
 from pathlib import Path
 from typing import Any
 
+import matplotlib.pyplot as plt
+import pandas as pd
 import streamlit as st
 from pyvis.network import Network
 
+from metakg.simulate import MetabolicSimulator, SimulationConfig
 from metakg.store import GraphStore
 
 # ---------------------------------------------------------------------------
@@ -29,10 +36,10 @@ from metakg.store import GraphStore
 # ---------------------------------------------------------------------------
 
 _KIND_COLOR: dict[str, str] = {
-    "pathway": "#3498DB",    # blue
-    "reaction": "#E74C3C",   # red
-    "compound": "#27AE60",   # green
-    "enzyme": "#F39C12",     # orange
+    "pathway": "#3498DB",  # blue
+    "reaction": "#E74C3C",  # red
+    "compound": "#27AE60",  # green
+    "enzyme": "#F39C12",  # orange
 }
 
 _KIND_SHAPE: dict[str, str] = {
@@ -43,13 +50,13 @@ _KIND_SHAPE: dict[str, str] = {
 }
 
 _REL_COLOR: dict[str, str] = {
-    "CONTAINS": "#BDC3C7",       # grey
-    "SUBSTRATE_OF": "#3498DB",   # blue
-    "PRODUCT_OF": "#27AE60",     # green
-    "CATALYZES": "#F39C12",      # orange
-    "INHIBITS": "#E74C3C",       # red
-    "ACTIVATES": "#F1C40F",      # yellow
-    "XREF": "#95A5A6",           # dark grey
+    "CONTAINS": "#BDC3C7",  # grey
+    "SUBSTRATE_OF": "#3498DB",  # blue
+    "PRODUCT_OF": "#27AE60",  # green
+    "CATALYZES": "#F39C12",  # orange
+    "INHIBITS": "#E74C3C",  # red
+    "ACTIVATES": "#F1C40F",  # yellow
+    "XREF": "#95A5A6",  # dark grey
 }
 
 # Honour the METAKG_DB env var for Docker deployment
@@ -308,11 +315,10 @@ def _tab_graph(cfg: dict[str, Any]) -> None:
         return
 
     # Filter by kind and relation
-    filtered_nodes = [
-        n for n in all_nodes if n.get("kind") in cfg["node_kinds_filter"]
-    ]
+    filtered_nodes = [n for n in all_nodes if n.get("kind") in cfg["node_kinds_filter"]]
     filtered_edges = [
-        e for e in all_edges
+        e
+        for e in all_edges
         if e.get("rel") in cfg["edge_rels_filter"]
         and e.get("src") in {n["id"] for n in filtered_nodes}
         and e.get("dst") in {n["id"] for n in filtered_nodes}
@@ -323,13 +329,12 @@ def _tab_graph(cfg: dict[str, Any]) -> None:
         filtered_nodes = filtered_nodes[: cfg["max_nodes"]]
         node_ids = {n["id"] for n in filtered_nodes}
         filtered_edges = [
-            e for e in filtered_edges
+            e
+            for e in filtered_edges
             if e.get("src") in node_ids and e.get("dst") in node_ids
         ]
 
-    st.caption(
-        f"Showing {len(filtered_nodes)} nodes and {len(filtered_edges)} edges"
-    )
+    st.caption(f"Showing {len(filtered_nodes)} nodes and {len(filtered_edges)} edges")
 
     _render_legend()
     html = _build_pyvis(filtered_nodes, filtered_edges, physics_on=cfg["physics_on"])
@@ -402,8 +407,8 @@ def _tab_search(cfg: dict[str, Any]) -> None:
                 st.markdown(
                     f'<div class="node-card" style="border-left-color:{color}">'
                     f'<b>{i}. {name}</b> <code style="color:{color}">{kind}</code><br>'
-                    f'<small>{node_id}</small><br>'
-                    f'<small>{description[:200]}</small>'
+                    f"<small>{node_id}</small><br>"
+                    f"<small>{description[:200]}</small>"
                     f"</div>",
                     unsafe_allow_html=True,
                 )
@@ -425,9 +430,7 @@ def _tab_details(cfg: dict[str, Any]) -> None:
         st.error(f"❌ Database not found at `{cfg['db_path']}`")
         return
 
-    node_id = st.text_input(
-        "Enter node ID", placeholder="e.g., cpd:kegg:C00022"
-    )
+    node_id = st.text_input("Enter node ID", placeholder="e.g., cpd:kegg:C00022")
 
     if node_id:
         try:
@@ -443,7 +446,7 @@ def _tab_details(cfg: dict[str, Any]) -> None:
                 f'<div style="border-left:4px solid {color};padding-left:10px;">'
                 f'<code style="color:{color};font-size:1.2em">{kind}</code> '
                 f'<b style="font-size:1.2em">{node.get("name", node_id)}</b><br>'
-                f'<small><code>{node_id}</code></small>'
+                f"<small><code>{node_id}</code></small>"
                 f"</div>",
                 unsafe_allow_html=True,
             )
@@ -487,9 +490,11 @@ def _tab_details(cfg: dict[str, Any]) -> None:
                         if outgoing_edges:
                             st.markdown(f"**Outgoing ({len(outgoing_edges)})**")
                             for e in outgoing_edges:
-                                dst_name = store.get_node(e["dst"]).get(
-                                    "name", e["dst"]
-                                ) if store.get_node(e["dst"]) else e["dst"]
+                                dst_name = (
+                                    store.get_node(e["dst"]).get("name", e["dst"])
+                                    if store.get_node(e["dst"])
+                                    else e["dst"]
+                                )
                                 color = _REL_COLOR.get(e["rel"], "#95A5A6")
                                 st.markdown(
                                     f'<span style="color:{color}">→</span> '
@@ -501,9 +506,11 @@ def _tab_details(cfg: dict[str, Any]) -> None:
                         if incoming_edges:
                             st.markdown(f"**Incoming ({len(incoming_edges)})**")
                             for e in incoming_edges:
-                                src_name = store.get_node(e["src"]).get(
-                                    "name", e["src"]
-                                ) if store.get_node(e["src"]) else e["src"]
+                                src_name = (
+                                    store.get_node(e["src"]).get("name", e["src"])
+                                    if store.get_node(e["src"])
+                                    else e["src"]
+                                )
                                 color = _REL_COLOR.get(e["rel"], "#95A5A6")
                                 st.markdown(
                                     f'<span style="color:{color}">←</span> '
@@ -515,6 +522,167 @@ def _tab_details(cfg: dict[str, Any]) -> None:
 
         except Exception as e:
             st.error(f"Error loading node: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Tab: Simulation
+# ---------------------------------------------------------------------------
+
+
+def _tab_simulation(cfg: dict[str, Any]) -> None:
+    """Render simulation controls and results plotting."""
+    st.subheader("🧪 Simulation")
+
+    store = _get_store()
+    if store is None:
+        st.error(f"❌ Database not found at `{cfg['db_path']}`")
+        return
+
+    try:
+        pathways = [n for n in store.query_nodes() if n.get("kind") == "pathway"]
+    except Exception as e:
+        st.error(f"Could not load pathways: {e}")
+        return
+
+    if not pathways:
+        st.warning("No pathways found in the current database.")
+        return
+
+    pathways = sorted(pathways, key=lambda x: x.get("name", x["id"]))
+    pwy_labels = {f"{p.get('name', p['id'])} ({p['id']})": p["id"] for p in pathways}
+
+    with st.sidebar:
+        st.markdown("---")
+        st.markdown("## Simulation")
+
+        selected_label = st.selectbox("Pathway", options=list(pwy_labels.keys()))
+        pathway_id = pwy_labels[selected_label]
+
+        sim_type = st.selectbox("Simulation type", options=["ODE", "FBA"])
+
+        t_end = st.number_input("Stop time", min_value=1.0, value=100.0, step=10.0)
+        t_points = st.number_input(
+            "Points", min_value=10, max_value=2000, value=300, step=10
+        )
+
+        start = st.button("▶ Start", use_container_width=True)
+        stop = st.button("⏹ Stop", use_container_width=True)
+        reset = st.button("↺ Reset", use_container_width=True)
+
+    if "sim_running" not in st.session_state:
+        st.session_state["sim_running"] = False
+    if "sim_result" not in st.session_state:
+        st.session_state["sim_result"] = None
+    if "sim_type" not in st.session_state:
+        st.session_state["sim_type"] = sim_type
+
+    if stop:
+        st.session_state["sim_running"] = False
+        st.info("Simulation stopped.")
+
+    if reset:
+        st.session_state["sim_running"] = False
+        st.session_state["sim_result"] = None
+        st.success("Simulation reset.")
+
+    if start:
+        st.session_state["sim_running"] = True
+        st.session_state["sim_type"] = sim_type
+
+        sim = MetabolicSimulator(store)
+        config = SimulationConfig(
+            pathway_id=pathway_id,
+            t_end=float(t_end),
+            t_points=int(t_points),
+        )
+
+        with st.spinner(f"Running {sim_type} simulation..."):
+            if sim_type == "ODE":
+                result = sim.run_ode(config)
+            else:
+                result = sim.run_fba(config)
+
+        st.session_state["sim_result"] = result
+
+    result = st.session_state.get("sim_result")
+    current_type = st.session_state.get("sim_type", sim_type)
+
+    if result is None:
+        st.info("Select simulation parameters in the sidebar and click Start.")
+        return
+
+    if current_type == "ODE":
+        if result.status != "ok":
+            st.error(f"ODE failed: {result.message}")
+            return
+
+        cpd_ids = sorted(result.concentrations.keys())
+        selected_cpds = st.multiselect(
+            "Variables (compounds)",
+            options=cpd_ids,
+            default=cpd_ids[: min(8, len(cpd_ids))],
+            help="Choose compound concentration trajectories to plot.",
+        )
+
+        if not selected_cpds:
+            st.warning("Select at least one variable to plot.")
+            return
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+        for cpd_id in selected_cpds:
+            ax.plot(result.t, result.concentrations[cpd_id], label=cpd_id)
+
+        ax.set_title("ODE Simulation Result")
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Concentration [mM]")
+        ax.grid(alpha=0.3)
+        ax.legend(loc="best", fontsize=8)
+        st.pyplot(fig, clear_figure=True)
+
+        final_df = pd.DataFrame(
+            {
+                "Compound": selected_cpds,
+                "Final concentration [mM]": [
+                    result.concentrations[c][-1] for c in selected_cpds
+                ],
+            }
+        ).sort_values("Final concentration [mM]", ascending=False)
+        st.dataframe(final_df, use_container_width=True, hide_index=True)
+
+    else:
+        if result.status != "optimal":
+            st.error(f"FBA failed: {result.message}")
+            return
+
+        fluxes = result.fluxes
+        rxn_ids = sorted(fluxes.keys())
+        selected_rxns = st.multiselect(
+            "Variables (reactions)",
+            options=rxn_ids,
+            default=rxn_ids[: min(20, len(rxn_ids))],
+            help="Choose reaction fluxes to display.",
+        )
+
+        if not selected_rxns:
+            st.warning("Select at least one variable to plot.")
+            return
+
+        plot_df = pd.DataFrame(
+            {
+                "Reaction": selected_rxns,
+                "Flux": [fluxes[r] for r in selected_rxns],
+            }
+        ).sort_values("Flux", ascending=False)
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.bar(plot_df["Reaction"], plot_df["Flux"])
+        ax.set_title("FBA Simulation Result")
+        ax.set_xlabel("Reaction")
+        ax.set_ylabel("Flux")
+        ax.tick_params(axis="x", rotation=75)
+        ax.grid(alpha=0.3, axis="y")
+        st.pyplot(fig, clear_figure=True)
+        st.dataframe(plot_df, use_container_width=True, hide_index=True)
 
 
 # ---------------------------------------------------------------------------
@@ -539,11 +707,12 @@ def main() -> None:
         "Powered by Streamlit + pyvis."
     )
 
-    tab1, tab2, tab3 = st.tabs(
+    tab1, tab2, tab3, tab4 = st.tabs(
         [
             "🗺️ Graph Browser",
             "🔍 Semantic Search",
             "📋 Node Details",
+            "🧪 Simulation",
         ]
     )
 
@@ -555,6 +724,9 @@ def main() -> None:
 
     with tab3:
         _tab_details(cfg)
+
+    with tab4:
+        _tab_simulation(cfg)
 
 
 if __name__ == "__main__":

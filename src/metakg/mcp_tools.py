@@ -32,6 +32,9 @@ Or mount onto an existing FastMCP instance::
 
     from metakg.mcp_tools import register_tools
     register_tools(mcp, metakg)
+Author: Eric G. Suchanek, PhD
+
+Last Revision: 2026-02-28 20:54:34
 """
 
 from __future__ import annotations

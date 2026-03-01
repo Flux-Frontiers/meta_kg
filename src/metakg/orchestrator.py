@@ -3,6 +3,10 @@ metakg.py — MetaKG: top-level orchestrator for the metabolic knowledge graph.
 
 Owns the full pipeline:
     data_dir → MetabolicGraph → MetaStore → MetaIndex → query results
+
+Author: Eric G. Suchanek, PhD
+
+Last Revision: 2026-02-28 20:44:14
 """
 
 from __future__ import annotations
@@ -13,9 +17,9 @@ from pathlib import Path
 
 from metakg.graph import MetabolicGraph
 from metakg.index import MetaIndex
-from metakg.store import MetaStore
-from metakg.simulate import MetabolicSimulator, SimulationConfig, WhatIfScenario
 from metakg.kinetics_fetch import seed_kinetics as _seed_kinetics
+from metakg.simulate import MetabolicSimulator, SimulationConfig, WhatIfScenario
+from metakg.store import MetaStore
 
 # ---------------------------------------------------------------------------
 # Result types
@@ -74,7 +78,9 @@ class MetabolicBuildStats:
             f"xref_rows   : {self.xref_rows}",
         ]
         if self.indexed_rows is not None:
-            lines.append(f"indexed     : {self.indexed_rows} vectors  dim={self.index_dim}")
+            lines.append(
+                f"indexed     : {self.indexed_rows} vectors  dim={self.index_dim}"
+            )
         if self.parse_errors:
             lines.append(f"parse_errors: {len(self.parse_errors)}")
         return "\n".join(lines)
@@ -119,7 +125,9 @@ class MetabolicRuntimeStats:
             f"edges       : {self.total_edges}  ({edge_str})",
         ]
         if self.indexed_rows is not None:
-            lines.append(f"indexed     : {self.indexed_rows} vectors  dim={self.index_dim}")
+            lines.append(
+                f"indexed     : {self.indexed_rows} vectors  dim={self.index_dim}"
+            )
         return "\n".join(lines)
 
 
@@ -217,6 +225,7 @@ class MetaKG:
         """LanceDB semantic index (lazy)."""
         if self._index is None:
             from metakg.embed import SentenceTransformerEmbedder
+
             embedder = SentenceTransformerEmbedder(self.model_name)
             self._index = MetaIndex(
                 self.lancedb_dir,
@@ -302,10 +311,13 @@ class MetaKG:
             node = self.store.node(h.id)
             if node and node["kind"] == "pathway":
                 cur = self.store._conn.execute(
-                    "SELECT COUNT(*) FROM meta_edges WHERE src=? AND rel='CONTAINS'", (h.id,)
+                    "SELECT COUNT(*) FROM meta_edges WHERE src=? AND rel='CONTAINS'",
+                    (h.id,),
                 )
                 member_count = cur.fetchone()[0]
-                results.append({**node, "_distance": h.distance, "member_count": member_count})
+                results.append(
+                    {**node, "_distance": h.distance, "member_count": member_count}
+                )
         return MetabolicQueryResult(query=name, hits=results)
 
     def get_compound(self, id: str) -> dict | None:
@@ -346,9 +358,7 @@ class MetaKG:
             return None
         return self.store.reaction_detail(nid)
 
-    def find_path(
-        self, compound_a: str, compound_b: str, *, max_hops: int = 6
-    ) -> dict:
+    def find_path(self, compound_a: str, compound_b: str, *, max_hops: int = 6) -> dict:
         """
         Find the shortest metabolic path between two compound nodes.
 
@@ -622,7 +632,10 @@ class MetaKG:
         index_dim: int | None = None
 
         # Get index stats if available
-        if self._index is not None or (self.lancedb_dir / "data" / "index" / ".lance").exists():
+        if (
+            self._index is not None
+            or (self.lancedb_dir / "data" / "index" / ".lance").exists()
+        ):
             try:
                 idx_stats = self.index.stats()
                 indexed_rows = idx_stats.get("indexed_rows")

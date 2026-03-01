@@ -13,6 +13,9 @@ Reference: https://www.genome.jp/kegg/xml/docs/
 
 KGML detection heuristic: the root element tag is ``{...}pathway`` or
 ``pathway`` (no namespace), which distinguishes it from SBML's ``<sbml>`` root.
+
+Author: Eric G. Suchanek, PhD
+Last Revision: 2026-02-28
 """
 
 from __future__ import annotations

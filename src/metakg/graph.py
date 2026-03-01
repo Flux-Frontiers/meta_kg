@@ -6,6 +6,10 @@ appropriate :class:`~code_kg.metakg.parsers.base.PathwayParser`, and
 aggregates the resulting nodes and edges.
 
 Analogous to ``code_kg.graph.CodeGraph``.
+
+Author: Eric G. Suchanek, PhD
+Last Revision: 2026-02-28 20:55:28
+
 """
 
 from __future__ import annotations
@@ -94,7 +98,10 @@ class MetabolicGraph:
                 all_edges.extend(edges)
                 logger.info(
                     "Parsed %s via %s: %d nodes, %d edges",
-                    path.name, type(parser).__name__, len(nodes), len(edges),
+                    path.name,
+                    type(parser).__name__,
+                    len(nodes),
+                    len(edges),
                 )
             except (ValueError, ImportError) as exc:
                 logger.warning("Failed to parse %s: %s", path, exc)

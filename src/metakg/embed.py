@@ -5,6 +5,10 @@ Provides a pluggable Embedder interface and a SentenceTransformer-backed
 implementation for producing float32 vectors from text.
 
 This module is self-contained — no dependency on code_kg.
+
+Author: Eric G. Suchanek, PhD
+Last Revision: 2026-02-28 20:55:28
+
 """
 
 from __future__ import annotations
@@ -81,7 +85,9 @@ class SentenceTransformerEmbedder(Embedder):
         :param texts: Input strings to embed.
         :return: List of float32 vectors, one per input string.
         """
-        vecs = self.model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
+        vecs = self.model.encode(
+            texts, normalize_embeddings=True, show_progress_bar=False
+        )
         return [np.asarray(v, dtype="float32").tolist() for v in vecs]
 
     def embed_query(self, query: str) -> list[float]:

@@ -3,6 +3,9 @@ base.py — Abstract base class for all metabolic pathway parsers.
 
 Each parser is stateless and pure: given a file path it returns
 (list[MetaNode], list[MetaEdge]) with no side effects.
+
+Author: Eric G. Suchanek, PhD
+Last Revision: 2026-02-28
 """
 
 from __future__ import annotations

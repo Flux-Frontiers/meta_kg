@@ -3,6 +3,10 @@ primitives.py — Core data types for the MetaKG metabolic knowledge graph.
 
 Defines MetaNode, MetaEdge dataclasses, stable node_id() constructor,
 and the kind/relation constants used throughout the metakg subpackage.
+
+    Author: Eric G. Suchanek, PhD
+
+    Last Revision: 2026-02-28 20:44:14
 """
 
 from __future__ import annotations
@@ -10,7 +14,6 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field
-
 
 # ---------------------------------------------------------------------------
 # Node kind constants
@@ -27,13 +30,13 @@ ALL_KINDS = (KIND_COMPOUND, KIND_REACTION, KIND_ENZYME, KIND_PATHWAY)
 # Edge relation constants
 # ---------------------------------------------------------------------------
 
-REL_SUBSTRATE_OF = "SUBSTRATE_OF"   # compound → reaction
-REL_PRODUCT_OF = "PRODUCT_OF"       # reaction → compound
-REL_CATALYZES = "CATALYZES"         # enzyme → reaction
-REL_INHIBITS = "INHIBITS"           # compound → reaction
-REL_ACTIVATES = "ACTIVATES"         # compound → reaction
-REL_CONTAINS = "CONTAINS"           # pathway → reaction|compound
-REL_XREF = "XREF"                   # any → any (cross-database identity)
+REL_SUBSTRATE_OF = "SUBSTRATE_OF"  # compound → reaction
+REL_PRODUCT_OF = "PRODUCT_OF"  # reaction → compound
+REL_CATALYZES = "CATALYZES"  # enzyme → reaction
+REL_INHIBITS = "INHIBITS"  # compound → reaction
+REL_ACTIVATES = "ACTIVATES"  # compound → reaction
+REL_CONTAINS = "CONTAINS"  # pathway → reaction|compound
+REL_XREF = "XREF"  # any → any (cross-database identity)
 
 DEFAULT_RELS: tuple[str, ...] = (
     REL_SUBSTRATE_OF,
@@ -122,8 +125,8 @@ class MetaNode:
     formula: str | None = None
     charge: int | None = None
     ec_number: str | None = None
-    stoichiometry: str | None = None   # JSON blob
-    xrefs: str | None = None            # JSON blob
+    stoichiometry: str | None = None  # JSON blob
+    xrefs: str | None = None  # JSON blob
     source_format: str = ""
     source_file: str | None = None
 
@@ -196,7 +199,12 @@ class MetaEdge:
 # ---------------------------------------------------------------------------
 
 
-def _kp_id(enzyme_id: str, reaction_id: str | None, substrate_id: str | None, source: str | None) -> str:
+def _kp_id(
+    enzyme_id: str,
+    reaction_id: str | None,
+    substrate_id: str | None,
+    source: str | None,
+) -> str:
     """Build a deterministic ID for a KineticParam row."""
     key = f"{enzyme_id}|{reaction_id or ''}|{substrate_id or ''}|{source or ''}"
     return "kp_" + hashlib.sha1(key.encode()).hexdigest()[:12]
@@ -261,6 +269,7 @@ class KineticParam:
     def as_dict(self) -> dict:
         """Return all fields as a plain dict."""
         from dataclasses import asdict
+
         return asdict(self)
 
 
@@ -306,4 +315,5 @@ class RegulatoryInteraction:
     def as_dict(self) -> dict:
         """Return all fields as a plain dict."""
         from dataclasses import asdict
+
         return asdict(self)

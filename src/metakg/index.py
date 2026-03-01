@@ -12,6 +12,10 @@ Embedding text format:
   XREF <DB>: <ext_id>     (all cross-references)
   DESCRIPTION:
   <description>
+
+Author: Eric G. Suchanek, PhD
+Last Revision: 2026-02-28 20:55:28
+
 """
 
 from __future__ import annotations
@@ -98,7 +102,9 @@ class MetaIndex:
         :param table: LanceDB table name.
         """
         self.lancedb_dir = Path(lancedb_dir)
-        self._embedder: Embedder = embedder or SentenceTransformerEmbedder(DEFAULT_MODEL)
+        self._embedder: Embedder = embedder or SentenceTransformerEmbedder(
+            DEFAULT_MODEL
+        )
         self._table_name = table
         self._tbl = None  # lazy LanceDB table handle
 
@@ -106,7 +112,9 @@ class MetaIndex:
     # Build
     # ------------------------------------------------------------------
 
-    def build(self, store: MetaStore, *, wipe: bool = False, batch_size: int = 256) -> dict:
+    def build(
+        self, store: MetaStore, *, wipe: bool = False, batch_size: int = 256
+    ) -> dict:
         """
         Build (or rebuild) the LanceDB vector index from *store*.
 
@@ -122,7 +130,7 @@ class MetaIndex:
 
         indexed = 0
         for i in range(0, len(nodes), batch_size):
-            chunk = nodes[i: i + batch_size]
+            chunk = nodes[i : i + batch_size]
             texts = [_build_meta_index_text(n) for n in chunk]
             vecs = self._embedder.embed_texts(texts)
 
@@ -213,7 +221,9 @@ class MetaIndex:
         db = lancedb.connect(str(self.lancedb_dir))
 
         table_list = db.list_tables()
-        existing = table_list.tables if hasattr(table_list, "tables") else list(table_list)
+        existing = (
+            table_list.tables if hasattr(table_list, "tables") else list(table_list)
+        )
 
         if self._table_name in existing:
             if wipe:
@@ -236,6 +246,7 @@ class MetaIndex:
         """Return the cached LanceDB table handle, opening it if needed."""
         if self._tbl is None:
             import lancedb
+
             db = lancedb.connect(str(self.lancedb_dir))
             self._tbl = db.open_table(self._table_name)
         return self._tbl

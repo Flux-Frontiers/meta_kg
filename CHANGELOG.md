@@ -52,6 +52,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Codebase Formatting & Maintainability Improvements** — Comprehensive code cleanup across all modules for consistency and maintainability
+  - Added author attribution and revision timestamps to all module docstrings (20 files)
+  - Standardized import ordering (alphabetical) across all modules
+  - Improved code readability with consistent line-breaking and comment alignment
+  - Reformatted SQL queries for better readability (multi-line formatting)
+  - Applied consistent __all__ list formatting and inline comment alignment
+  - Enhanced docstring formatting in data classes and analysis functions
+  - All changes pass Ruff formatting, type checking, and linting standards
+
 - **Article Examples API Cleanup** — Updated `scripts/article_examples.py` to use public `kg.get_stats()` instead of internal `kg.store.stats()`
   - Uses typed `MetabolicRuntimeStats` object with attribute access instead of dict access
   - Gracefully handles optional index statistics with `.get()` calls

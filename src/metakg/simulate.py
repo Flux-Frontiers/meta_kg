@@ -41,6 +41,10 @@ Typical usage::
     )
     result = sim.run_whatif(config, scenario, mode="fba")
     print(result.delta_fluxes)
+
+    Author: Eric G. Suchanek, PhD
+
+    Last Revision: 2026-02-28 20:44:14
 """
 
 from __future__ import annotations
@@ -200,9 +204,9 @@ class MetabolicSimulator:
     """
 
     # Defaults used when no kinetic parameters are stored
-    DEFAULT_VMAX: float = 1.0    # mM/s (normalised)
-    DEFAULT_KM: float = 0.5      # mM
-    DEFAULT_KEQ: float = 1.0     # dimensionless
+    DEFAULT_VMAX: float = 1.0  # mM/s (normalised)
+    DEFAULT_KM: float = 0.5  # mM
+    DEFAULT_KEQ: float = 1.0  # dimensionless
 
     def __init__(self, store: MetaStore) -> None:
         self._store = store
@@ -349,32 +353,32 @@ class MetabolicSimulator:
         rxn_specs = []
         for j, rxn_id in enumerate(rxn_ids):
             substrates = [
-                (i, float(-S[i, j]))
-                for i in range(n_cpd) if S[i, j] < -1e-10
+                (i, float(-S[i, j])) for i in range(n_cpd) if S[i, j] < -1e-10
             ]
-            products = [
-                (i, float(S[i, j]))
-                for i in range(n_cpd) if S[i, j] > 1e-10
-            ]
+            products = [(i, float(S[i, j])) for i in range(n_cpd) if S[i, j] > 1e-10]
             kp = kparams.get(rxn_id, {})
             vmax = kp.get("vmax") or self.DEFAULT_VMAX
             km_default = kp.get("km") or self.DEFAULT_KM
             km_by_sub = kp.get("km_by_substrate", {})
             keq = kp.get("equilibrium_constant") or self.DEFAULT_KEQ
-            rxn_specs.append({
-                "substrates": substrates,
-                "products": products,
-                "vmax": vmax,
-                "km_default": km_default,
-                "km_by_sub": km_by_sub,
-                "reversible": rev_flags.get(rxn_id, True),
-                "keq": keq,
-            })
+            rxn_specs.append(
+                {
+                    "substrates": substrates,
+                    "products": products,
+                    "vmax": vmax,
+                    "km_default": km_default,
+                    "km_by_sub": km_by_sub,
+                    "reversible": rev_flags.get(rxn_id, True),
+                    "keq": keq,
+                }
+            )
 
-        y0 = np.array([
-            config.initial_concentrations.get(c, config.default_concentration)
-            for c in cpd_ids
-        ])
+        y0 = np.array(
+            [
+                config.initial_concentrations.get(c, config.default_concentration)
+                for c in cpd_ids
+            ]
+        )
 
         def _dydt(_t: float, y: "np.ndarray") -> "np.ndarray":
             yc = np.maximum(y, 0.0)  # clamp negatives
@@ -422,8 +426,7 @@ class MetabolicSimulator:
 
         t_span = (0.0, config.t_end)
         t_eval = [
-            config.t_end * i / (config.t_points - 1)
-            for i in range(config.t_points)
+            config.t_end * i / (config.t_points - 1) for i in range(config.t_points)
         ]
 
         try:
@@ -438,7 +441,9 @@ class MetabolicSimulator:
                 solve_kwargs["max_step"] = config.ode_max_step
 
             sol = solve_ivp(
-                _dydt, t_span, y0,
+                _dydt,
+                t_span,
+                y0,
                 t_eval=t_eval,
                 **solve_kwargs,
             )
@@ -752,7 +757,9 @@ def render_fba_result(
     lines.append("")
 
     if result.fluxes:
-        sorted_rxns = sorted(result.fluxes.items(), key=lambda x: abs(x[1]), reverse=True)
+        sorted_rxns = sorted(
+            result.fluxes.items(), key=lambda x: abs(x[1]), reverse=True
+        )
         lines.append(f"{h3}Top {min(top_n, len(sorted_rxns))} Fluxes (by magnitude)")
         if markdown:
             lines.append("| Reaction | ID | Flux |")
@@ -771,7 +778,9 @@ def render_fba_result(
     if result.shadow_prices:
         lines.append("")
         lines.append(f"{h3}Top Shadow Prices")
-        sorted_sp = sorted(result.shadow_prices.items(), key=lambda x: abs(x[1]), reverse=True)
+        sorted_sp = sorted(
+            result.shadow_prices.items(), key=lambda x: abs(x[1]), reverse=True
+        )
         if markdown:
             lines.append("| Compound | ID | Shadow Price |")
             lines.append("|---|---|---:|")
@@ -818,7 +827,9 @@ def render_ode_result(
     if result.concentrations:
         final_concs = {c: vals[-1] for c, vals in result.concentrations.items() if vals}
         sorted_cpds = sorted(final_concs.items(), key=lambda x: x[1], reverse=True)
-        lines.append(f"{h3}Final Concentrations (t = {result.t[-1] if result.t else '?'})")
+        lines.append(
+            f"{h3}Final Concentrations (t = {result.t[-1] if result.t else '?'})"
+        )
         if markdown:
             lines.append("| Compound | ID | Final [mM] |")
             lines.append("|---|---|---:|")
@@ -910,7 +921,9 @@ def render_whatif_result(
             )
             lines.append(f"{h3}Final Concentration Changes (Δ[C] at t_end)")
             if markdown:
-                lines.append("| Compound | ID | Baseline [mM] | Perturbed [mM] | Δ [mM] |")
+                lines.append(
+                    "| Compound | ID | Baseline [mM] | Perturbed [mM] | Δ [mM] |"
+                )
                 lines.append("|---|---|---:|---:|---:|")
             for cpd_id, delta in sorted_deltas[:top_n]:
                 if abs(delta) < 1e-8:

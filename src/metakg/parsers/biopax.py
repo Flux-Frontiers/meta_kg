@@ -17,6 +17,9 @@ Reference: https://www.biopax.org/release/biopax-level3-documentation.pdf
 Requires: ``rdflib`` (``pip install rdflib``).
 If rdflib is not installed, ``BioPAXParser.parse()`` raises ``ImportError``
 with an install hint.
+
+Author: Eric G. Suchanek, PhD
+Last Revision: 2026-02-28
 """
 
 from __future__ import annotations

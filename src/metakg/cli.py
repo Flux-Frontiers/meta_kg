@@ -6,6 +6,10 @@ Commands
 metakg-build     Build the knowledge graph from a directory of pathway files.
 metakg-mcp       Start the MCP server.
 metakg-analyze   Run the thorough pathway analysis report.
+
+Author: Eric G. Suchanek, PhD
+Last Revision: 2026-02-28 20:55:28
+
 """
 
 from __future__ import annotations
@@ -15,7 +19,6 @@ import sys
 from pathlib import Path
 
 from metakg.embed import DEFAULT_MODEL
-
 
 # ---------------------------------------------------------------------------
 # metakg-build
@@ -28,27 +31,33 @@ def _build_args(argv: list | None = None) -> argparse.Namespace:
         description="Build the MetaKG metabolic knowledge graph from pathway files.",
     )
     p.add_argument(
-        "--data", required=True,
+        "--data",
+        required=True,
         help="Directory containing pathway files (KGML, SBML, BioPAX, CSV)",
     )
     p.add_argument(
-        "--db", default=".metakg/meta.sqlite",
+        "--db",
+        default=".metakg/meta.sqlite",
         help="Output SQLite database path (default: .metakg/meta.sqlite)",
     )
     p.add_argument(
-        "--lancedb", default=".metakg/lancedb",
+        "--lancedb",
+        default=".metakg/lancedb",
         help="Output LanceDB directory (default: .metakg/lancedb)",
     )
     p.add_argument(
-        "--model", default=DEFAULT_MODEL,
+        "--model",
+        default=DEFAULT_MODEL,
         help=f"Sentence-transformer model name (default: {DEFAULT_MODEL})",
     )
     p.add_argument(
-        "--no-index", action="store_true",
+        "--no-index",
+        action="store_true",
         help="Skip building the LanceDB vector index",
     )
     p.add_argument(
-        "--wipe", action="store_true",
+        "--wipe",
+        action="store_true",
         help="Wipe existing data before building",
     )
     return p.parse_args(argv)
@@ -92,19 +101,24 @@ def _mcp_args(argv: list | None = None) -> argparse.Namespace:
         description="Start the MetaKG MCP server.",
     )
     p.add_argument(
-        "--db", default=".metakg/meta.sqlite",
+        "--db",
+        default=".metakg/meta.sqlite",
         help="Path to MetaKG SQLite database (default: .metakg/meta.sqlite)",
     )
     p.add_argument(
-        "--lancedb", default=".metakg/lancedb",
+        "--lancedb",
+        default=".metakg/lancedb",
         help="Path to LanceDB directory (default: .metakg/lancedb)",
     )
     p.add_argument(
-        "--model", default=DEFAULT_MODEL,
+        "--model",
+        default=DEFAULT_MODEL,
         help=f"Sentence-transformer model name (default: {DEFAULT_MODEL})",
     )
     p.add_argument(
-        "--transport", choices=["stdio", "sse"], default="stdio",
+        "--transport",
+        choices=["stdio", "sse"],
+        default="stdio",
         help="MCP transport: stdio (default) or sse (HTTP)",
     )
     return p.parse_args(argv)
@@ -124,8 +138,7 @@ def mcp_main(argv: list | None = None) -> None:
     db = Path(args.db)
     if not db.exists():
         print(
-            f"WARNING: database not found at '{db}'.\n"
-            "Run 'metakg-build' first.",
+            f"WARNING: database not found at '{db}'.\n" "Run 'metakg-build' first.",
             file=sys.stderr,
         )
 
@@ -192,21 +205,27 @@ def _analyze_args(argv: list | None = None) -> argparse.Namespace:
         ),
     )
     p.add_argument(
-        "--db", default=".metakg/meta.sqlite",
+        "--db",
+        default=".metakg/meta.sqlite",
         help="Path to MetaKG SQLite database (default: .metakg/meta.sqlite)",
     )
     p.add_argument(
-        "--output", "-o", default=None,
+        "--output",
+        "-o",
+        default=None,
         metavar="FILE",
         help="Write the Markdown report to FILE (default: print to stdout)",
     )
     p.add_argument(
-        "--top", type=int, default=20,
+        "--top",
+        type=int,
+        default=20,
         metavar="N",
         help="Number of items in each ranked list (default: 20)",
     )
     p.add_argument(
-        "--plain", action="store_true",
+        "--plain",
+        action="store_true",
         help="Plain-text output instead of Markdown",
     )
     return p.parse_args(argv)
@@ -223,8 +242,7 @@ def analyze_main(argv: list | None = None) -> None:
 
     if not db_path.exists():
         print(
-            f"ERROR: database not found: {db_path}\n"
-            "Run 'metakg-build' first.",
+            f"ERROR: database not found: {db_path}\n" "Run 'metakg-build' first.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -264,19 +282,27 @@ def _simulate_args(argv: list | None = None) -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument(
-        "--db", default=".metakg/meta.sqlite",
+        "--db",
+        default=".metakg/meta.sqlite",
         help="Path to MetaKG SQLite database (default: .metakg/meta.sqlite)",
     )
     p.add_argument(
-        "--output", "-o", default=None, metavar="FILE",
+        "--output",
+        "-o",
+        default=None,
+        metavar="FILE",
         help="Write Markdown report to FILE (default: print to stdout)",
     )
     p.add_argument(
-        "--plain", action="store_true",
+        "--plain",
+        action="store_true",
         help="Plain-text output instead of Markdown",
     )
     p.add_argument(
-        "--top", type=int, default=25, metavar="N",
+        "--top",
+        type=int,
+        default=25,
+        metavar="N",
         help="Maximum items to list in each table (default: 25)",
     )
 
@@ -285,82 +311,118 @@ def _simulate_args(argv: list | None = None) -> argparse.Namespace:
     # --- fba ---
     fba_p = sub.add_parser("fba", help="Flux Balance Analysis")
     fba_p.add_argument(
-        "--pathway", "-p", default=None,
+        "--pathway",
+        "-p",
+        default=None,
         help="Pathway node ID or name (e.g. pwy:kegg:hsa00010 or 'Glycolysis')",
     )
     fba_p.add_argument(
-        "--objective", default=None, metavar="RXN_ID",
+        "--objective",
+        default=None,
+        metavar="RXN_ID",
         help="Reaction ID to optimise (default: maximise total forward flux)",
     )
     fba_p.add_argument(
-        "--minimize", action="store_true",
+        "--minimize",
+        action="store_true",
         help="Minimise rather than maximise the objective",
     )
 
     # --- ode ---
     ode_p = sub.add_parser("ode", help="ODE kinetic simulation")
     ode_p.add_argument(
-        "--pathway", "-p", default=None,
+        "--pathway",
+        "-p",
+        default=None,
         help="Pathway node ID or name",
     )
     ode_p.add_argument(
-        "--time", "-t", type=float, default=100.0,
+        "--time",
+        "-t",
+        type=float,
+        default=100.0,
         help="Simulation end time (arbitrary units, default 100)",
     )
     ode_p.add_argument(
-        "--points", type=int, default=500,
+        "--points",
+        type=int,
+        default=500,
         help="Number of time points to sample (default 500)",
     )
     ode_p.add_argument(
-        "--conc", action="append", default=[], metavar="ID:VALUE",
+        "--conc",
+        action="append",
+        default=[],
+        metavar="ID:VALUE",
         help=(
             "Set initial concentration for a compound: e.g. "
             "--conc cpd:kegg:C00031:5.0  (can repeat)"
         ),
     )
     ode_p.add_argument(
-        "--default-conc", type=float, default=1.0, metavar="MM",
+        "--default-conc",
+        type=float,
+        default=1.0,
+        metavar="MM",
         help="Default initial concentration in mM for all compounds (default 1.0)",
     )
 
     # --- whatif ---
     wi_p = sub.add_parser("whatif", help="Perturbation / what-if analysis")
     wi_p.add_argument(
-        "--pathway", "-p", default=None,
+        "--pathway",
+        "-p",
+        default=None,
         help="Pathway node ID or name",
     )
     wi_p.add_argument(
-        "--mode", choices=["fba", "ode"], default="fba",
+        "--mode",
+        choices=["fba", "ode"],
+        default="fba",
         help="Simulation mode (default: fba)",
     )
     wi_p.add_argument(
-        "--knockout", action="append", default=[], metavar="ENZ_ID",
+        "--knockout",
+        action="append",
+        default=[],
+        metavar="ENZ_ID",
         help="Enzyme node ID to knock out (can repeat)",
     )
     wi_p.add_argument(
-        "--factor", action="append", default=[], metavar="ENZ_ID:FACTOR",
+        "--factor",
+        action="append",
+        default=[],
+        metavar="ENZ_ID:FACTOR",
         help=(
             "Scale enzyme activity: e.g. --factor enz:kegg:hsa:2538:0.5  "
             "halves activity (can repeat)"
         ),
     )
     wi_p.add_argument(
-        "--conc", action="append", default=[], metavar="ID:VALUE",
+        "--conc",
+        action="append",
+        default=[],
+        metavar="ID:VALUE",
         help="Override initial compound concentration (ODE mode): ID:mM (can repeat)",
     )
     wi_p.add_argument(
-        "--name", default="whatif_scenario",
+        "--name",
+        default="whatif_scenario",
         help="Scenario label for the report (default: whatif_scenario)",
     )
     wi_p.add_argument(
-        "--time", "-t", type=float, default=100.0,
+        "--time",
+        "-t",
+        type=float,
+        default=100.0,
         help="ODE end time (ignored for FBA, default 100)",
     )
 
     # --- seed ---
     seed_p = sub.add_parser("seed", help="Seed kinetic parameters from literature")
     seed_p.add_argument(
-        "--force", action="store_true",
+        "--force",
+        action="store_true",
         help="Overwrite existing kinetic parameter rows",
     )
 
@@ -456,7 +518,9 @@ def simulate_main(argv: list | None = None) -> None:
                 initial_concentrations=_parse_conc_args(args.conc),
                 default_concentration=args.default_conc,
             )
-            print(f"Running ODE (t=0..{args.time}, {args.points} pts)...", file=sys.stderr)
+            print(
+                f"Running ODE (t=0..{args.time}, {args.points} pts)...", file=sys.stderr
+            )
             result = sim.run_ode(config)
             text = render_ode_result(result, store, top_n=args.top, markdown=markdown)
 
@@ -468,9 +532,7 @@ def simulate_main(argv: list | None = None) -> None:
             )
             scenario = WhatIfScenario(
                 name=args.name,
-                enzyme_knockouts=[
-                    store.resolve_id(e) or e for e in args.knockout
-                ],
+                enzyme_knockouts=[store.resolve_id(e) or e for e in args.knockout],
                 enzyme_factors=_parse_factor_args(args.factor),
                 initial_conc_overrides=_parse_conc_args(args.conc),
             )
@@ -479,7 +541,9 @@ def simulate_main(argv: list | None = None) -> None:
                 file=sys.stderr,
             )
             result = sim.run_whatif(config, scenario, mode=args.mode)
-            text = render_whatif_result(result, store, top_n=args.top, markdown=markdown)
+            text = render_whatif_result(
+                result, store, top_n=args.top, markdown=markdown
+            )
 
         else:
             print(f"Unknown subcommand: {args.subcommand}", file=sys.stderr)

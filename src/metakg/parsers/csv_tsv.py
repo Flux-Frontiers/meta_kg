@@ -13,6 +13,9 @@ Default expected columns::
 All columns except ``substrate`` and ``product`` are optional.
 
 Rows with the same ``reaction_id`` are merged into a single reaction node.
+
+Author: Eric G. Suchanek, PhD
+Last Revision: 2026-02-28
 """
 
 from __future__ import annotations
