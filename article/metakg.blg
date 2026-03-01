@@ -4,45 +4,45 @@ The top-level auxiliary file: metakg.aux
 The style file: plainnat.bst
 Database file #1: references.bib
 Warning--can't use both volume and number fields in feng2023kuzu
-You've used 22 entries,
+You've used 21 entries,
             2773 wiz_defined-function locations,
-            739 strings with 8823 characters,
-and the built_in function-call counts, 10554 in all, are:
-= -- 966
-> -- 591
+            731 strings with 8608 characters,
+and the built_in function-call counts, 10021 in all, are:
+= -- 920
+> -- 553
 < -- 13
-+ -- 206
-- -- 183
-* -- 863
-:= -- 1639
-add.period$ -- 89
-call.type$ -- 22
-change.case$ -- 119
-chr.to.int$ -- 21
-cite$ -- 45
-duplicate$ -- 450
-empty$ -- 863
-format.name$ -- 209
-if$ -- 2213
++ -- 193
+- -- 171
+* -- 814
+:= -- 1552
+add.period$ -- 85
+call.type$ -- 21
+change.case$ -- 113
+chr.to.int$ -- 20
+cite$ -- 43
+duplicate$ -- 429
+empty$ -- 824
+format.name$ -- 196
+if$ -- 2104
 int.to.chr$ -- 2
 int.to.str$ -- 1
-missing$ -- 17
-newline$ -- 140
-num.names$ -- 88
-pop$ -- 227
+missing$ -- 16
+newline$ -- 134
+num.names$ -- 84
+pop$ -- 218
 preamble$ -- 1
-purify$ -- 97
+purify$ -- 92
 quote$ -- 0
-skip$ -- 352
+skip$ -- 336
 stack$ -- 0
-substring$ -- 420
-swap$ -- 50
+substring$ -- 400
+swap$ -- 49
 text.length$ -- 3
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 237
+type$ -- 226
 warning$ -- 1
-while$ -- 93
+while$ -- 89
 width$ -- 0
-write$ -- 333
+write$ -- 318
 (There was 1 warning)

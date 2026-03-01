@@ -39,20 +39,32 @@ source .venv/bin/activate
 poetry install --extras all
 ```
 
+### Download Human KEGG Pathways (Complete Metabolome)
+
+```bash
+# Download all 369 human KEGG pathways (~19 MB)
+poetry run python scripts/download_human_kegg.py --output data/hsa_pathways
+
+# To preview without downloading:
+poetry run python scripts/download_human_kegg.py --output data/hsa_pathways --dry-run
+```
+
 ### Build the Knowledge Graph
 
 ```bash
 # Parse pathway files and build the KG
-metakg-build --data ./data/pathways --db .metakg/meta.sqlite --lancedb .metakg/lancedb
+metakg-build --data ./data/hsa_pathways --db .metakg/meta.sqlite --lancedb .metakg/lancedb --wipe
 
 # Output:
-# Building MetaKG from ./data/pathways...
-# data_root   : ./data/pathways
+# Building MetaKG from ./data/hsa_pathways...
+# data_root   : ./data/hsa_pathways
 # db_path     : .metakg/meta.sqlite
-# nodes       : 1234  {'compound': 567, 'reaction': 432, 'enzyme': 156, 'pathway': 79}
-# edges       : 5678  {'SUBSTRATE_OF': 2100, 'PRODUCT_OF': 2050, 'CATALYZES': 1234, 'CONTAINS': 294}
-# indexed     : 1234 vectors  dim=384
+# nodes       : 22290  {'compound': 5115, 'reaction': 2139, 'enzyme': 14667, 'pathway': 369}
+# edges       : 11298  {'SUBSTRATE_OF': 2551, 'PRODUCT_OF': 2532, 'CATALYZES': 2406, 'CONTAINS': 3809}
+# indexed     : 20151 vectors  dim=384
 ```
+
+**Complete Human Metabolome:** All 369 KEGG metabolic and regulatory pathways integrated into a single queryable knowledge graph with 22K+ nodes and 11K+ edges.
 
 ### Launch Web Explorer
 

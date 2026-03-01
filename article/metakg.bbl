@@ -1,4 +1,4 @@
-\begin{thebibliography}{22}
+\begin{thebibliography}{21}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -52,12 +52,6 @@ Xiyang Feng, Guodong Jin, Ziyi Chen, Chang Liu, and Semih Salihoğlu.
 \newblock {CodeKG: A Structural and Semantic Knowledge Graph for Python Codebases}.
 \newblock \url{https://github.com/Flux-Frontiers/code_kg}, 2025.
 \newblock Accessed February 2026.
-
-\bibitem[Himmelstein et~al.(2017)Himmelstein, Lizee, Hessler, et~al.]{himmelstein2017hetionet}
-Daniel~S. Himmelstein, Antoine Lizee, Christine Hessler, et~al.
-\newblock {Systematic integration of biomedical knowledge prioritizes drugs for repurposing}.
-\newblock \emph{eLife}, 6:\penalty0 e26726, 2017.
-\newblock \doi{10.7554/eLife.26726}.
 
 \bibitem[Jassal et~al.(2020)Jassal, Matthews, Viteri, et~al.]{jassal2020reactome}
 Bijay Jassal, Lisa Matthews, Guilherme Viteri, et~al.
