@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Comprehensive Metabolic Simulation Documentation** — Expanded CLI reference, API guide, and scientific article with complete examples for all three simulation modalities
+  - CLAUDE.md: New "Simulation and Analysis" section with detailed examples for FBA, kinetic ODE integration, and what-if perturbation analysis
+  - README.md: New "Metabolic Simulations" section with runnable code examples and ODE solver configuration guide
+  - article/metakg.tex: New "Metabolic Simulations" subsection explaining solver architecture and parameter seeding
+  - Comprehensive explanation of why BDF solver is optimal for metabolic systems (inherent stiffness from fast enzyme kinetics + slow substrate dynamics)
+  - All ODE parameters documented: ode_method, ode_rtol, ode_atol, ode_max_step with defaults and rationale
+
+- **Comprehensive Unit Tests for Metabolic Simulations** — 21 new tests covering all simulation modalities with timeout guards
+  - FBA tests: Basic FBA, minimize mode, nonexistent pathway handling
+  - ODE tests: BDF (default), RK45 (non-stiff), Radau, custom tolerances, max_step behavior, edge cases, stiffness handling
+  - What-if tests: FBA mode (baseline/knockout/inhibition), ODE mode with perturbations
+  - Kinetics tests: seed_kinetics, force overwrite, repeated seeding
+  - Regression tests: BDF completes <2s on integration (prevents hanging), ode_max_step=None doesn't cause hanging
+  - Timeout guards: @pytest.mark.timeout(3-10s) on all ODE/what-if tests prevents test runner lock-up
+
+- **Updated Orchestrator Docstrings** — Clarified ODE parameters in simulate_ode() and simulate_whatif() method documentation
+  - Corrected default ode_method from "LSODA" to "BDF" with stiffness explanation
+  - Updated ode_rtol, ode_atol with relaxed defaults (1e-3, 1e-5) optimized for convergence on stiff systems
+  - Documented ode_max_step=None as recommended to let solver adapt adaptively
+
 - **Public Statistics API** — New `MetabolicRuntimeStats` dataclass and `MetaKG.get_stats()` method for clean, type-safe access to knowledge graph statistics
   - Encapsulates total nodes/edges, node counts by kind, edge counts by relation
   - Includes optional vector index statistics (indexed rows and embedding dimension)

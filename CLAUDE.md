@@ -184,6 +184,117 @@ poetry run metakg-mcp --transport sse --db .metakg/meta.sqlite  # HTTP transport
 - `get_compound(id)`: Compound + connected reactions
 - `get_reaction(id)`: Full stoichiometric detail
 - `find_path(compound_a, compound_b, max_hops)`: Shortest metabolic path
+- `seed_kinetics()`: Load kinetic parameters from literature
+- `simulate_fba(pathway_id, maximize, ode_method, ode_rtol, ode_atol, ode_max_step)`: Flux balance analysis
+- `simulate_ode(pathway_id, t_end, t_points, initial_concentrations, ode_method, ode_rtol, ode_atol, ode_max_step)`: Kinetic ODE simulation
+- `simulate_whatif(pathway_id, scenario_json, mode, ode_method, ode_rtol, ode_atol, ode_max_step)`: Perturbation analysis
+
+---
+
+## Simulation and Analysis
+
+MetaKG provides three simulation modalities accessible via Python API, CLI demo script, and MCP server:
+
+### 1. Flux Balance Analysis (FBA)
+
+**Purpose:** Steady-state metabolic flux optimization.
+
+**Python API:**
+```python
+from metakg import MetaKG
+
+kg = MetaKG()
+result = kg.simulate_fba(
+    pathway_id="pwy:kegg:hsa00010",  # Glycolysis
+    maximize=True
+)
+print(f"Status: {result['status']}")
+print(f"Objective value: {result['objective_value']}")
+```
+
+**ODE Solver Parameters:**
+FBA uses constraint-based optimization (not ODE-based), so ODE parameters are not used.
+
+### 2. Kinetic ODE Simulation
+
+**Purpose:** Time-course concentration dynamics with Michaelis-Menten kinetics.
+
+**Python API:**
+```python
+result = kg.simulate_ode(
+    pathway_id="pwy:kegg:hsa00010",
+    t_end=20.0,                                  # Integration end time
+    t_points=50,                                 # Output points
+    initial_concentrations={"cpd:kegg:C00031": 5.0},  # Glucose: 5 mM
+    ode_method="BDF",                           # ODE solver (see below)
+    ode_rtol=1e-3,                              # Relative tolerance
+    ode_atol=1e-5,                              # Absolute tolerance
+    ode_max_step=None,                          # Max internal step (None = solver chooses)
+)
+```
+
+**ODE Solver Defaults:**
+- `ode_method="BDF"` — Implicit stiff solver (recommended for metabolic systems)
+  - **BDF** (Backward Differentiation Formula): Auto-detects stiffness, switches between Adams/BDF internally. Best for metabolic pathways.
+  - **RK45**: Explicit non-stiff solver. Use only for non-stiff systems; will hang on stiff metabolic ODEs.
+  - **Radau**: Implicit Runge-Kutta, good for very stiff systems; slower than BDF.
+  - **RK23**, **DOP853**: Explicit solvers, avoid for metabolic systems.
+
+- `ode_rtol=1e-3`, `ode_atol=1e-5` — Tolerances (relaxed from 1e-4 / 1e-6 for convergence on stiff systems)
+
+- `ode_max_step=None` — Let solver choose internal step size (do not force small steps on stiff systems)
+
+**Why BDF for Metabolic Systems:**
+Metabolic pathways are inherently stiff: enzyme-catalyzed reactions (fast timescale, Michaelis-Menten kinetics) coexist with substrate depletion (slow timescale, enzyme saturation dynamics). Explicit RK45 solvers require tiny internal steps on stiff systems, causing hang or failure. BDF adapts internally and converges efficiently.
+
+### 3. What-If (Perturbation) Analysis
+
+**Purpose:** Compare baseline vs. perturbed pathway (enzyme knockout, inhibition, substrate override).
+
+**Python API:**
+```python
+scenario = {
+    "name": "hexokinase_knockout",
+    "enzyme_knockouts": ["enz:kegg:hsa:2539"],  # Remove enzyme
+}
+result = kg.simulate_whatif(
+    pathway_id="pwy:kegg:hsa00010",
+    scenario_json=json.dumps(scenario),
+    mode="fba",  # or "ode"
+    ode_method="BDF",
+    ode_rtol=1e-3,
+    ode_atol=1e-5,
+    ode_max_step=None,
+)
+print(f"Baseline objective: {result['baseline']['objective_value']}")
+print(f"Perturbed objective: {result['perturbed']['objective_value']}")
+```
+
+**Scenario Schema:**
+```json
+{
+  "name": "scenario_label",
+  "enzyme_knockouts": ["enz:id1", "enz:id2"],
+  "enzyme_factors": {"enz:id3": 0.5},  # Reduce activity by 50%
+  "initial_conc_overrides": {"cpd:id": 2.0}  # ODE mode only
+}
+```
+
+### 4. Seed Kinetic Parameters
+
+**Purpose:** Load curated literature kinetic parameters (Km, Vmax, kcat) into the database.
+
+**Python API:**
+```python
+result = kg.seed_kinetics(force=False)
+print(f"Kinetic params: {result['kinetic_params_written']}")
+print(f"Regulatory interactions: {result['regulatory_interactions_written']}")
+```
+
+**Notes:**
+- Call once after building the knowledge graph
+- Sources: BRENDA, SABIO-RK, published metabolic models
+- `force=True` overwrites existing parameters
 
 ---
 

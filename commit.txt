@@ -1,21 +1,16 @@
-fix: Resolve Pylance type errors and code linting issues
+docs: Add comprehensive metabolic simulation documentation and unit tests
 
-Add MetaIndex.stats() method to resolve type checking errors and fix import
-ordering and code quality issues detected by Ruff.
+- CLAUDE.md: Expanded with "Simulation and Analysis" section covering FBA, kinetic ODE,
+  and what-if perturbation analysis with complete examples and ODE solver parameter guide
+- README.md: Added "Metabolic Simulations" section with runnable code examples and
+  ODE solver configuration rationale (BDF for stiff metabolic systems)
+- article/metakg.tex: New "Metabolic Simulations" subsection and updated Discussion/Future
+  Directions to emphasize simulation capabilities
+- orchestrator.py: Updated docstrings for simulate_ode() and simulate_whatif() with correct
+  ODE parameter defaults (ode_method="BDF", ode_rtol=1e-3, ode_atol=1e-5)
+- tests/test_simulation.py: 21 comprehensive unit tests covering FBA, ODE, what-if analysis,
+  kinetics seeding, and edge cases with timeout guards preventing test runner hang
 
-Fixed:
-- Added MetaIndex.stats() method returning indexed row count and embedding dim
-- Fixed import ordering in simulation_demo.py (json, sys, pathlib)
-- Fixed import ordering in orchestrator.py and test_orchestrator.py
-- Removed f-string prefixes from non-placeholder strings (F541)
-- Removed unused imports (tempfile, pathlib.Path) from tests
-
-Quality improvements:
-- All files pass Ruff linting checks (I001, F541, F401)
-- Type checking passes with mypy
-- All 76 tests still passing
-- No regressions in functionality
-
-CHANGELOG.md updated with fixes section detailing code quality improvements.
-
-Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
+Documentation clarifies why BDF solver is essential for metabolic systems: inherent stiffness
+from fast enzyme kinetics (Michaelis-Menten) coexisting with slow substrate dynamics requires
+implicit stiff solver; RK45 (explicit) hangs on such systems.

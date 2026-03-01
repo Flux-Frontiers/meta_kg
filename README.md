@@ -18,6 +18,7 @@ A comprehensive, extendable knowledge graph system for metabolic pathways with s
 - **Semantic Search** — Vector-based similarity search using LanceDB and sentence-transformers
 - **Interactive Visualization** — Explore pathways through Streamlit web interface or 3D PyVista viewer
 - **Metabolic Queries** — Find shortest paths between compounds, filter by reaction relationships
+- **Metabolic Simulations** — Flux balance analysis (FBA), kinetic ODE integration, and what-if perturbation analysis
 - **MCP Integration** — Expose the knowledge graph via Model Context Protocol for AI assistant integration
 - **Production-Ready** — SQLite persistence, comprehensive error handling, extensive test coverage
 
@@ -259,6 +260,68 @@ for hit in results.hits:
 
 kg.close()
 ```
+
+### Metabolic Simulations
+
+**Flux Balance Analysis (FBA):**
+```python
+from metakg import MetaKG
+
+kg = MetaKG(db_path=".metakg/meta.sqlite", lancedb_dir=".metakg/lancedb")
+
+# Run steady-state optimization
+result = kg.simulate_fba(
+    pathway_id="pwy:kegg:hsa00010",  # Glycolysis
+    maximize=True
+)
+print(f"Status: {result['status']}")
+print(f"Objective value: {result['objective_value']}")
+
+kg.close()
+```
+
+**Kinetic ODE Simulation:**
+```python
+# Time-course with Michaelis-Menten kinetics
+result = kg.simulate_ode(
+    pathway_id="pwy:kegg:hsa00010",
+    t_end=20,
+    t_points=50,
+    initial_concentrations={"cpd:kegg:C00031": 5.0},  # Glucose: 5 mM
+    ode_method="BDF",      # Stiff ODE solver (recommended)
+    ode_rtol=1e-3,         # Relative tolerance
+    ode_atol=1e-5,         # Absolute tolerance
+    ode_max_step=None,     # Let solver choose step size
+)
+print(f"Status: {result['status']}")
+print(f"Final concentrations: {result['concentrations']}")
+```
+
+**What-If Analysis (Perturbations):**
+```python
+import json
+
+# Compare baseline vs. enzyme knockout
+scenario = {
+    "name": "hexokinase_knockout",
+    "enzyme_knockouts": ["enz:kegg:hsa:2539"]
+}
+result = kg.simulate_whatif(
+    pathway_id="pwy:kegg:hsa00010",
+    scenario_json=json.dumps(scenario),
+    mode="fba"
+)
+baseline = result["baseline"]["objective_value"]
+perturbed = result["perturbed"]["objective_value"]
+print(f"Change: {100 * (perturbed - baseline) / baseline:+.1f}%")
+```
+
+**ODE Solver Notes:**
+- Default solver is **BDF** (stiff-optimized) for metabolic systems
+- Metabolic ODEs are inherently stiff (fast enzyme kinetics + slow substrate dynamics)
+- Use `ode_method="BDF"` (default) for metabolic pathways
+- `ode_method="RK45"` (explicit, non-stiff) will hang on stiff systems—do not use
+- Set `ode_max_step=None` (default) to let solver adapt; never force small steps on stiff systems
 
 ### Visualization in Code
 

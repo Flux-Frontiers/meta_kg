@@ -465,11 +465,12 @@ class MetaKG:
         :param vmax_overrides: Override Vmax for specific reactions.
         :param vmax_factors: Multiply stored (or default) Vmax by a factor.
         :param ode_method: ODE solver method (default ``"BDF"``). Use ``"RK45"`` for
-            non-stiff systems, ``"Radau"`` as alternative for stiff systems.
-        :param ode_rtol: ODE relative tolerance (default ``1e-4``).
-        :param ode_atol: ODE absolute tolerance in mM (default ``1e-6``).
+            non-stiff systems (NOT recommended for metabolic pathways, which are stiff);
+            ``"Radau"`` as alternative for stiff systems.
+        :param ode_rtol: ODE relative tolerance (default ``1e-3``; relaxed for stiff systems).
+        :param ode_atol: ODE absolute tolerance in mM (default ``1e-5``; relaxed for convergence).
         :param ode_max_step: Maximum internal step size for ODE solver. ``None`` (default)
-            lets the solver choose.
+            lets the solver choose adaptively (recommended for stiff systems).
         :return: Dict with ``status``, ``t``, ``concentrations``, and ``message``.
         """
         # Parse JSON if provided
@@ -533,10 +534,11 @@ class MetaKG:
         :param default_concentration: Default initial concentration (mM) for ODE runs (default 1.0).
         :param t_end: End time for ODE integration (default 100).
         :param t_points: Number of time points to sample (default 500).
-        :param ode_method: ODE solver method (default ``"LSODA"``). Only used if ``mode="ode"``.
-        :param ode_rtol: ODE relative tolerance (default ``1e-4``). Only used if ``mode="ode"``.
-        :param ode_atol: ODE absolute tolerance in mM (default ``1e-6``). Only used if ``mode="ode"``.
-        :param ode_max_step: Maximum internal step size for ODE solver. Only used if ``mode="ode"``.
+        :param ode_method: ODE solver method (default ``"BDF"`` for stiff systems). Only used if ``mode="ode"``.
+        :param ode_rtol: ODE relative tolerance (default ``1e-3``). Only used if ``mode="ode"``.
+        :param ode_atol: ODE absolute tolerance in mM (default ``1e-5``). Only used if ``mode="ode"``.
+        :param ode_max_step: Maximum internal step size for ODE solver (default ``None``; let solver choose).
+            Only used if ``mode="ode"``.
         :return: Dict with ``baseline``, ``perturbed``, ``delta_fluxes``, ``delta_final_conc``, and ``mode``.
         :raises ValueError: If *mode* is not ``"fba"`` or ``"ode"``.
         """

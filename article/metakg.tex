@@ -553,6 +553,35 @@ It queries \texttt{xref\_index} first for exact matches, then falls back to a
 case-insensitive name search in \texttt{meta\_nodes}. This allows the same
 user-facing functions to accept identifiers from any source database.
 
+\subsection{Metabolic Simulations}
+
+Building on the structural query layer, \textsc{MetaKG} provides three simulation
+modalities:
+
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+  \item \textbf{Flux Balance Analysis (FBA)} ---
+    \texttt{MetaKG.simulate\_fba(pathway\_id, maximize=True)} performs
+    steady-state optimization using the stoichiometry stored in the graph.
+    The result includes a status flag, objective value, and per-reaction flux
+    distribution.
+
+  \item \textbf{Kinetic ODE Integration} ---
+    \texttt{MetaKG.simulate\_ode(pathway\_id, t\_end, t\_points, ...)}
+    performs time-course simulation using Michaelis-Menten rate laws and
+    seeded kinetic parameters (Km, Vmax, kcat). Uses an implicit stiff solver
+    (BDF) optimized for metabolic systems; returns time-course concentration
+    trajectories for all compounds.
+
+  \item \textbf{What-If Perturbation Analysis} ---
+    \texttt{MetaKG.simulate\_whatif(pathway\_id, scenario\_json, mode)}
+    compares baseline vs.\ perturbed pathway by knockout, inhibition, or
+    substrate concentration override. Available in both FBA and ODE modes.
+\end{enumerate}
+
+Kinetic parameters are populated on first use by seeding from literature
+sources (BRENDA, SABIO-RK, published metabolic models) via
+\texttt{MetaKG.seed\_kinetics()}.
+
 % ---------------------------------------------------------------------------
 \section{Visualisation}
 \label{sec:viz}
@@ -893,18 +922,24 @@ not be automatically merged. More complete reconciliation would require
 integration with a name normalisation service such as
 MetaNetX~\citep{moretti2021metanetx} or UMLS~\citep{bodenreider2004umls}.
 
-\textbf{Stoichiometric models.} \textsc{MetaKG} stores stoichiometric
-coefficients but does not solve flux-balance or steady-state equations.
-Analysts requiring constraint-based modelling should combine \textsc{MetaKG}
-with COBRApy~\citep{ebrahim2013cobrapy} or a similar package; the SBML parser
-preserves all information needed to reconstruct a COBRApy model.
+\textbf{Stoichiometric models and simulations.} \textsc{MetaKG} provides three
+core simulation modalities: (1)~Flux Balance Analysis (FBA) for steady-state
+flux optimization; (2)~kinetic ODE integration with Michaelis-Menten rate laws
+using an implicit stiff solver (BDF) optimized for metabolic pathways; and
+(3)~what-if perturbation analysis for enzyme knockouts, inhibition, and substrate
+overrides. Kinetic parameters are seeded from literature (BRENDA, SABIO-RK,
+published models). For advanced constraint-based modelling workflows, the SBML
+parser preserves all information needed to reconstruct a COBRApy model.
 
-\textbf{Future directions.} Planned extensions include: centralised measures
-(betweenness, closeness, eigenvector centrality) implemented with NetworkX
-for hub ranking; a GraphQL query endpoint; integration with the UniProt and
-ChEBI REST APIs for on-demand annotation; differential pathway analysis
-across two or more organisms; and export to Cytoscape~\citep{shannon2003cytoscape}
-JSON for interoperability with the broader network biology ecosystem.
+\textbf{Future directions.} Planned extensions include: graph-theoretic centrality
+measures (betweenness, closeness, eigenvector centrality) implemented with
+NetworkX for hub ranking; a GraphQL query endpoint; integration with the
+UniProt and ChEBI REST APIs for on-demand annotation; differential pathway
+analysis across two or more organisms; GPU-accelerated embedding for large
+datasets; and export to Cytoscape~\citep{shannon2003cytoscape} JSON for
+interoperability with the broader network biology ecosystem. Advanced kinetic
+parameter optimization (parameter fitting from experimental data) is also
+planned.
 
 % ---------------------------------------------------------------------------
 \section{Conclusion}
