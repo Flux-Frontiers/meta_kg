@@ -227,39 +227,50 @@ def _build_node_label_map(
 
 def _build_node_title(node: dict[str, Any]) -> str:
     """
-    Build rich hover text with node metadata.
+    Build plain-text hover tooltip with node metadata (for pyvis compatibility).
 
     :param node: Node dict from the store.
-    :return: HTML-formatted hover title with metadata.
+    :return: Plain-text hover title with newlines.
     """
     node_id = node.get("id", "unknown")
-    kind = node.get("kind", "")
+    kind = node.get("kind", "").upper()
     name = node.get("name", "")
     description = node.get("description", "")
 
-    parts = [f"<b>{name or node_id}</b>"]
-    parts.append(f"<i>{kind}</i>")
+    parts = []
 
+    # Main title
+    if name:
+        parts.append(f"{name}")
+
+    # Kind label
+    parts.append(f"[{kind}]")
+
+    # Description
     if description:
-        parts.append(f"{description[:_DESCRIPTION_HOVER_LEN]}")
+        parts.append(f"\n{description[:_DESCRIPTION_HOVER_LEN]}")
 
-    # Add kind-specific metadata
-    if kind == "compound":
+    # Kind-specific metadata
+    if kind == "COMPOUND":
         formula = node.get("formula", "")
         charge = node.get("charge", "")
+        if formula or charge is not None:
+            parts.append("")  # blank line
         if formula:
             parts.append(f"Formula: {formula}")
         if charge is not None and charge != "":
             parts.append(f"Charge: {charge}")
-    elif kind == "enzyme":
+    elif kind == "ENZYME":
         ec_number = node.get("ec_number", "")
         if ec_number:
+            parts.append("")  # blank line
             parts.append(f"EC: {ec_number}")
 
     # Always add ID at the end
-    parts.append(f"<code style='font-size:0.8em'>{node_id}</code>")
+    parts.append("")  # blank line
+    parts.append(f"ID: {node_id}")
 
-    return "<br>".join(parts)
+    return "\n".join(parts)
 
 
 # ---------------------------------------------------------------------------
