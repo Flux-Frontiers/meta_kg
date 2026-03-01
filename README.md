@@ -8,7 +8,7 @@ A comprehensive, extendable knowledge graph system for metabolic pathways with s
 
 [![Python 3.10 | 3.11 | 3.12](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://www.python.org/downloads/)
 [![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic%202.0-blue.svg)](https://www.elastic.co/licensing/elastic-license)
-[![Version](https://img.shields.io/badge/Version-0.1.0-blue.svg)](https://github.com/flux-frontiers/meta_kg/releases)
+[![Version](https://img.shields.io/badge/Version-0.2.0-blue.svg)](https://github.com/flux-frontiers/meta_kg/releases)
 [![Poetry](https://img.shields.io/badge/Poetry-1.8+-blue.svg)](https://python-poetry.org/)
 
 ## Features

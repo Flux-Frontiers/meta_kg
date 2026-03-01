@@ -1,23 +1,8 @@
-# Changelog
+# Release Notes — v0.2.0
 
-All notable changes to MetaKG are documented in this file.
+> Released: 2026-02-28
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-### Added
-
-### Changed
-
-### Removed
-
-### Fixed
-
-## [0.2.0] - 2026-02-28
-
-### Added
+## Added
 
 - **Comprehensive Metabolic Simulation Documentation** — Expanded CLI reference, API guide, and scientific article with complete examples for all three simulation modalities
   - CLAUDE.md: New "Simulation and Analysis" section with detailed examples for FBA, kinetic ODE integration, and what-if perturbation analysis
@@ -60,46 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Example 5: Enzyme knockout perturbation analysis
   - Example 6: Enzyme partial inhibition (50%) perturbation analysis
 
-### Changed
-
-- **Codebase Formatting & Maintainability Improvements** — Comprehensive code cleanup across all modules for consistency and maintainability
-  - Added author attribution and revision timestamps to all module docstrings (20 files)
-  - Standardized import ordering (alphabetical) across all modules
-  - Improved code readability with consistent line-breaking and comment alignment
-  - Reformatted SQL queries for better readability (multi-line formatting)
-  - Applied consistent __all__ list formatting and inline comment alignment
-  - Enhanced docstring formatting in data classes and analysis functions
-  - All changes pass Ruff formatting, type checking, and linting standards
-
-- **Article Examples API Cleanup** — Updated `scripts/article_examples.py` to use public `kg.get_stats()` instead of internal `kg.store.stats()`
-  - Uses typed `MetabolicRuntimeStats` object with attribute access instead of dict access
-  - Gracefully handles optional index statistics with `.get()` calls
-  - Demonstrates proper API usage patterns for users
-
-- **License Migration to Elastic License 2.0** — Updated from PolyForm Noncommercial to Elastic License 2.0 to align with sister project CodeKG
-  - Updated `pyproject.toml` license field to `Elastic-2.0`
-  - Added `LICENSE` file with complete Elastic License 2.0 terms
-  - Updated README license badge with link to official license page
-
-### Fixed
-
-- **Pylance Type Checking Issues** — Added `MetaIndex.stats()` method to resolve type errors in `MetaKG.get_stats()`
-  - Returns indexed row count and embedding dimension from LanceDB index
-  - Gracefully handles missing or unavailable index
-
-- **Code Quality & Linting**
-  - Fixed import ordering in `scripts/simulation_demo.py`, `src/metakg/orchestrator.py`, and `tests/test_orchestrator.py` to comply with Ruff I001
-  - Removed f-string prefixes from non-placeholder strings in `scripts/simulation_demo.py` (Ruff F541)
-  - Removed unused imports (`tempfile`, `pathlib.Path`) from `tests/test_orchestrator.py`
-  - All changes pass Ruff linting and mypy type checking
-
-- **Critical Namespace Shadowing Bug** — `src/metakg/metakg.py` was shadowing the metakg package namespace, preventing imports of submodules like `graph.py` and breaking all CLI commands. Resolved by renaming to `orchestrator.py` and updating all import statements.
-
-### Added
-
 - **Consistent Project Badges** — Enhanced README with project status badges matching CodeKG style
   - Python version badge showing supported versions (3.10, 3.11, 3.12)
-  - Version badge (0.1.0) with link to releases
+  - Version badge (0.2.0) with link to releases
   - Poetry dependency manager badge
   - Updated license badge for Elastic License 2.0
 
@@ -166,7 +114,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Detailed feature descriptions and usage patterns
   - Performance characteristics and installation variants
 
-### Changed
+## Changed
+
+- **Codebase Formatting & Maintainability Improvements** — Comprehensive code cleanup across all modules for consistency and maintainability
+  - Added author attribution and revision timestamps to all module docstrings (20 files)
+  - Standardized import ordering (alphabetical) across all modules
+  - Improved code readability with consistent line-breaking and comment alignment
+  - Reformatted SQL queries for better readability (multi-line formatting)
+  - Applied consistent __all__ list formatting and inline comment alignment
+  - Enhanced docstring formatting in data classes and analysis functions
+  - All changes pass Ruff formatting, type checking, and linting standards
+
+- **Article Examples API Cleanup** — Updated `scripts/article_examples.py` to use public `kg.get_stats()` instead of internal `kg.store.stats()`
+  - Uses typed `MetabolicRuntimeStats` object with attribute access instead of dict access
+  - Gracefully handles optional index statistics with `.get()` calls
+  - Demonstrates proper API usage patterns for users
+
+- **License Migration to Elastic License 2.0** — Updated from PolyForm Noncommercial to Elastic License 2.0 to align with sister project CodeKG
+  - Updated `pyproject.toml` license field to `Elastic-2.0`
+  - Added `LICENSE` file with complete Elastic License 2.0 terms
+  - Updated README license badge with link to official license page
 
 - **Orchestrator Class** — Renamed `MetaKG` source file from `metakg.py` to `orchestrator.py` for clarity and to eliminate namespace shadowing
 - **Import Paths** — Updated all references from `metakg.metakg` to `metakg.orchestrator` in `__init__.py`, `mcp_tools.py`, and `app.py`
@@ -174,27 +141,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **src/metakg/cli.py** — Added `viz_main()` and `viz3d_main()` entry points for new CLI commands
 - **src/metakg/store.py** — Extended with GraphStore compatibility wrapper class
 
-### Technical Details
+## Fixed
 
-- **Visualization Scope** — Adapted from flux-frontiers/code_kg with metabolic pathway domain-specific customizations
-- **Node Types** — Supports compound, reaction, enzyme, and pathway nodes
-- **Edge Relations** — SUBSTRATE_OF, PRODUCT_OF, CATALYZES, INHIBITS, ACTIVATES, CONTAINS, XREF
-- **Embedding Model** — Integrates with sentence-transformers via LanceDB for semantic search
-- **Database** — SQLite persistence with indexed queries for graph operations
+- **Pylance Type Checking Issues** — Added `MetaIndex.stats()` method to resolve type errors in `MetaKG.get_stats()`
+  - Returns indexed row count and embedding dimension from LanceDB index
+  - Gracefully handles missing or unavailable index
 
-## [0.1.0] — 2024-02-27
+- **Code Quality & Linting**
+  - Fixed import ordering in `scripts/simulation_demo.py`, `src/metakg/orchestrator.py`, and `tests/test_orchestrator.py` to comply with Ruff I001
+  - Removed f-string prefixes from non-placeholder strings in `scripts/simulation_demo.py` (Ruff F541)
+  - Removed unused imports (`tempfile`, `pathlib.Path`) from `tests/test_orchestrator.py`
+  - All changes pass Ruff linting and mypy type checking
 
-### Added
-
-- Initial standalone MetaKG package release
-- Metabolic pathway parser supporting KGML, SBML, BioPAX, and CSV formats
-- Semantic knowledge graph with LanceDB vector indexing
-- MCP (Model Context Protocol) server integration
-- Core CLI: `metakg-build` and `metakg-mcp` commands
-- SQLite-based graph persistence layer
-- Cross-reference resolution and pathway unification
+- **Critical Namespace Shadowing Bug** — `src/metakg/metakg.py` was shadowing the metakg package namespace, preventing imports of submodules like `graph.py` and breaking all CLI commands. Resolved by renaming to `orchestrator.py` and updating all import statements.
 
 ---
 
-[Unreleased]: https://github.com/flux-frontiers/meta_kg/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/flux-frontiers/meta_kg/releases/tag/v0.1.0
+_Full changelog: [CHANGELOG.md](CHANGELOG.md)_

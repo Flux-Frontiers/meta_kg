@@ -21,6 +21,8 @@ Last Revision: 2026-02-28 20:55:28
 
 """
 
+__version__ = "0.2.0"
+
 from metakg.orchestrator import (
     MetabolicBuildStats,
     MetabolicQueryResult,
