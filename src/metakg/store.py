@@ -237,6 +237,30 @@ class MetaStore:
         row = cur.fetchone()
         return dict(row) if row else None
 
+    def nodes(self, node_ids: list[str]) -> dict[str, dict | None]:
+        """
+        Fetch multiple nodes by their IDs in a single batch query.
+
+        :param node_ids: List of node identifier strings.
+        :return: Dict mapping node_id → node dict (or None if not found).
+        """
+        if not node_ids:
+            return {}
+        placeholders = ",".join("?" * len(node_ids))
+        cur = self._conn.execute(
+            f"SELECT * FROM meta_nodes WHERE id IN ({placeholders})",
+            node_ids,
+        )
+        result = {}
+        for row in cur.fetchall():
+            node_dict = dict(row)
+            result[node_dict["id"]] = node_dict
+        # Include missing nodes as None for consistency
+        for node_id in node_ids:
+            if node_id not in result:
+                result[node_id] = None
+        return result
+
     def node_by_xref(self, db_name: str, ext_id: str) -> dict | None:
         """
         Resolve an external database ID to a MetaStore node.

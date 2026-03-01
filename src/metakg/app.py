@@ -12,7 +12,7 @@ Run with:
     poetry run metakg-viz
 
 Author: Eric G. Suchanek, PhD
-Last Revision: 2026-02-28 20:56:39
+Last Revision: 2026-02-28 21:25:00
 
 """
 
@@ -26,13 +26,14 @@ from typing import Any
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from pyvis.network import Network
 
 from metakg.simulate import MetabolicSimulator, SimulationConfig
 from metakg.store import GraphStore
 
 # ---------------------------------------------------------------------------
-# Constants — colours and shapes per node kind
+# Constants — colours, shapes, and display strings
 # ---------------------------------------------------------------------------
 
 _KIND_COLOR: dict[str, str] = {
@@ -41,6 +42,13 @@ _KIND_COLOR: dict[str, str] = {
     "compound": "#27AE60",  # green
     "enzyme": "#F39C12",  # orange
 }
+
+# String truncation limits for different contexts
+_DESCRIPTION_BRIEF_LEN = 80          # Node list view (expander)
+_DESCRIPTION_HOVER_LEN = 150         # Hover title
+_DESCRIPTION_CARD_LEN = 200          # Search result card
+_LABEL_TRUNCATE_LEN = 30             # Bar chart labels
+_LABEL_TRUNCATE_SUFFIX = "…"
 
 _KIND_SHAPE: dict[str, str] = {
     "pathway": "box",
@@ -143,7 +151,7 @@ def _load_store(db_path: str) -> GraphStore | None:
 
 def _get_store() -> GraphStore | None:
     """Retrieve the current GraphStore, loading it if the database path has changed."""
-    current_path = st.session_state.get("db_path")
+    current_path = str(st.session_state.get("db_path", _DEFAULT_DB))
     loaded_path = st.session_state.get("store_loaded_path")
 
     if current_path != loaded_path:
@@ -180,6 +188,81 @@ def _render_legend() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Node display helpers
+# ---------------------------------------------------------------------------
+
+
+def _get_node_label(node: dict[str, Any] | None) -> str:
+    """
+    Extract a readable label for a node, preferring name over ID.
+
+    :param node: Node dict from the store (or None).
+    :return: Display-friendly label string.
+    """
+    if node is None:
+        return "unknown"
+    name = node.get("name", "").strip()
+    if name:
+        return name
+    node_id = node.get("id", "unknown")
+    kind = node.get("kind", "")
+    if kind:
+        return f"{kind}:{node_id.split(':')[-1]}"
+    return node_id
+
+
+def _build_node_label_map(
+    node_ids: list[str], store: GraphStore
+) -> dict[str, str]:
+    """
+    Build a mapping of node IDs to display labels using batch query.
+
+    :param node_ids: List of node IDs to fetch.
+    :param store: GraphStore instance.
+    :return: Dict mapping node_id → display label.
+    """
+    nodes = store.nodes(node_ids)
+    return {nid: _get_node_label(nodes.get(nid)) for nid in node_ids}
+
+
+def _build_node_title(node: dict[str, Any]) -> str:
+    """
+    Build rich hover text with node metadata.
+
+    :param node: Node dict from the store.
+    :return: HTML-formatted hover title with metadata.
+    """
+    node_id = node.get("id", "unknown")
+    kind = node.get("kind", "")
+    name = node.get("name", "")
+    description = node.get("description", "")
+
+    parts = [f"<b>{name or node_id}</b>"]
+    parts.append(f"<i>{kind}</i>")
+
+    if description:
+        parts.append(f"{description[:_DESCRIPTION_HOVER_LEN]}")
+
+    # Add kind-specific metadata
+    if kind == "compound":
+        formula = node.get("formula", "")
+        charge = node.get("charge", "")
+        if formula:
+            parts.append(f"Formula: {formula}")
+        if charge is not None and charge != "":
+            parts.append(f"Charge: {charge}")
+    elif kind == "enzyme":
+        ec_number = node.get("ec_number", "")
+        if ec_number:
+            parts.append(f"EC: {ec_number}")
+
+    # Always add ID at the end
+    parts.append(f"<code style='font-size:0.8em'>{node_id}</code>")
+
+    return "<br>".join(parts)
+
+
+# ---------------------------------------------------------------------------
 # Pyvis graph rendering
 # ---------------------------------------------------------------------------
 
@@ -204,10 +287,11 @@ def _build_pyvis(
     for node in nodes:
         node_id = node["id"]
         kind = node.get("kind", "")
-        label = node.get("name", node_id)
+        label = _get_node_label(node)
+        title = _build_node_title(node)
         color = _KIND_COLOR.get(kind, "#95A5A6")
         shape = _KIND_SHAPE.get(kind, "dot")
-        net.add_node(node_id, label=label, color=color, shape=shape, title=label)
+        net.add_node(node_id, label=label, color=color, shape=shape, title=title)
 
     for edge in edges:
         src = edge["src"]
@@ -217,9 +301,12 @@ def _build_pyvis(
         net.add_edge(src, dst, label=rel, color=color)
 
     net.toggle_physics(physics_on)
-    net.show(f"temp_{id(net)}.html")
-    with open(f"temp_{id(net)}.html") as f:
-        return f.read()
+    temp_file = f"temp_{id(net)}.html"
+    net.write_html(temp_file)
+    with open(temp_file) as f:
+        html_content = f.read()
+    os.remove(temp_file)
+    return html_content
 
 
 # ---------------------------------------------------------------------------
@@ -338,7 +425,7 @@ def _tab_graph(cfg: dict[str, Any]) -> None:
 
     _render_legend()
     html = _build_pyvis(filtered_nodes, filtered_edges, physics_on=cfg["physics_on"])
-    st.components.v1.html(html, height=750, scrolling=False)
+    components.html(html, height=750, scrolling=False)
 
     # Node list
     with st.expander(f"📋 Nodes ({len(filtered_nodes)})", expanded=False):
@@ -350,7 +437,7 @@ def _tab_graph(cfg: dict[str, Any]) -> None:
                     "ID": n["id"],
                     "Kind": n.get("kind", ""),
                     "Name": n.get("name", ""),
-                    "Description": (n.get("description", "") or "")[:80],
+                    "Description": (n.get("description", "") or "")[:_DESCRIPTION_BRIEF_LEN],
                 }
                 for n in filtered_nodes
             ]
@@ -408,7 +495,7 @@ def _tab_search(cfg: dict[str, Any]) -> None:
                     f'<div class="node-card" style="border-left-color:{color}">'
                     f'<b>{i}. {name}</b> <code style="color:{color}">{kind}</code><br>'
                     f"<small>{node_id}</small><br>"
-                    f"<small>{description[:200]}</small>"
+                    f"<small>{description[:_DESCRIPTION_CARD_LEN]}</small>"
                     f"</div>",
                     unsafe_allow_html=True,
                 )
@@ -490,9 +577,10 @@ def _tab_details(cfg: dict[str, Any]) -> None:
                         if outgoing_edges:
                             st.markdown(f"**Outgoing ({len(outgoing_edges)})**")
                             for e in outgoing_edges:
+                                dst_node = store.get_node(e["dst"])
                                 dst_name = (
-                                    store.get_node(e["dst"]).get("name", e["dst"])
-                                    if store.get_node(e["dst"])
+                                    dst_node.get("name", e["dst"])
+                                    if dst_node
                                     else e["dst"]
                                 )
                                 color = _REL_COLOR.get(e["rel"], "#95A5A6")
@@ -506,9 +594,10 @@ def _tab_details(cfg: dict[str, Any]) -> None:
                         if incoming_edges:
                             st.markdown(f"**Incoming ({len(incoming_edges)})**")
                             for e in incoming_edges:
+                                src_node = store.get_node(e["src"])
                                 src_name = (
-                                    store.get_node(e["src"]).get("name", e["src"])
-                                    if store.get_node(e["src"])
+                                    src_node.get("name", e["src"])
+                                    if src_node
                                     else e["src"]
                                 )
                                 color = _REL_COLOR.get(e["rel"], "#95A5A6")
@@ -628,9 +717,16 @@ def _tab_simulation(cfg: dict[str, Any]) -> None:
             st.warning("Select at least one variable to plot.")
             return
 
+        # Cache compound names in session state (batch query)
+        cpd_cache_key = f"_cpd_labels_{pathway_id}"
+        if cpd_cache_key not in st.session_state:
+            st.session_state[cpd_cache_key] = _build_node_label_map(cpd_ids, store)
+        cpd_names = st.session_state[cpd_cache_key]
+
         fig, ax = plt.subplots(figsize=(10, 5))
         for cpd_id in selected_cpds:
-            ax.plot(result.t, result.concentrations[cpd_id], label=cpd_id)
+            label = cpd_names[cpd_id]
+            ax.plot(result.t, result.concentrations[cpd_id], label=label)
 
         ax.set_title("ODE Simulation Result")
         ax.set_xlabel("Time")
@@ -641,7 +737,8 @@ def _tab_simulation(cfg: dict[str, Any]) -> None:
 
         final_df = pd.DataFrame(
             {
-                "Compound": selected_cpds,
+                "Compound": [cpd_names[c] for c in selected_cpds],
+                "Compound ID": selected_cpds,
                 "Final concentration [mM]": [
                     result.concentrations[c][-1] for c in selected_cpds
                 ],
@@ -667,15 +764,29 @@ def _tab_simulation(cfg: dict[str, Any]) -> None:
             st.warning("Select at least one variable to plot.")
             return
 
+        # Cache reaction names in session state (batch query)
+        rxn_cache_key = f"_rxn_labels_{pathway_id}"
+        if rxn_cache_key not in st.session_state:
+            st.session_state[rxn_cache_key] = _build_node_label_map(rxn_ids, store)
+        rxn_names = st.session_state[rxn_cache_key]
+
         plot_df = pd.DataFrame(
             {
-                "Reaction": selected_rxns,
+                "Reaction": [rxn_names[r] for r in selected_rxns],
+                "Reaction ID": selected_rxns,
                 "Flux": [fluxes[r] for r in selected_rxns],
             }
         ).sort_values("Flux", ascending=False)
 
         fig, ax = plt.subplots(figsize=(10, 5))
-        ax.bar(plot_df["Reaction"], plot_df["Flux"])
+        # Use short labels for the bar chart
+        short_labels = [
+            name[: _LABEL_TRUNCATE_LEN] + _LABEL_TRUNCATE_SUFFIX
+            if len(name) > _LABEL_TRUNCATE_LEN
+            else name
+            for name in plot_df["Reaction"]
+        ]
+        ax.bar(short_labels, plot_df["Flux"])
         ax.set_title("FBA Simulation Result")
         ax.set_xlabel("Reaction")
         ax.set_ylabel("Flux")
