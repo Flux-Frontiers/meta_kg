@@ -101,8 +101,15 @@ def main():
     print(f"\nDownloading to {output_dir.absolute()}...\n")
     success_count = 0
     for i, pathway_id in enumerate(pathways, 1):
-        # Extract short ID for filename (e.g., 'path:hsa00010' -> 'hsa00010')
-        short_id = pathway_id.split(':')[1]
+        # Extract short ID for filename
+        # API returns 'hsa00010', not 'path:hsa00010'
+        if ':' in pathway_id:
+            short_id = pathway_id.split(':')[1]
+            download_id = pathway_id
+        else:
+            short_id = pathway_id
+            download_id = f"path:{pathway_id}"
+
         filename = output_dir / f"{short_id}.kgml"
 
         # Skip if already exists
@@ -113,7 +120,7 @@ def main():
 
         # Download
         print(f"[{i:3}/{len(pathways)}] Downloading {short_id}...", end=" ")
-        content = download_pathway_kgml(pathway_id)
+        content = download_pathway_kgml(download_id)
         if content:
             filename.write_bytes(content)
             print(f"✓ ({len(content)} bytes)")
