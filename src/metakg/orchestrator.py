@@ -447,6 +447,10 @@ class MetaKG:
         initial_concentrations_json: str | None = None,
         vmax_overrides: dict[str, float] | None = None,
         vmax_factors: dict[str, float] | None = None,
+        ode_method: str = "BDF",
+        ode_rtol: float = 1e-3,
+        ode_atol: float = 1e-5,
+        ode_max_step: float | None = None,
     ) -> dict:
         """
         Run kinetic ODE simulation using Michaelis-Menten rate equations.
@@ -460,6 +464,12 @@ class MetaKG:
         :param initial_concentrations_json: JSON string of ``{compound_id: mM}`` (alternative to dict).
         :param vmax_overrides: Override Vmax for specific reactions.
         :param vmax_factors: Multiply stored (or default) Vmax by a factor.
+        :param ode_method: ODE solver method (default ``"BDF"``). Use ``"RK45"`` for
+            non-stiff systems, ``"Radau"`` as alternative for stiff systems.
+        :param ode_rtol: ODE relative tolerance (default ``1e-4``).
+        :param ode_atol: ODE absolute tolerance in mM (default ``1e-6``).
+        :param ode_max_step: Maximum internal step size for ODE solver. ``None`` (default)
+            lets the solver choose.
         :return: Dict with ``status``, ``t``, ``concentrations``, and ``message``.
         """
         # Parse JSON if provided
@@ -475,6 +485,10 @@ class MetaKG:
             default_concentration=default_concentration,
             vmax_overrides=vmax_overrides or {},
             vmax_factors=vmax_factors or {},
+            ode_method=ode_method,
+            ode_rtol=ode_rtol,
+            ode_atol=ode_atol,
+            ode_max_step=ode_max_step,
         )
         result = self.simulator.run_ode(config)
         return {
@@ -495,6 +509,10 @@ class MetaKG:
         default_concentration: float = 1.0,
         t_end: float = 100.0,
         t_points: int = 500,
+        ode_method: str = "BDF",
+        ode_rtol: float = 1e-3,
+        ode_atol: float = 1e-5,
+        ode_max_step: float | None = None,
     ) -> dict:
         """
         Run baseline and perturbed simulations and return the difference.
@@ -515,6 +533,10 @@ class MetaKG:
         :param default_concentration: Default initial concentration (mM) for ODE runs (default 1.0).
         :param t_end: End time for ODE integration (default 100).
         :param t_points: Number of time points to sample (default 500).
+        :param ode_method: ODE solver method (default ``"LSODA"``). Only used if ``mode="ode"``.
+        :param ode_rtol: ODE relative tolerance (default ``1e-4``). Only used if ``mode="ode"``.
+        :param ode_atol: ODE absolute tolerance in mM (default ``1e-6``). Only used if ``mode="ode"``.
+        :param ode_max_step: Maximum internal step size for ODE solver. Only used if ``mode="ode"``.
         :return: Dict with ``baseline``, ``perturbed``, ``delta_fluxes``, ``delta_final_conc``, and ``mode``.
         :raises ValueError: If *mode* is not ``"fba"`` or ``"ode"``.
         """
@@ -536,6 +558,10 @@ class MetaKG:
             t_points=t_points,
             initial_concentrations=initial_concentrations or {},
             default_concentration=default_concentration,
+            ode_method=ode_method,
+            ode_rtol=ode_rtol,
+            ode_atol=ode_atol,
+            ode_max_step=ode_max_step,
         )
 
         result = self.simulator.run_whatif(config, scenario, mode=mode)

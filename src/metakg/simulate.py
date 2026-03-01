@@ -47,7 +47,6 @@ from __future__ import annotations
 
 import copy
 import json
-import math
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -81,6 +80,12 @@ class SimulationConfig:
     :param vmax_overrides: Override Vmax for specific reactions in ODE mode
         ``{reaction_id: vmax_mM_per_s}``.
     :param vmax_factors: Multiply stored (or default) Vmax by a factor ``{reaction_id: factor}``.
+    :param ode_method: ODE solver method (default ``"BDF"``). ``"BDF"`` is for stiff systems;
+        use ``"RK45"`` for non-stiff systems, ``"Radau"`` as alternative for stiff.
+    :param ode_rtol: ODE relative tolerance (default ``1e-4``).
+    :param ode_atol: ODE absolute tolerance in mM (default ``1e-6``).
+    :param ode_max_step: Maximum internal step size for ODE solver. ``None`` (default)
+        lets the solver choose; set to a small value for stricter control.
     """
 
     pathway_id: str | None = None
@@ -94,6 +99,10 @@ class SimulationConfig:
     flux_bounds: dict[str, tuple[float, float]] = field(default_factory=dict)
     vmax_overrides: dict[str, float] = field(default_factory=dict)
     vmax_factors: dict[str, float] = field(default_factory=dict)
+    ode_method: str = "BDF"
+    ode_rtol: float = 1e-3
+    ode_atol: float = 1e-5
+    ode_max_step: float | None = None
 
 
 @dataclass
@@ -418,12 +427,20 @@ class MetabolicSimulator:
         ]
 
         try:
+            # Build solve_ivp kwargs, excluding max_step if None (let solver choose)
+            solve_kwargs = {
+                "method": config.ode_method,
+                "rtol": config.ode_rtol,
+                "atol": config.ode_atol,
+                "first_step": 1e-3,  # Small initial step for stiff systems
+            }
+            if config.ode_max_step is not None:
+                solve_kwargs["max_step"] = config.ode_max_step
+
             sol = solve_ivp(
                 _dydt, t_span, y0,
                 t_eval=t_eval,
-                method="RK45",
-                rtol=1e-4, atol=1e-6,
-                max_step=config.t_end / 50,
+                **solve_kwargs,
             )
         except Exception as exc:
             return ODEResult(
