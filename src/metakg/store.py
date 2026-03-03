@@ -210,8 +210,13 @@ class MetaStore:
             except (json.JSONDecodeError, TypeError):
                 continue
             for db_name, ext_id in xrefs.items():
-                if db_name and ext_id:
-                    xref_rows.append((nid, db_name.lower(), str(ext_id)))
+                if not db_name or not ext_id:
+                    continue
+                # ext_id may be a list (multi-gene enzyme groups) or a scalar.
+                # Expand lists so each member gets its own xref_index row.
+                members = ext_id if isinstance(ext_id, list) else [ext_id]
+                for member in members:
+                    xref_rows.append((nid, db_name.lower(), str(member)))
 
         cur.executemany(
             "INSERT OR REPLACE INTO xref_index (node_id, db_name, ext_id) VALUES (?,?,?)",
