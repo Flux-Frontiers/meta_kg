@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **KGML multi-gene entry grouping** (`src/metakg/parsers/kgml.py`) — A single KGML `<entry type="gene">` often lists multiple gene IDs (e.g. pyruvate dehydrogenase complex `hsa:5160 hsa:5161 hsa:5162`). The previous parser created one enzyme node per gene but only wired the last-processed gene to its reaction via a CATALYZES edge, leaving all others as orphaned nodes with no edges. Fix: create one canonical group node per entry (keyed on the first gene ID, labelled with KEGG graphics name); all member gene IDs stored as a list in the node's `xrefs` JSON; `entry_map` points to the single node so CATALYZES wiring is correct and complete. Effect across full human KEGG dataset: ~1,797 fewer enzyme nodes, CATALYZES edge count unchanged at 4,165, ~5,255 previously orphaned enzyme nodes eliminated.
+
+- **xref index expansion for list-valued entries** (`src/metakg/store.py` — `MetaStore.build_xref_index`) — Updated to expand list-valued xref entries into individual `xref_index` rows. Each member gene ID in a group node gets its own row pointing to the canonical group node, so per-gene lookup works transparently. Example: group node `enz:kegg:5160` with `xrefs={"kegg": ["5160","5161","5162"]}` produces three `xref_index` rows.
+
 ### Added
+
+- **`scripts/wire_kegg_enzymes.py`** — Analysis and patching utility that scans KGML files for reaction elements missing enzyme coverage (not handled by Strategy A or B) and patches them with `enzyme="N"` attributes. Confirmed that all 4,165 reaction elements in the full human KEGG dataset are fully covered by Strategy B; patching is only needed for hand-authored sample files.
 
 - **`metakg-analyze-basic` CLI entry point** — New `analyze_basic_main()` in `cli.py` exposing the original structured (non-narrative) analysis report as a separate command, preserving both report styles
 - **Timestamped output filenames** — `metakg-analyze`, `metakg-analyze-basic`, and `metakg-simulate` now write to auto-named files (e.g., `metakg-analysis-2026-03-03-143022.md`) when `--output` is not specified, eliminating silent stdout dumps
