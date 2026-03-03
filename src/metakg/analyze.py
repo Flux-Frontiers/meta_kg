@@ -778,7 +778,7 @@ def render_report(report: PathwayAnalysisReport, *, markdown: bool = True) -> st
         return [header, sep]
 
     # ---- Title ----
-    h(1, "MetaKG Pathway Analysis Report")
+    h(1, "metaKG_analysis")
     lines.append(
         f"**Database:** `{report.db_path}`  \n**Generated:** {report.generated_at}\n"
     )

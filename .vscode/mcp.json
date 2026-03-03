@@ -17,7 +17,7 @@
     },
     "codekg": {
       "type": "stdio",
-      "command": "/Users/egs/repos/meta_kg/.venv/bin/python3",
+      "command": "/Users/egs/repos/meta_kg/.venv/bin/python",
       "args": [
         "-m",
         "code_kg",

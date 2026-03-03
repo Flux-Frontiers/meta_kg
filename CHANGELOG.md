@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`metakg-analyze-basic` CLI entry point** — New `analyze_basic_main()` in `cli.py` exposing the original structured (non-narrative) analysis report as a separate command, preserving both report styles
+- **Timestamped output filenames** — `metakg-analyze`, `metakg-analyze-basic`, and `metakg-simulate` now write to auto-named files (e.g., `metakg-analysis-2026-03-03-143022.md`) when `--output` is not specified, eliminating silent stdout dumps
+- **`code-kg` core dependency** — Added `code-kg` as a production dependency in `pyproject.toml` (git source: Flux-Frontiers/code_kg); codekg CLI scripts now come from that package directly rather than being re-declared here
+- **Revised article abstract** (`article/metakg_revised.tex`) — Rewritten to lead with architectural innovation (dual-layer SQLite + LanceDB), emphasise all four query modalities plus simulation and visualisation capabilities, and highlight the complete human metabolome ingestion; format parsing demoted to supporting infrastructure
+
+### Changed
+
+- **`metakg-analyze` always writes to file** — Removed stdout fallback; output path is either the `--output` argument or a timestamped default; mirrors `metakg-simulate` behaviour
+- **CLAUDE.md refactored** — Condensed from ~600 lines to ~120-line table-driven quick reference; removed redundant prose, kept command tables, simulation examples, and CodeKG query strategy
+- **`pyproject.toml` scripts cleaned up** — Removed duplicate `codekg-*` script entries (now provided by the `code-kg` package); added `metakg-analyze-basic` entry point
+- **`.codekg/lancedb` untracked from git** — Removed regenerable LanceDB vector index files from version control; `.gitignore` entry already present; index can be rebuilt with `/codekg-rebuild`
+- **Analysis report title** (`src/metakg/analyze.py`) — Changed from `"MetaKG Pathway Analysis Report"` to `"metaKG_analysis"` for cleaner file naming
+
+### Removed
+
+- **`codekg-*` script declarations from `pyproject.toml`** — Scripts are now provided by the `code-kg` dependency package; no functional change for users
+
 - **Polished MetaKG Thorough Analysis Report** — New `src/metakg/thorough_analysis.py` module providing CodeKG-style formatted analysis output
   - Executive Summary with 5-minute KPI overview
   - Emoji-enhanced section headers (📊 📈 🔥 ⚡ 🔗 📦 🧬 🧪 ⚠️ ✅ 💡)

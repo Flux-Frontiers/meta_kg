@@ -1,3 +1,4 @@
+
 # MetaKG — Complete Capabilities Reference
 
 **v0.1.0** · Metabolic pathway knowledge graph with simulation, semantic search, and MCP tooling.

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from metakg.embed import DEFAULT_MODEL
@@ -195,6 +196,12 @@ def viz3d_main() -> None:
 # ---------------------------------------------------------------------------
 
 
+def _timestamped_filename(basename: str = "metakg-analysis", ext: str = ".md") -> str:
+    """Generate a timestamped filename: metakg-analysis-2026-03-01-143022.md"""
+    ts = datetime.now().strftime("%Y-%m-%d-%H%M%S")
+    return f"{basename}-{ts}{ext}"
+
+
 def _analyze_args(argv: list | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         prog="metakg-analyze",
@@ -233,7 +240,9 @@ def _analyze_args(argv: list | None = None) -> argparse.Namespace:
 
 def analyze_main(argv: list | None = None) -> None:
     """
-    CLI entry point: ``metakg-analyze``.
+    CLI entry point: ``metakg-analyze`` (thorough report).
+
+    Writes to timestamped file by default (e.g., metakg-analysis-2026-03-01-143022.md).
 
     :param argv: Argument list; defaults to ``sys.argv[1:]``.
     """
@@ -256,12 +265,43 @@ def analyze_main(argv: list | None = None) -> None:
 
     text = render_thorough_report(report, markdown=not args.plain)
 
-    if args.output:
-        out_path = Path(args.output)
-        out_path.write_text(text, encoding="utf-8")
-        print(f"Report written to {out_path}", file=sys.stderr)
-    else:
-        print(text)
+    # Use provided output path or generate timestamped default
+    out_path = Path(args.output or _timestamped_filename("metakg-analysis"))
+    out_path.write_text(text, encoding="utf-8")
+    print(f"Report written to {out_path}", file=sys.stderr)
+
+
+def analyze_basic_main(argv: list | None = None) -> None:
+    """
+    CLI entry point: ``metakg-analyze-basic``.
+
+    Basic structured report: facts, ranked lists, minimal narrative.
+    Writes to timestamped file by default (e.g., metakg-analysis-basic-2026-03-01-143022.md).
+
+    :param argv: Argument list; defaults to ``sys.argv[1:]``.
+    """
+    args = _analyze_args(argv)
+    db_path = Path(args.db)
+
+    if not db_path.exists():
+        print(
+            f"ERROR: database not found: {db_path}\n" "Run 'metakg-build' first.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    from metakg.analyze import PathwayAnalyzer, render_report
+
+    print(f"Analysing {db_path} ...", file=sys.stderr)
+    with PathwayAnalyzer(db_path, top_n=args.top) as analyzer:
+        report = analyzer.run()
+
+    text = render_report(report, markdown=not args.plain)
+
+    # Use provided output path or generate timestamped default
+    out_path = Path(args.output or _timestamped_filename("metakg-analysis-basic"))
+    out_path.write_text(text, encoding="utf-8")
+    print(f"Report written to {out_path}", file=sys.stderr)
 
 
 # ---------------------------------------------------------------------------
@@ -550,12 +590,15 @@ def simulate_main(argv: list | None = None) -> None:
             print(f"Unknown subcommand: {args.subcommand}", file=sys.stderr)
             sys.exit(1)
 
+    # Use provided output path or generate timestamped default based on subcommand
     if args.output:
         out_path = Path(args.output)
-        out_path.write_text(text, encoding="utf-8")
-        print(f"Report written to {out_path}", file=sys.stderr)
     else:
-        print(text)
+        filename = _timestamped_filename(f"metakg-simulate-{args.subcommand}")
+        out_path = Path(filename)
+
+    out_path.write_text(text, encoding="utf-8")
+    print(f"Report written to {out_path}", file=sys.stderr)
 
 
 # ---------------------------------------------------------------------------
