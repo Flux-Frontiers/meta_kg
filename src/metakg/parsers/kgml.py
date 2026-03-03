@@ -130,22 +130,43 @@ class KGMLParser(PathwayParser):
                     entry_map[entry_id] = nid
                     # One entry typically has one compound; use last if multiple
             elif etype in ("gene", "ortholog"):
-                for raw_name in enames.split():
-                    kegg_gene = raw_name.replace("hsa:", "").replace("ko:", "").strip()
-                    nid = node_id(KIND_ENZYME, "kegg", kegg_gene)
-                    if nid not in nodes:
-                        graphics = entry.find("graphics")
-                        label = graphics.attrib.get("name", kegg_gene) if graphics is not None else kegg_gene
-                        nodes[nid] = MetaNode(
-                            id=nid,
-                            kind=KIND_ENZYME,
-                            name=label,
-                            description=f"KEGG gene/enzyme {kegg_gene}",
-                            xrefs=json.dumps({"kegg": kegg_gene}),
-                            source_format="kgml",
-                            source_file=str(path),
-                        )
-                    entry_map[entry_id] = nid
+                # Collect all gene IDs in this entry.  A single KGML entry
+                # often bundles multiple genes that KEGG treats as a functional
+                # group (true isozymes or complex subunits for that pathway
+                # step).  We represent the group as ONE enzyme node keyed on
+                # the first (canonical) gene, with all members stored in xrefs.
+                # This avoids creating orphaned enzyme nodes for non-canonical
+                # genes that would never receive a CATALYZES edge.
+                gene_ids = [
+                    raw.replace("hsa:", "").replace("ko:", "").strip()
+                    for raw in enames.split()
+                ]
+                if not gene_ids:
+                    continue
+
+                canonical = gene_ids[0]
+                nid = node_id(KIND_ENZYME, "kegg", canonical)
+
+                graphics = entry.find("graphics")
+                label = (
+                    graphics.attrib.get("name", canonical)
+                    if graphics is not None
+                    else canonical
+                )
+
+                if nid not in nodes:
+                    xrefs_val: str | list[str] = gene_ids if len(gene_ids) > 1 else gene_ids[0]
+                    nodes[nid] = MetaNode(
+                        id=nid,
+                        kind=KIND_ENZYME,
+                        name=label,
+                        description=f"KEGG gene/enzyme group: {label}",
+                        xrefs=json.dumps({"kegg": xrefs_val}),
+                        source_format="kgml",
+                        source_file=str(path),
+                    )
+
+                entry_map[entry_id] = nid
 
         # --- Reactions ---
         for rxn_elem in root.findall("reaction"):

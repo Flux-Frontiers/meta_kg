@@ -9,7 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **KEGG Enzyme Wiring Analysis** (`scripts/wire_kegg_enzymes.py`) — Investigation script
+  confirming that all 4,165 reaction elements across 369 downloaded human KEGG pathway files
+  are fully covered by the parser's Strategy B (reaction element id == gene entry id), a
+  standard KEGG KGML convention. No file patching required for real KEGG data; contrast with
+  the hand-authored sample files that required `wire_enzymes.py`.
+
 ### Changed
+
+- **KGML parser: group node representation for multi-gene entries** — A single KGML
+  `<entry type="gene">` can list multiple gene IDs (e.g. `hsa:5160 hsa:5161 hsa:5162`),
+  representing either complex subunits or isozyme families that KEGG treats as a functional
+  unit for that pathway step. Previously the parser created one enzyme node per gene but only
+  wired the last-processed gene to its reaction via a CATALYZES edge, leaving all others as
+  orphaned nodes with no edges. Now the parser creates **one canonical group node** (keyed on
+  the first gene ID, labelled with the KEGG graphics name) and wires that single node. All
+  member gene IDs are stored in the node's `xrefs` JSON as a list, so every individual gene
+  remains searchable via the xref index. This reduces enzyme node count by ~1,797 and
+  eliminates ~5,255 orphaned nodes across the full human KEGG dataset, with no change to
+  CATALYZES edge count (4,165).
+
+- **`MetaStore.build_xref_index`** — Updated to expand list-valued xref entries (produced by
+  multi-gene group nodes) into individual `xref_index` rows, preserving per-gene lookup
+  through the canonical group node.
 
 ### Removed
 
