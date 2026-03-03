@@ -139,7 +139,7 @@ def mcp_main(argv: list | None = None) -> None:
     db = Path(args.db)
     if not db.exists():
         print(
-            f"WARNING: database not found at '{db}'.\n" "Run 'metakg-build' first.",
+            f"WARNING: database not found at '{db}'.\nRun 'metakg-build' first.",
             file=sys.stderr,
         )
 
@@ -251,7 +251,7 @@ def analyze_main(argv: list | None = None) -> None:
 
     if not db_path.exists():
         print(
-            f"ERROR: database not found: {db_path}\n" "Run 'metakg-build' first.",
+            f"ERROR: database not found: {db_path}\nRun 'metakg-build' first.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -285,7 +285,7 @@ def analyze_basic_main(argv: list | None = None) -> None:
 
     if not db_path.exists():
         print(
-            f"ERROR: database not found: {db_path}\n" "Run 'metakg-build' first.",
+            f"ERROR: database not found: {db_path}\nRun 'metakg-build' first.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -547,8 +547,8 @@ def simulate_main(argv: list | None = None) -> None:
                 maximize=not args.minimize,
             )
             print("Running FBA...", file=sys.stderr)
-            result = sim.run_fba(config)
-            text = render_fba_result(result, store, top_n=args.top, markdown=markdown)
+            fba_result = sim.run_fba(config)
+            text = render_fba_result(fba_result, store, top_n=args.top, markdown=markdown)
 
         elif args.subcommand == "ode":
             pathway_id = store.resolve_id(args.pathway) if args.pathway else None
@@ -559,11 +559,9 @@ def simulate_main(argv: list | None = None) -> None:
                 initial_concentrations=_parse_conc_args(args.conc),
                 default_concentration=args.default_conc,
             )
-            print(
-                f"Running ODE (t=0..{args.time}, {args.points} pts)...", file=sys.stderr
-            )
-            result = sim.run_ode(config)
-            text = render_ode_result(result, store, top_n=args.top, markdown=markdown)
+            print(f"Running ODE (t=0..{args.time}, {args.points} pts)...", file=sys.stderr)
+            ode_result = sim.run_ode(config)
+            text = render_ode_result(ode_result, store, top_n=args.top, markdown=markdown)
 
         elif args.subcommand == "whatif":
             pathway_id = store.resolve_id(args.pathway) if args.pathway else None
@@ -581,10 +579,8 @@ def simulate_main(argv: list | None = None) -> None:
                 f"Running what-if '{args.name}' ({args.mode.upper()})...",
                 file=sys.stderr,
             )
-            result = sim.run_whatif(config, scenario, mode=args.mode)
-            text = render_whatif_result(
-                result, store, top_n=args.top, markdown=markdown
-            )
+            whatif_result = sim.run_whatif(config, scenario, mode=args.mode)
+            text = render_whatif_result(whatif_result, store, top_n=args.top, markdown=markdown)
 
         else:
             print(f"Unknown subcommand: {args.subcommand}", file=sys.stderr)

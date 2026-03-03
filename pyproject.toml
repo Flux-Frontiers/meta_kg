@@ -75,6 +75,7 @@ ruff       = ">=0.4.0"
 mypy       = ">=1.10.0"
 pytest-timeout = "^2.4.0"
 pre-commit     = ">=4.0.0"
+detect-secrets = "^1.5.0"
 
 [tool.poetry.scripts]
 

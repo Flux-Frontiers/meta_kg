@@ -16,14 +16,15 @@ import sqlite3
 from collections import deque
 from collections.abc import Iterable
 from pathlib import Path
+from typing import cast
 
 from metakg.primitives import (
     DEFAULT_RELS,
+    REL_PRODUCT_OF,
+    REL_SUBSTRATE_OF,
     KineticParam,
     MetaEdge,
     MetaNode,
-    REL_PRODUCT_OF,
-    REL_SUBSTRATE_OF,
     RegulatoryInteraction,
 )
 
@@ -162,10 +163,17 @@ class MetaStore:
 
         node_rows = [
             (
-                n.id, n.kind, n.name, n.description,
-                n.formula, n.charge, n.ec_number,
-                n.stoichiometry, n.xrefs,
-                n.source_format, n.source_file,
+                n.id,
+                n.kind,
+                n.name,
+                n.description,
+                n.formula,
+                n.charge,
+                n.ec_number,
+                n.stoichiometry,
+                n.xrefs,
+                n.source_format,
+                n.source_file,
             )
             for n in nodes
         ]
@@ -236,9 +244,7 @@ class MetaStore:
         :param node_id: Node identifier string.
         :return: Node dict or ``None`` if not found.
         """
-        cur = self._conn.execute(
-            "SELECT * FROM meta_nodes WHERE id = ?", (node_id,)
-        )
+        cur = self._conn.execute("SELECT * FROM meta_nodes WHERE id = ?", (node_id,))
         row = cur.fetchone()
         return dict(row) if row else None
 
@@ -256,7 +262,7 @@ class MetaStore:
             f"SELECT * FROM meta_nodes WHERE id IN ({placeholders})",
             node_ids,
         )
-        result = {}
+        result: dict[str, dict | None] = {}
         for row in cur.fetchall():
             node_dict = dict(row)
             result[node_dict["id"]] = node_dict
@@ -494,8 +500,10 @@ class MetaStore:
                         next_fwd.append(nb)
                     if nb in bwd:
                         path_ids = _reconstruct(nb)
-                        path_nodes = [self.node(pid) for pid in path_ids]
-                        path_nodes = [n for n in path_nodes if n]
+                        path_nodes = cast(
+                            list[dict],
+                            [n for n in [self.node(pid) for pid in path_ids] if n is not None],
+                        )
                         rxn_count = sum(1 for n in path_nodes if n["kind"] == "reaction")
                         edges = self.edges_within(set(path_ids))
                         return {"path": path_nodes, "hops": rxn_count, "edges": edges}
@@ -511,8 +519,10 @@ class MetaStore:
                         next_bwd.append(nb)
                     if nb in fwd:
                         path_ids = _reconstruct(nb)
-                        path_nodes = [self.node(pid) for pid in path_ids]
-                        path_nodes = [n for n in path_nodes if n]
+                        path_nodes = cast(
+                            list[dict],
+                            [n for n in [self.node(pid) for pid in path_ids] if n is not None],
+                        )
                         rxn_count = sum(1 for n in path_nodes if n["kind"] == "reaction")
                         edges = self.edges_within(set(path_ids))
                         return {"path": path_nodes, "hops": rxn_count, "edges": edges}
@@ -557,9 +567,7 @@ class MetaStore:
         :return: List of node dicts.
         """
         if kind:
-            cur = self._conn.execute(
-                "SELECT * FROM meta_nodes WHERE kind=?", (kind,)
-            )
+            cur = self._conn.execute("SELECT * FROM meta_nodes WHERE kind=?", (kind,))
         else:
             cur = self._conn.execute("SELECT * FROM meta_nodes")
         return [dict(r) for r in cur.fetchall()]
@@ -586,12 +594,26 @@ class MetaStore:
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (
-                param.id, param.enzyme_id, param.reaction_id, param.substrate_id,
-                param.km, param.kcat, param.vmax, param.ki, param.hill_coefficient,
-                param.delta_g_prime, param.equilibrium_constant,
-                param.ph, param.temperature_celsius, param.ionic_strength,
-                param.source_database, param.literature_reference,
-                param.organism, param.tissue, param.confidence_score, param.measurement_error,
+                param.id,
+                param.enzyme_id,
+                param.reaction_id,
+                param.substrate_id,
+                param.km,
+                param.kcat,
+                param.vmax,
+                param.ki,
+                param.hill_coefficient,
+                param.delta_g_prime,
+                param.equilibrium_constant,
+                param.ph,
+                param.temperature_celsius,
+                param.ionic_strength,
+                param.source_database,
+                param.literature_reference,
+                param.organism,
+                param.tissue,
+                param.confidence_score,
+                param.measurement_error,
             ),
         )
         self._conn.commit()
@@ -605,12 +627,26 @@ class MetaStore:
         """
         rows = [
             (
-                p.id, p.enzyme_id, p.reaction_id, p.substrate_id,
-                p.km, p.kcat, p.vmax, p.ki, p.hill_coefficient,
-                p.delta_g_prime, p.equilibrium_constant,
-                p.ph, p.temperature_celsius, p.ionic_strength,
-                p.source_database, p.literature_reference,
-                p.organism, p.tissue, p.confidence_score, p.measurement_error,
+                p.id,
+                p.enzyme_id,
+                p.reaction_id,
+                p.substrate_id,
+                p.km,
+                p.kcat,
+                p.vmax,
+                p.ki,
+                p.hill_coefficient,
+                p.delta_g_prime,
+                p.equilibrium_constant,
+                p.ph,
+                p.temperature_celsius,
+                p.ionic_strength,
+                p.source_database,
+                p.literature_reference,
+                p.organism,
+                p.tissue,
+                p.confidence_score,
+                p.measurement_error,
             )
             for p in params
         ]
@@ -649,9 +685,7 @@ class MetaStore:
         :param enzyme_id: Enzyme node ID.
         :return: List of row dicts.
         """
-        cur = self._conn.execute(
-            "SELECT * FROM kinetic_parameters WHERE enzyme_id=?", (enzyme_id,)
-        )
+        cur = self._conn.execute("SELECT * FROM kinetic_parameters WHERE enzyme_id=?", (enzyme_id,))
         return [dict(r) for r in cur.fetchall()]
 
     def all_kinetic_params(self) -> list[dict]:
@@ -677,9 +711,15 @@ class MetaStore:
             VALUES (?,?,?,?,?,?,?,?,?)
             """,
             (
-                ri.id, ri.enzyme_id, ri.compound_id, ri.interaction_type,
-                ri.ki_allosteric, ri.hill_coefficient, ri.site,
-                ri.organism, ri.source_database,
+                ri.id,
+                ri.enzyme_id,
+                ri.compound_id,
+                ri.interaction_type,
+                ri.ki_allosteric,
+                ri.hill_coefficient,
+                ri.site,
+                ri.organism,
+                ri.source_database,
             ),
         )
         self._conn.commit()
@@ -693,9 +733,15 @@ class MetaStore:
         """
         rows = [
             (
-                ri.id, ri.enzyme_id, ri.compound_id, ri.interaction_type,
-                ri.ki_allosteric, ri.hill_coefficient, ri.site,
-                ri.organism, ri.source_database,
+                ri.id,
+                ri.enzyme_id,
+                ri.compound_id,
+                ri.interaction_type,
+                ri.ki_allosteric,
+                ri.hill_coefficient,
+                ri.site,
+                ri.organism,
+                ri.source_database,
             )
             for ri in interactions
         ]
@@ -778,9 +824,7 @@ class GraphStore(MetaStore):
         """
         return self.all_nodes(kind=kind)
 
-    def query_edges(
-        self, *, src: str | None = None, dst: str | None = None
-    ) -> list[dict]:
+    def query_edges(self, *, src: str | None = None, dst: str | None = None) -> list[dict]:
         """
         Query edges, optionally filtered by source or destination.
 

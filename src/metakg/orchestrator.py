@@ -14,11 +14,18 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, cast
 
 from metakg.graph import MetabolicGraph
 from metakg.index import MetaIndex
 from metakg.kinetics_fetch import seed_kinetics as _seed_kinetics
-from metakg.simulate import MetabolicSimulator, SimulationConfig, WhatIfScenario
+from metakg.simulate import (
+    FBAResult,
+    MetabolicSimulator,
+    ODEResult,
+    SimulationConfig,
+    WhatIfScenario,
+)
 from metakg.store import MetaStore
 
 # ---------------------------------------------------------------------------
@@ -78,9 +85,7 @@ class MetabolicBuildStats:
             f"xref_rows   : {self.xref_rows}",
         ]
         if self.indexed_rows is not None:
-            lines.append(
-                f"indexed     : {self.indexed_rows} vectors  dim={self.index_dim}"
-            )
+            lines.append(f"indexed     : {self.indexed_rows} vectors  dim={self.index_dim}")
         if self.parse_errors:
             lines.append(f"parse_errors: {len(self.parse_errors)}")
         return "\n".join(lines)
@@ -125,9 +130,7 @@ class MetabolicRuntimeStats:
             f"edges       : {self.total_edges}  ({edge_str})",
         ]
         if self.indexed_rows is not None:
-            lines.append(
-                f"indexed     : {self.indexed_rows} vectors  dim={self.index_dim}"
-            )
+            lines.append(f"indexed     : {self.indexed_rows} vectors  dim={self.index_dim}")
         return "\n".join(lines)
 
 
@@ -315,9 +318,7 @@ class MetaKG:
                     (h.id,),
                 )
                 member_count = cur.fetchone()[0]
-                results.append(
-                    {**node, "_distance": h.distance, "member_count": member_count}
-                )
+                results.append({**node, "_distance": h.distance, "member_count": member_count})
         return MetabolicQueryResult(query=name, hits=results)
 
     def get_compound(self, id: str) -> dict | None:
@@ -579,36 +580,40 @@ class MetaKG:
         result = self.simulator.run_whatif(config, scenario, mode=mode)
 
         # Convert result to dict
-        baseline_dict = {}
-        perturbed_dict = {}
+        baseline_dict: dict[str, Any] = {}
+        perturbed_dict: dict[str, Any] = {}
 
         if mode == "fba":
+            baseline_fba = cast(FBAResult, result.baseline)
+            perturbed_fba = cast(FBAResult, result.perturbed)
             baseline_dict = {
-                "status": result.baseline.status,
-                "objective_value": result.baseline.objective_value,
-                "fluxes": result.baseline.fluxes,
-                "shadow_prices": result.baseline.shadow_prices,
-                "message": result.baseline.message,
+                "status": baseline_fba.status,
+                "objective_value": baseline_fba.objective_value,
+                "fluxes": baseline_fba.fluxes,
+                "shadow_prices": baseline_fba.shadow_prices,
+                "message": baseline_fba.message,
             }
             perturbed_dict = {
-                "status": result.perturbed.status,
-                "objective_value": result.perturbed.objective_value,
-                "fluxes": result.perturbed.fluxes,
-                "shadow_prices": result.perturbed.shadow_prices,
-                "message": result.perturbed.message,
+                "status": perturbed_fba.status,
+                "objective_value": perturbed_fba.objective_value,
+                "fluxes": perturbed_fba.fluxes,
+                "shadow_prices": perturbed_fba.shadow_prices,
+                "message": perturbed_fba.message,
             }
         else:  # mode == "ode"
+            baseline_ode = cast(ODEResult, result.baseline)
+            perturbed_ode = cast(ODEResult, result.perturbed)
             baseline_dict = {
-                "status": result.baseline.status,
-                "t": result.baseline.t,
-                "concentrations": result.baseline.concentrations,
-                "message": result.baseline.message,
+                "status": baseline_ode.status,
+                "t": baseline_ode.t,
+                "concentrations": baseline_ode.concentrations,
+                "message": baseline_ode.message,
             }
             perturbed_dict = {
-                "status": result.perturbed.status,
-                "t": result.perturbed.t,
-                "concentrations": result.perturbed.concentrations,
-                "message": result.perturbed.message,
+                "status": perturbed_ode.status,
+                "t": perturbed_ode.t,
+                "concentrations": perturbed_ode.concentrations,
+                "message": perturbed_ode.message,
             }
 
         return {
@@ -632,10 +637,7 @@ class MetaKG:
         index_dim: int | None = None
 
         # Get index stats if available
-        if (
-            self._index is not None
-            or (self.lancedb_dir / "data" / "index" / ".lance").exists()
-        ):
+        if self._index is not None or (self.lancedb_dir / "data" / "index" / ".lance").exists():
             try:
                 idx_stats = self.index.stats()
                 indexed_rows = idx_stats.get("indexed_rows")

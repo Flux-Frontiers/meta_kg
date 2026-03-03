@@ -69,11 +69,11 @@ def render_thorough_report(report: PathwayAnalysisReport, *, markdown: bool = Tr
         else:
             lines.append(f"\n{'=' * level} {text} {'=' * level}\n")
 
-    def row(*cols: str) -> str:
+    def row(*cols: str | int) -> str:
         """Format a markdown table row."""
         return "| " + " | ".join(str(c) for c in cols) + " |"
 
-    def th(*cols: str) -> list[str]:
+    def th(*cols: str | int) -> list[str]:
         """Format markdown table header and separator."""
         header = row(*cols)
         sep = "| " + " | ".join("---" for _ in cols) + " |"
@@ -98,21 +98,25 @@ def render_thorough_report(report: PathwayAnalysisReport, *, markdown: bool = Tr
 
     nc = report.node_counts
     ec = report.edge_counts
-    sub_only = sum(
-        1 for d in report.dead_end_metabolites if d.role == "substrate-only"
-    )
-    prod_only = sum(
-        1 for d in report.dead_end_metabolites if d.role == "product-only"
-    )
+    sub_only = sum(1 for d in report.dead_end_metabolites if d.role == "substrate-only")
+    prod_only = sum(1 for d in report.dead_end_metabolites if d.role == "product-only")
 
     lines.append("**Key Findings:**")
-    lines.append(f"- **Total entities:** {nc.get('pathway', 0)} pathways, "
-                 f"{nc.get('reaction', 0)} reactions, {nc.get('compound', 0)} compounds, "
-                 f"{nc.get('enzyme', 0)} enzymes")
-    lines.append(f"- **Hub metabolites:** {len(report.hub_metabolites)} high-connectivity compounds")
-    lines.append(f"- **Cross-pathway hubs:** {len(report.cross_pathway_hubs)} compounds bridging pathways")
-    lines.append(f"- **Network health:** {100 - len(report.isolated_nodes) // max(1, report.total_nodes) * 100:.0f}% connected, "
-                 f"{len(report.dead_end_metabolites)} dead-ends\n")
+    lines.append(
+        f"- **Total entities:** {nc.get('pathway', 0)} pathways, "
+        f"{nc.get('reaction', 0)} reactions, {nc.get('compound', 0)} compounds, "
+        f"{nc.get('enzyme', 0)} enzymes"
+    )
+    lines.append(
+        f"- **Hub metabolites:** {len(report.hub_metabolites)} high-connectivity compounds"
+    )
+    lines.append(
+        f"- **Cross-pathway hubs:** {len(report.cross_pathway_hubs)} compounds bridging pathways"
+    )
+    lines.append(
+        f"- **Network health:** {100 - len(report.isolated_nodes) // max(1, report.total_nodes) * 100:.0f}% connected, "
+        f"{len(report.dead_end_metabolites)} dead-ends\n"
+    )
 
     # ---- Baseline Metrics ----
     h(2, "📈 Baseline Metrics")
@@ -120,10 +124,10 @@ def render_thorough_report(report: PathwayAnalysisReport, *, markdown: bool = Tr
     lines.extend(th("Metric", "Value"))
     lines.append(row("**Total Nodes**", f"{report.total_nodes:,}"))
     lines.append(row("**Total Edges**", f"{report.total_edges:,}"))
-    lines.append(row("**Pathways**", nc.get('pathway', 0)))
-    lines.append(row("**Reactions**", nc.get('reaction', 0)))
-    lines.append(row("**Compounds**", nc.get('compound', 0)))
-    lines.append(row("**Enzymes**", nc.get('enzyme', 0)))
+    lines.append(row("**Pathways**", nc.get("pathway", 0)))
+    lines.append(row("**Reactions**", nc.get("reaction", 0)))
+    lines.append(row("**Compounds**", nc.get("compound", 0)))
+    lines.append(row("**Enzymes**", nc.get("enzyme", 0)))
 
     # Edge distribution
     lines.append("\n### Edge Distribution\n")
@@ -146,7 +150,16 @@ def render_thorough_report(report: PathwayAnalysisReport, *, markdown: bool = Tr
     )
     if report.hub_metabolites:
         lines.extend(
-            th("Rank", "Compound", "Formula", "Reactions", "Substrate", "Product", "Pathways", "Load")
+            th(
+                "Rank",
+                "Compound",
+                "Formula",
+                "Reactions",
+                "Substrate",
+                "Product",
+                "Pathways",
+                "Load",
+            )
         )
         for i, h_met in enumerate(report.hub_metabolites, 1):
             lines.append(
@@ -171,7 +184,9 @@ def render_thorough_report(report: PathwayAnalysisReport, *, markdown: bool = Tr
         "Often rate-limiting steps or allosteric control points._\n"
     )
     if report.complex_reactions:
-        lines.extend(th("Rank", "Reaction", "Substrates", "Products", "Enzymes", "Pathways", "Complexity"))
+        lines.extend(
+            th("Rank", "Reaction", "Substrates", "Products", "Enzymes", "Pathways", "Complexity")
+        )
         for i, rxn in enumerate(report.complex_reactions, 1):
             lines.append(
                 row(
@@ -200,7 +215,14 @@ def render_thorough_report(report: PathwayAnalysisReport, *, markdown: bool = Tr
             if len(hub.pathway_names) > 3:
                 example_pwys += f" (+{len(hub.pathway_names) - 3} more)"
             lines.append(
-                row(i, hub.name, hub.formula or "—", hub.pathway_count, hub.reaction_count, example_pwys)
+                row(
+                    i,
+                    hub.name,
+                    hub.formula or "—",
+                    hub.pathway_count,
+                    hub.reaction_count,
+                    example_pwys,
+                )
             )
     else:
         lines.append("_No cross-pathway metabolites detected._")
@@ -218,7 +240,12 @@ def render_thorough_report(report: PathwayAnalysisReport, *, markdown: bool = Tr
             if coupling.shared_count > 3:
                 examples += f" (+{coupling.shared_count - 3} more)"
             lines.append(
-                row(coupling.pathway_a_name, coupling.pathway_b_name, coupling.shared_count, examples)
+                row(
+                    coupling.pathway_a_name,
+                    coupling.pathway_b_name,
+                    coupling.shared_count,
+                    examples,
+                )
             )
     else:
         lines.append("_No pathway coupling detected._")
@@ -238,13 +265,17 @@ def render_thorough_report(report: PathwayAnalysisReport, *, markdown: bool = Tr
         product_only = [d for d in report.dead_end_metabolites if d.role == "product-only"]
 
         if substrate_only:
-            lines.append(f"**Substrate-only** ({len(substrate_only)} — pure inputs, never produced):\n")
+            lines.append(
+                f"**Substrate-only** ({len(substrate_only)} — pure inputs, never produced):\n"
+            )
             lines.extend(th("Compound", "Formula"))
             for d in substrate_only[:10]:
                 lines.append(row(d.name, d.formula or "—"))
 
         if product_only:
-            lines.append(f"\n**Product-only** ({len(product_only)} — terminal outputs, never consumed):\n")
+            lines.append(
+                f"\n**Product-only** ({len(product_only)} — terminal outputs, never consumed):\n"
+            )
             lines.extend(th("Compound", "Formula"))
             for d in product_only[:10]:
                 lines.append(row(d.name, d.formula or "—"))
@@ -306,7 +337,9 @@ def render_thorough_report(report: PathwayAnalysisReport, *, markdown: bool = Tr
     strengths: list[str] = []
 
     if report.pathway_profiles:
-        avg_reactions = sum(p.reaction_count for p in report.pathway_profiles) // len(report.pathway_profiles)
+        avg_reactions = sum(p.reaction_count for p in report.pathway_profiles) // len(
+            report.pathway_profiles
+        )
         strengths.append(
             f"✓ **Well-connected pathways** — {len(report.pathway_profiles)} pathways, "
             f"avg {avg_reactions} reactions each"
@@ -342,11 +375,25 @@ def render_thorough_report(report: PathwayAnalysisReport, *, markdown: bool = Tr
 
     # Cofactor hubs
     cofactor_keywords = {
-        "atp", "adp", "amp", "nad", "nadh", "nadph", "nadp", "coa", "coenzyme a",
-        "fad", "fadh", "gtp", "gdp", "ump", "ctp"
+        "atp",
+        "adp",
+        "amp",
+        "nad",
+        "nadh",
+        "nadph",
+        "nadp",
+        "coa",
+        "coenzyme a",
+        "fad",
+        "fadh",
+        "gtp",
+        "gdp",
+        "ump",
+        "ctp",
     }
     cofactors_found = [
-        h_met for h_met in report.hub_metabolites[:10]
+        h_met
+        for h_met in report.hub_metabolites[:10]
         if any(kw in h_met.name.lower() for kw in cofactor_keywords)
     ]
     if cofactors_found:
@@ -434,9 +481,7 @@ def render_thorough_report(report: PathwayAnalysisReport, *, markdown: bool = Tr
 
     # Long-term modeling
     h(3, "Long-term Metabolic Modeling")
-    lines.append(
-        "Use MetaKG's simulation tools to build predictive models:\n"
-    )
+    lines.append("Use MetaKG's simulation tools to build predictive models:\n")
     lines.append(
         "- **Steady-state analysis**: `metakg-simulate fba --pathway <id>` — "
         "Predict metabolic fluxes at equilibrium\n"
@@ -470,6 +515,8 @@ def render_thorough_report(report: PathwayAnalysisReport, *, markdown: bool = Tr
         lines.append("_(No dead-end metabolites.)_")
 
     # ---- Footer ----
-    lines.append(f"\n\n---\n*Generated by MetaKG thorough pathway analyzer · {report.generated_at}*\n")
+    lines.append(
+        f"\n\n---\n*Generated by MetaKG thorough pathway analyzer · {report.generated_at}*\n"
+    )
 
     return "\n".join(lines)

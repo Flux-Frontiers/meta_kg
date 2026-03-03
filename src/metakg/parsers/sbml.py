@@ -97,7 +97,7 @@ class SBMLParser(PathwayParser):
         if root_tag != "sbml":
             raise ValueError(f"Root element is <{root_tag}>, expected <sbml>")
 
-        ns = root.tag[: root.tag.index("}")+1] if "}" in root.tag else ""
+        ns = root.tag[: root.tag.index("}") + 1] if "}" in root.tag else ""
         nodes: dict[str, MetaNode] = {}
         edges: list[MetaEdge] = []
 
@@ -132,19 +132,19 @@ class SBMLParser(PathwayParser):
                 compartment = sp.attrib.get("compartment", "")
 
                 # Try to extract ChEBI or KEGG from annotation
-                xrefs: dict[str, str] = {}
+                sp_xrefs: dict[str, str] = {}
                 annotation = sp.find(_tag("annotation"))
                 if annotation is not None:
                     ann_text = ET.tostring(annotation, encoding="unicode")
-                    for m in re.finditer(r'identifiers\.org/chebi/([A-Z0-9_:]+)', ann_text):
-                        xrefs["chebi"] = m.group(1)
-                    for m in re.finditer(r'identifiers\.org/kegg\.compound/([A-Z0-9]+)', ann_text):
-                        xrefs["kegg"] = m.group(1)
+                    for m in re.finditer(r"identifiers\.org/chebi/([A-Z0-9_:]+)", ann_text):
+                        sp_xrefs["chebi"] = m.group(1)
+                    for m in re.finditer(r"identifiers\.org/kegg\.compound/([A-Z0-9]+)", ann_text):
+                        sp_xrefs["kegg"] = m.group(1)
 
-                if "chebi" in xrefs:
-                    nid = node_id(KIND_COMPOUND, "chebi", xrefs["chebi"])
-                elif "kegg" in xrefs:
-                    nid = node_id(KIND_COMPOUND, "kegg", xrefs["kegg"])
+                if "chebi" in sp_xrefs:
+                    nid = node_id(KIND_COMPOUND, "chebi", sp_xrefs["chebi"])
+                elif "kegg" in sp_xrefs:
+                    nid = node_id(KIND_COMPOUND, "kegg", sp_xrefs["kegg"])
                 else:
                     nid = synthetic_id(KIND_COMPOUND, sp_id)
 
@@ -158,7 +158,7 @@ class SBMLParser(PathwayParser):
                         kind=KIND_COMPOUND,
                         name=sp_name,
                         description=". ".join(desc_parts),
-                        xrefs=json.dumps(xrefs) if xrefs else None,
+                        xrefs=json.dumps(sp_xrefs) if sp_xrefs else None,
                         source_format="sbml",
                         source_file=str(path),
                     )
@@ -174,9 +174,9 @@ class SBMLParser(PathwayParser):
                 annotation = rxn_elem.find(_tag("annotation"))
                 if annotation is not None:
                     ann_text = ET.tostring(annotation, encoding="unicode")
-                    for m in re.finditer(r'identifiers\.org/kegg\.reaction/([A-Z0-9]+)', ann_text):
+                    for m in re.finditer(r"identifiers\.org/kegg\.reaction/([A-Z0-9]+)", ann_text):
                         xrefs["kegg"] = m.group(1)
-                    for m in re.finditer(r'identifiers\.org/rhea/([0-9]+)', ann_text):
+                    for m in re.finditer(r"identifiers\.org/rhea/([0-9]+)", ann_text):
                         xrefs["rhea"] = m.group(1)
 
                 if "kegg" in xrefs:
@@ -203,18 +203,21 @@ class SBMLParser(PathwayParser):
                         if cid:
                             products.append({"id": cid, "stoich": stoich})
 
-                stoich_blob = json.dumps({
-                    "substrates": substrates,
-                    "products": products,
-                    "direction": "reversible" if reversible else "forward",
-                })
+                stoich_blob = json.dumps(
+                    {
+                        "substrates": substrates,
+                        "products": products,
+                        "direction": "reversible" if reversible else "forward",
+                    }
+                )
 
                 if rxn_nid not in nodes:
                     nodes[rxn_nid] = MetaNode(
                         id=rxn_nid,
                         kind=KIND_REACTION,
                         name=rxn_name,
-                        description=f"SBML reaction: {rxn_name}" + (" (reversible)" if reversible else ""),
+                        description=f"SBML reaction: {rxn_name}"
+                        + (" (reversible)" if reversible else ""),
                         stoichiometry=stoich_blob,
                         xrefs=json.dumps(xrefs) if xrefs else None,
                         source_format="sbml",
@@ -224,15 +227,23 @@ class SBMLParser(PathwayParser):
                 edges.append(MetaEdge(src=pwy_id, rel=REL_CONTAINS, dst=rxn_nid))
 
                 for s in substrates:
-                    edges.append(MetaEdge(
-                        src=s["id"], rel=REL_SUBSTRATE_OF, dst=rxn_nid,
-                        evidence=json.dumps({"stoich": s["stoich"]}),
-                    ))
+                    edges.append(
+                        MetaEdge(
+                            src=s["id"],
+                            rel=REL_SUBSTRATE_OF,
+                            dst=rxn_nid,
+                            evidence=json.dumps({"stoich": s["stoich"]}),
+                        )
+                    )
                 for p in products:
-                    edges.append(MetaEdge(
-                        src=rxn_nid, rel=REL_PRODUCT_OF, dst=p["id"],
-                        evidence=json.dumps({"stoich": p["stoich"]}),
-                    ))
+                    edges.append(
+                        MetaEdge(
+                            src=rxn_nid,
+                            rel=REL_PRODUCT_OF,
+                            dst=p["id"],
+                            evidence=json.dumps({"stoich": p["stoich"]}),
+                        )
+                    )
 
                 # Modifiers (enzymes/inhibitors/activators)
                 for mods_list in rxn_elem.findall(_tag("listOfModifiers")):
@@ -249,14 +260,28 @@ class SBMLParser(PathwayParser):
                         else:
                             rel = REL_CATALYZES
                         # Modifier could be enzyme or compound — promote to enzyme kind
-                        if mod_cid in nodes and nodes[mod_cid].kind == KIND_COMPOUND and rel == REL_CATALYZES:
+                        if (
+                            mod_cid in nodes
+                            and nodes[mod_cid].kind == KIND_COMPOUND
+                            and rel == REL_CATALYZES
+                        ):
                             old = nodes[mod_cid]
                             nodes[mod_cid] = MetaNode(
-                                id=old.id, kind=KIND_ENZYME, name=old.name,
-                                description=old.description, xrefs=old.xrefs,
-                                source_format=old.source_format, source_file=old.source_file,
+                                id=old.id,
+                                kind=KIND_ENZYME,
+                                name=old.name,
+                                description=old.description,
+                                xrefs=old.xrefs,
+                                source_format=old.source_format,
+                                source_file=old.source_file,
                             )
-                        edges.append(MetaEdge(src=mod_cid, rel=rel, dst=rxn_nid,
-                                               evidence=json.dumps({"sbo": sbo}) if sbo else None))
+                        edges.append(
+                            MetaEdge(
+                                src=mod_cid,
+                                rel=rel,
+                                dst=rxn_nid,
+                                evidence=json.dumps({"sbo": sbo}) if sbo else None,
+                            )
+                        )
 
         return list(nodes.values()), edges

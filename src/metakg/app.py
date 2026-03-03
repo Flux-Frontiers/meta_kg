@@ -29,7 +29,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 from pyvis.network import Network
 
-from metakg.simulate import MetabolicSimulator, SimulationConfig
+from metakg.simulate import FBAResult, MetabolicSimulator, ODEResult, SimulationConfig
 from metakg.store import GraphStore
 
 # ---------------------------------------------------------------------------
@@ -44,10 +44,10 @@ _KIND_COLOR: dict[str, str] = {
 }
 
 # String truncation limits for different contexts
-_DESCRIPTION_BRIEF_LEN = 80          # Node list view (expander)
-_DESCRIPTION_HOVER_LEN = 150         # Hover title
-_DESCRIPTION_CARD_LEN = 200          # Search result card
-_LABEL_TRUNCATE_LEN = 30             # Bar chart labels
+_DESCRIPTION_BRIEF_LEN = 80  # Node list view (expander)
+_DESCRIPTION_HOVER_LEN = 150  # Hover title
+_DESCRIPTION_CARD_LEN = 200  # Search result card
+_LABEL_TRUNCATE_LEN = 30  # Bar chart labels
 _LABEL_TRUNCATE_SUFFIX = "…"
 
 _KIND_SHAPE: dict[str, str] = {
@@ -211,9 +211,7 @@ def _get_node_label(node: dict[str, Any] | None) -> str:
     return node_id
 
 
-def _build_node_label_map(
-    node_ids: list[str], store: GraphStore
-) -> dict[str, str]:
+def _build_node_label_map(node_ids: list[str], store: GraphStore) -> dict[str, str]:
     """
     Build a mapping of node IDs to display labels using batch query.
 
@@ -427,9 +425,7 @@ def _tab_graph(cfg: dict[str, Any]) -> None:
         filtered_nodes = filtered_nodes[: cfg["max_nodes"]]
         node_ids = {n["id"] for n in filtered_nodes}
         filtered_edges = [
-            e
-            for e in filtered_edges
-            if e.get("src") in node_ids and e.get("dst") in node_ids
+            e for e in filtered_edges if e.get("src") in node_ids and e.get("dst") in node_ids
         ]
 
     st.caption(f"Showing {len(filtered_nodes)} nodes and {len(filtered_edges)} edges")
@@ -589,15 +585,11 @@ def _tab_details(cfg: dict[str, Any]) -> None:
                             st.markdown(f"**Outgoing ({len(outgoing_edges)})**")
                             for e in outgoing_edges:
                                 dst_node = store.get_node(e["dst"])
-                                dst_name = (
-                                    dst_node.get("name", e["dst"])
-                                    if dst_node
-                                    else e["dst"]
-                                )
+                                dst_name = dst_node.get("name", e["dst"]) if dst_node else e["dst"]
                                 color = _REL_COLOR.get(e["rel"], "#95A5A6")
                                 st.markdown(
                                     f'<span style="color:{color}">→</span> '
-                                    f'<b>{e["rel"]}</b> {dst_name}',
+                                    f"<b>{e['rel']}</b> {dst_name}",
                                     unsafe_allow_html=True,
                                 )
 
@@ -606,15 +598,11 @@ def _tab_details(cfg: dict[str, Any]) -> None:
                             st.markdown(f"**Incoming ({len(incoming_edges)})**")
                             for e in incoming_edges:
                                 src_node = store.get_node(e["src"])
-                                src_name = (
-                                    src_node.get("name", e["src"])
-                                    if src_node
-                                    else e["src"]
-                                )
+                                src_name = src_node.get("name", e["src"]) if src_node else e["src"]
                                 color = _REL_COLOR.get(e["rel"], "#95A5A6")
                                 st.markdown(
                                     f'<span style="color:{color}">←</span> '
-                                    f'{src_name} <b>{e["rel"]}</b>',
+                                    f"{src_name} <b>{e['rel']}</b>",
                                     unsafe_allow_html=True,
                                 )
             except Exception as e:
@@ -661,9 +649,7 @@ def _tab_simulation(cfg: dict[str, Any]) -> None:
         sim_type = st.selectbox("Simulation type", options=["ODE", "FBA"])
 
         t_end = st.number_input("Stop time", min_value=1.0, value=100.0, step=10.0)
-        t_points = st.number_input(
-            "Points", min_value=10, max_value=2000, value=300, step=10
-        )
+        t_points = st.number_input("Points", min_value=10, max_value=2000, value=300, step=10)
 
         start = st.button("▶ Start", use_container_width=True)
         stop = st.button("⏹ Stop", use_container_width=True)
@@ -698,20 +684,21 @@ def _tab_simulation(cfg: dict[str, Any]) -> None:
 
         with st.spinner(f"Running {sim_type} simulation..."):
             if sim_type == "ODE":
-                result = sim.run_ode(config)
+                result: FBAResult | ODEResult = sim.run_ode(config)
             else:
                 result = sim.run_fba(config)
 
         st.session_state["sim_result"] = result
 
-    result = st.session_state.get("sim_result")
+    result_obj: FBAResult | ODEResult | None = st.session_state.get("sim_result")
     current_type = st.session_state.get("sim_type", sim_type)
 
-    if result is None:
+    if result_obj is None:
         st.info("Select simulation parameters in the sidebar and click Start.")
         return
 
-    if current_type == "ODE":
+    if current_type == "ODE" and isinstance(result_obj, ODEResult):
+        result = result_obj
         if result.status != "ok":
             st.error(f"ODE failed: {result.message}")
             return
@@ -750,14 +737,13 @@ def _tab_simulation(cfg: dict[str, Any]) -> None:
             {
                 "Compound": [cpd_names[c] for c in selected_cpds],
                 "Compound ID": selected_cpds,
-                "Final concentration [mM]": [
-                    result.concentrations[c][-1] for c in selected_cpds
-                ],
+                "Final concentration [mM]": [result.concentrations[c][-1] for c in selected_cpds],
             }
         ).sort_values("Final concentration [mM]", ascending=False)
         st.dataframe(final_df, use_container_width=True, hide_index=True)
 
-    else:
+    elif isinstance(result_obj, FBAResult):
+        result = result_obj
         if result.status != "optimal":
             st.error(f"FBA failed: {result.message}")
             return
@@ -792,7 +778,7 @@ def _tab_simulation(cfg: dict[str, Any]) -> None:
         fig, ax = plt.subplots(figsize=(10, 5))
         # Use short labels for the bar chart
         short_labels = [
-            name[: _LABEL_TRUNCATE_LEN] + _LABEL_TRUNCATE_SUFFIX
+            name[:_LABEL_TRUNCATE_LEN] + _LABEL_TRUNCATE_SUFFIX
             if len(name) > _LABEL_TRUNCATE_LEN
             else name
             for name in plot_df["Reaction"]

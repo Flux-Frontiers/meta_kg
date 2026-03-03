@@ -11,7 +11,6 @@ Author: Eric G. Suchanek, PhD
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 
 def launch(
@@ -36,9 +35,11 @@ def launch(
     """
     try:
         import pyvista as pv
+
         from metakg.store import GraphStore
     except ImportError:
         import sys
+
         print(
             "ERROR: PyVista and related dependencies not installed.\n"
             "Install visualization support with: poetry install --extras viz3d",
@@ -72,13 +73,11 @@ def launch(
         layout_edges = [LayoutEdge.from_dict(e) for e in edges_data]
 
         # Select and compute layout
+        from metakg.layout3d import AlliumLayout, LayerCakeLayout, Layout3D
+
         if layout_name == "cake":
-            from metakg.layout3d import LayerCakeLayout
-
-            layout = LayerCakeLayout()
+            layout: Layout3D = LayerCakeLayout()
         else:  # default: allium
-            from metakg.layout3d import AlliumLayout
-
             layout = AlliumLayout()
 
         positions = layout.compute(layout_nodes, layout_edges)

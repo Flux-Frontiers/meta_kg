@@ -33,7 +33,7 @@ Last Revision: 2026-02-28 20:55:28
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from metakg.primitives import KineticParam, RegulatoryInteraction, _kp_id, _ri_id
 
@@ -572,7 +572,7 @@ _KEGG_REGULATORY: dict[str, list[dict]] = {
 # ---------------------------------------------------------------------------
 
 
-def seed_kinetics(store: "MetaStore", *, force: bool = False) -> tuple[int, int]:
+def seed_kinetics(store: MetaStore, *, force: bool = False) -> tuple[int, int]:
     """
     Populate ``kinetic_parameters`` and ``regulatory_interactions`` from the
     curated literature tables above.
@@ -657,12 +657,12 @@ def seed_kinetics(store: "MetaStore", *, force: bool = False) -> tuple[int, int]
         rxn_id = rxn_node["id"]
 
         # Find catalysing enzymes
-        enzyme_ids = [
-            e["src"]
+        reg_enzyme_ids: list[str] = [
+            cast(str, e["src"])
             for e in store.edges_of(rxn_id)
             if e["rel"] == "CATALYZES" and e["dst"] == rxn_id
         ]
-        if not enzyme_ids:
+        if not reg_enzyme_ids:
             continue  # No enzyme to attach regulation to
 
         for reg in reg_list:
@@ -671,7 +671,7 @@ def seed_kinetics(store: "MetaStore", *, force: bool = False) -> tuple[int, int]
                 continue
             cpd_id = cpd_node["id"]
 
-            for enz_id in enzyme_ids:
+            for enz_id in reg_enzyme_ids:
                 ri_id = _ri_id(enz_id, cpd_id, reg["interaction_type"])
                 if not force and ri_id in existing_ri_ids:
                     continue

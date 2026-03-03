@@ -47,7 +47,6 @@ Last Revision: 2026-02-28 20:55:28
 
 from __future__ import annotations
 
-import json
 import sqlite3
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -288,9 +287,7 @@ class PathwayAnalyzer:
     # Phase 2: hub metabolites
     # ------------------------------------------------------------------
 
-    def _phase2_hub_metabolites(
-        self, membership: dict[str, set[str]]
-    ) -> list[HubMetabolite]:
+    def _phase2_hub_metabolites(self, membership: dict[str, set[str]]) -> list[HubMetabolite]:
         """
         Find compounds that participate in the most reactions.
         Analogous to 'most-called functions' (fan-in) in code analysis.
@@ -413,9 +410,7 @@ class PathwayAnalyzer:
     # Phase 4: cross-pathway hubs
     # ------------------------------------------------------------------
 
-    def _phase4_cross_pathway_hubs(
-        self, membership: dict[str, set[str]]
-    ) -> list[CrossPathwayHub]:
+    def _phase4_cross_pathway_hubs(self, membership: dict[str, set[str]]) -> list[CrossPathwayHub]:
         """
         Identify metabolites that appear in two or more distinct pathways.
         These are the 'shared utility' metabolites bridging multiple biological processes.
@@ -427,9 +422,7 @@ class PathwayAnalyzer:
                 cpd_to_pathways[cid].add(pwy_id)
 
         # Only keep compounds in 2+ pathways
-        multi_pwy = {
-            cid: pwys for cid, pwys in cpd_to_pathways.items() if len(pwys) >= 2
-        }
+        multi_pwy = {cid: pwys for cid, pwys in cpd_to_pathways.items() if len(pwys) >= 2}
 
         # Reaction count per compound
         cur = self.conn.execute(
@@ -449,9 +442,7 @@ class PathwayAnalyzer:
 
         results: list[CrossPathwayHub] = []
         for cid, pwy_ids in sorted(multi_pwy.items(), key=lambda x: -len(x[1])):
-            cur3 = self.conn.execute(
-                "SELECT name, formula FROM meta_nodes WHERE id=?", (cid,)
-            )
+            cur3 = self.conn.execute("SELECT name, formula FROM meta_nodes WHERE id=?", (cid,))
             row = cur3.fetchone()
             if not row:
                 continue
@@ -472,16 +463,12 @@ class PathwayAnalyzer:
     # Phase 5: pathway coupling
     # ------------------------------------------------------------------
 
-    def _phase5_pathway_coupling(
-        self, membership: dict[str, set[str]]
-    ) -> list[PathwayCoupling]:
+    def _phase5_pathway_coupling(self, membership: dict[str, set[str]]) -> list[PathwayCoupling]:
         """
         Find pairs of pathways that share the most compounds.
         Analogous to module-level dependency coupling in code analysis.
         """
-        pwy_names_cur = self.conn.execute(
-            "SELECT id, name FROM meta_nodes WHERE kind='pathway'"
-        )
+        pwy_names_cur = self.conn.execute("SELECT id, name FROM meta_nodes WHERE kind='pathway'")
         pwy_names: dict[str, str] = {r[0]: r[1] for r in pwy_names_cur.fetchall()}
 
         pwy_ids = list(membership.keys())
@@ -497,9 +484,7 @@ class PathwayAnalyzer:
                 # Resolve compound names (limit to top 5 for the report)
                 shared_names: list[str] = []
                 for cid in list(shared_cpd_ids)[:5]:
-                    cur = self.conn.execute(
-                        "SELECT name FROM meta_nodes WHERE id=?", (cid,)
-                    )
+                    cur = self.conn.execute("SELECT name FROM meta_nodes WHERE id=?", (cid,))
                     row = cur.fetchone()
                     if row:
                         shared_names.append(row[0])
@@ -547,9 +532,7 @@ class PathwayAnalyzer:
         )
         as_prod: dict[str, int] = {r[0]: r[1] for r in cur.fetchall()}
 
-        cur = self.conn.execute(
-            "SELECT id, name, formula FROM meta_nodes WHERE kind='compound'"
-        )
+        cur = self.conn.execute("SELECT id, name, formula FROM meta_nodes WHERE kind='compound'")
         compound_rows = cur.fetchall()
 
         dead_ends: list[DeadEndMetabolite] = []
@@ -769,19 +752,17 @@ def render_report(report: PathwayAnalysisReport, *, markdown: bool = True) -> st
         else:
             lines.append(f"\n{'=' * level} {text} {'=' * level}\n")
 
-    def row(*cols: str) -> str:
+    def row(*cols: str | int) -> str:
         return "| " + " | ".join(str(c) for c in cols) + " |"
 
-    def th(*cols: str) -> list[str]:
+    def th(*cols: str | int) -> list[str]:
         header = row(*cols)
         sep = "| " + " | ".join("---" for _ in cols) + " |"
         return [header, sep]
 
     # ---- Title ----
     h(1, "metaKG_analysis")
-    lines.append(
-        f"**Database:** `{report.db_path}`  \n**Generated:** {report.generated_at}\n"
-    )
+    lines.append(f"**Database:** `{report.db_path}`  \n**Generated:** {report.generated_at}\n")
 
     # ---- Phase 1: Baseline stats ----
     h(2, "Phase 1 — Graph Statistics")
@@ -801,9 +782,7 @@ def render_report(report: PathwayAnalysisReport, *, markdown: bool = True) -> st
         h(3, "Pathway Profiles")
         lines.extend(th("Pathway", "Reactions", "Compounds", "Enzymes"))
         for p in report.pathway_profiles:
-            lines.append(
-                row(p.name, p.reaction_count, p.compound_count, p.enzyme_count)
-            )
+            lines.append(row(p.name, p.reaction_count, p.compound_count, p.enzyme_count))
 
     # ---- Phase 2: Hub metabolites ----
     h(2, "Phase 2 — Hub Metabolites (Highest Connectivity)")
@@ -838,9 +817,7 @@ def render_report(report: PathwayAnalysisReport, *, markdown: bool = True) -> st
                 )
             )
     else:
-        lines.append(
-            "_No compound–reaction edges found. Build the knowledge graph first._"
-        )
+        lines.append("_No compound–reaction edges found. Build the knowledge graph first._")
 
     # ---- Phase 3: Complex reactions ----
     h(2, "Phase 3 — Complex Reactions (Highest Stoichiometric Complexity)")
@@ -882,9 +859,7 @@ def render_report(report: PathwayAnalysisReport, *, markdown: bool = True) -> st
         "of metabolism. These are integration points between biological modules._\n"
     )
     if report.cross_pathway_hubs:
-        lines.extend(
-            th("Rank", "Compound", "Formula", "Pathways", "Reactions", "Examples")
-        )
+        lines.extend(th("Rank", "Compound", "Formula", "Pathways", "Reactions", "Examples"))
         for i, hub in enumerate(report.cross_pathway_hubs, 1):
             example_pwys = "; ".join(hub.pathway_names[:3])
             if len(hub.pathway_names) > 3:
@@ -935,16 +910,10 @@ def render_report(report: PathwayAnalysisReport, *, markdown: bool = True) -> st
         "incompletely parsed data._\n"
     )
     if report.dead_end_metabolites:
-        lines.append(
-            f"Found **{len(report.dead_end_metabolites)}** dead-end metabolites."
-        )
+        lines.append(f"Found **{len(report.dead_end_metabolites)}** dead-end metabolites.")
 
-        substrate_only = [
-            d for d in report.dead_end_metabolites if d.role == "substrate-only"
-        ]
-        product_only = [
-            d for d in report.dead_end_metabolites if d.role == "product-only"
-        ]
+        substrate_only = [d for d in report.dead_end_metabolites if d.role == "substrate-only"]
+        product_only = [d for d in report.dead_end_metabolites if d.role == "product-only"]
 
         if substrate_only:
             lines.append(
@@ -1048,12 +1017,8 @@ def render_report(report: PathwayAnalysisReport, *, markdown: bool = True) -> st
         )
 
     # Dead ends
-    substrate_only_count = sum(
-        1 for d in report.dead_end_metabolites if d.role == "substrate-only"
-    )
-    product_only_count = sum(
-        1 for d in report.dead_end_metabolites if d.role == "product-only"
-    )
+    substrate_only_count = sum(1 for d in report.dead_end_metabolites if d.role == "substrate-only")
+    product_only_count = sum(1 for d in report.dead_end_metabolites if d.role == "product-only")
     if substrate_only_count or product_only_count:
         insights.append(
             f"**Dead-end metabolites**: {substrate_only_count} substrate-only and "
@@ -1083,8 +1048,6 @@ def render_report(report: PathwayAnalysisReport, *, markdown: bool = True) -> st
         lines.append(f"\n- {insight}")
 
     # ---- Footer ----
-    lines.append(
-        f"\n\n---\n*Generated by MetaKG pathway analyzer · {report.generated_at}*\n"
-    )
+    lines.append(f"\n\n---\n*Generated by MetaKG pathway analyzer · {report.generated_at}*\n")
 
     return "\n".join(lines)

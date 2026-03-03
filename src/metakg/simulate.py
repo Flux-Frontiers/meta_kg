@@ -54,6 +54,10 @@ import json
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+import numpy as np
+from scipy.integrate import solve_ivp
+from scipy.optimize import linprog
+
 if TYPE_CHECKING:
     from metakg.store import MetaStore
 
@@ -228,18 +232,6 @@ class MetabolicSimulator:
         :param config: Simulation scope and parameters.
         :return: :class:`FBAResult` with optimal fluxes and shadow prices.
         """
-        try:
-            import numpy as np
-            from scipy.optimize import linprog
-        except ImportError:
-            return FBAResult(
-                status="error",
-                objective_value=None,
-                fluxes={},
-                shadow_prices={},
-                message="scipy is required for FBA.  Install it: pip install scipy",
-            )
-
         rxn_ids, cpd_ids, S, rev_flags = self._build_stoich_matrix(config)
 
         if not rxn_ids:
@@ -273,7 +265,7 @@ class MetabolicSimulator:
             # Maximise sum of all forward fluxes as surrogate
             sign = -1.0 if config.maximize else 1.0
             for j, rxn_id in enumerate(rxn_ids):
-                lb, ub = bounds[j]
+                lb, _ = bounds[j]
                 if lb >= 0:  # irreversible
                     c[j] = sign / n_rxn
 
@@ -324,17 +316,6 @@ class MetabolicSimulator:
         :param config: Simulation scope and parameters.
         :return: :class:`ODEResult` with concentration time-courses.
         """
-        try:
-            import numpy as np
-            from scipy.integrate import solve_ivp
-        except ImportError:
-            return ODEResult(
-                status="error",
-                t=[],
-                concentrations={},
-                message="scipy is required for ODE.  Install it: pip install scipy",
-            )
-
         rxn_ids, cpd_ids, S, rev_flags = self._build_stoich_matrix(config)
 
         if not rxn_ids:
@@ -349,12 +330,9 @@ class MetabolicSimulator:
 
         # Pre-build reaction specs (avoid repeated dict lookups in hot loop)
         n_cpd = len(cpd_ids)
-        cpd_index = {c: i for i, c in enumerate(cpd_ids)}
         rxn_specs = []
         for j, rxn_id in enumerate(rxn_ids):
-            substrates = [
-                (i, float(-S[i, j])) for i in range(n_cpd) if S[i, j] < -1e-10
-            ]
+            substrates = [(i, float(-S[i, j])) for i in range(n_cpd) if S[i, j] < -1e-10]
             products = [(i, float(S[i, j])) for i in range(n_cpd) if S[i, j] > 1e-10]
             kp = kparams.get(rxn_id, {})
             vmax = kp.get("vmax") or self.DEFAULT_VMAX
@@ -374,13 +352,10 @@ class MetabolicSimulator:
             )
 
         y0 = np.array(
-            [
-                config.initial_concentrations.get(c, config.default_concentration)
-                for c in cpd_ids
-            ]
+            [config.initial_concentrations.get(c, config.default_concentration) for c in cpd_ids]
         )
 
-        def _dydt(_t: float, y: "np.ndarray") -> "np.ndarray":
+        def _dydt(_t: float, y: np.ndarray) -> np.ndarray:
             yc = np.maximum(y, 0.0)  # clamp negatives
             dy = np.zeros(n_cpd)
             for spec in rxn_specs:
@@ -391,7 +366,7 @@ class MetabolicSimulator:
                     dy[idx] += stoich * v
             return dy
 
-        def _mm_rate(spec: dict, y: "np.ndarray", cpd_ids: list[str]) -> float:
+        def _mm_rate(spec: dict, y: np.ndarray, cpd_ids: list[str]) -> float:
             substrates = spec["substrates"]
             if not substrates:
                 return 0.0
@@ -425,9 +400,7 @@ class MetabolicSimulator:
             return v_fwd - v_rev
 
         t_span = (0.0, config.t_end)
-        t_eval = [
-            config.t_end * i / (config.t_points - 1) for i in range(config.t_points)
-        ]
+        t_eval = [config.t_end * i / (config.t_points - 1) for i in range(config.t_points)]
 
         try:
             # Build solve_ivp kwargs, excluding max_step if None (let solver choose)
@@ -447,7 +420,7 @@ class MetabolicSimulator:
                 t_eval=t_eval,
                 **solve_kwargs,
             )
-        except Exception as exc:
+        except (ValueError, RuntimeError) as exc:
             return ODEResult(
                 status="error",
                 t=[],
@@ -531,7 +504,7 @@ class MetabolicSimulator:
     def _build_stoich_matrix(
         self,
         config: SimulationConfig,
-    ) -> tuple[list[str], list[str], "np.ndarray", dict[str, bool]]:
+    ) -> tuple[list[str], list[str], np.ndarray, dict[str, bool]]:
         """
         Build the stoichiometric matrix S from the store.
 
@@ -540,8 +513,6 @@ class MetabolicSimulator:
 
         :return: ``(rxn_ids, cpd_ids, S, rev_flags)``
         """
-        import numpy as np
-
         # Determine which reactions to include
         if config.reaction_ids:
             rxn_ids = list(config.reaction_ids)
@@ -713,9 +684,7 @@ class MetabolicSimulator:
                     lb, ub = new_cfg.flux_bounds.get(rxn_id, (0.0, 1000.0))
                     new_cfg.flux_bounds[rxn_id] = (lb, ub * factor)
                 else:
-                    new_cfg.vmax_factors[rxn_id] = (
-                        new_cfg.vmax_factors.get(rxn_id, 1.0) * factor
-                    )
+                    new_cfg.vmax_factors[rxn_id] = new_cfg.vmax_factors.get(rxn_id, 1.0) * factor
 
         for cpd_id, conc in scenario.initial_conc_overrides.items():
             new_cfg.initial_concentrations[cpd_id] = conc
@@ -730,7 +699,7 @@ class MetabolicSimulator:
 
 def render_fba_result(
     result: FBAResult,
-    store: "MetaStore | None" = None,
+    store: MetaStore | None = None,
     *,
     top_n: int = 20,
     markdown: bool = True,
@@ -757,9 +726,7 @@ def render_fba_result(
     lines.append("")
 
     if result.fluxes:
-        sorted_rxns = sorted(
-            result.fluxes.items(), key=lambda x: abs(x[1]), reverse=True
-        )
+        sorted_rxns = sorted(result.fluxes.items(), key=lambda x: abs(x[1]), reverse=True)
         lines.append(f"{h3}Top {min(top_n, len(sorted_rxns))} Fluxes (by magnitude)")
         if markdown:
             lines.append("| Reaction | ID | Flux |")
@@ -778,9 +745,7 @@ def render_fba_result(
     if result.shadow_prices:
         lines.append("")
         lines.append(f"{h3}Top Shadow Prices")
-        sorted_sp = sorted(
-            result.shadow_prices.items(), key=lambda x: abs(x[1]), reverse=True
-        )
+        sorted_sp = sorted(result.shadow_prices.items(), key=lambda x: abs(x[1]), reverse=True)
         if markdown:
             lines.append("| Compound | ID | Shadow Price |")
             lines.append("|---|---|---:|")
@@ -800,7 +765,7 @@ def render_fba_result(
 
 def render_ode_result(
     result: ODEResult,
-    store: "MetaStore | None" = None,
+    store: MetaStore | None = None,
     *,
     top_n: int = 20,
     markdown: bool = True,
@@ -827,9 +792,7 @@ def render_ode_result(
     if result.concentrations:
         final_concs = {c: vals[-1] for c, vals in result.concentrations.items() if vals}
         sorted_cpds = sorted(final_concs.items(), key=lambda x: x[1], reverse=True)
-        lines.append(
-            f"{h3}Final Concentrations (t = {result.t[-1] if result.t else '?'})"
-        )
+        lines.append(f"{h3}Final Concentrations (t = {result.t[-1] if result.t else '?'})")
         if markdown:
             lines.append("| Compound | ID | Final [mM] |")
             lines.append("|---|---|---:|")
@@ -849,7 +812,7 @@ def render_ode_result(
 
 def render_whatif_result(
     result: WhatIfResult,
-    store: "MetaStore | None" = None,
+    store: MetaStore | None = None,
     *,
     top_n: int = 20,
     markdown: bool = True,
@@ -921,9 +884,7 @@ def render_whatif_result(
             )
             lines.append(f"{h3}Final Concentration Changes (Δ[C] at t_end)")
             if markdown:
-                lines.append(
-                    "| Compound | ID | Baseline [mM] | Perturbed [mM] | Δ [mM] |"
-                )
+                lines.append("| Compound | ID | Baseline [mM] | Perturbed [mM] | Δ [mM] |")
                 lines.append("|---|---|---:|---:|---:|")
             for cpd_id, delta in sorted_deltas[:top_n]:
                 if abs(delta) < 1e-8:
