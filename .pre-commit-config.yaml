@@ -9,7 +9,7 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
         args: [--maxkb=1000]
-        exclude: '^(docs|article)/.*\.(png|jpg|jpeg|gif|pdf)$|^\.codekg/'
+        exclude: '^(docs|article)/.*\.(png|jpg|jpeg|gif|pdf)$|^\.codekg/|^data/kegg_.*\.tsv$'
       - id: debug-statements
 
   - repo: local

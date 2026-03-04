@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Name enrichment pipeline** (`src/metakg/enrich.py`) — New module that replaces bare KEGG accessions (`C00031`, `R00710`) with human-readable names stored directly in `meta_nodes.name`. Phase 1 (no network): derives reaction labels from catalysing enzyme gene symbols via `CATALYZES` edges (e.g. `R00710` → `ADH1A / ADH1B / ADH1C`). Phase 2 (requires TSV files): updates compound and reaction names from downloaded KEGG name lists. Both phases are idempotent.
+
+- **`metakg-enrich` CLI command** (`src/metakg/cli.py`, `pyproject.toml`) — Standalone Click command for running name enrichment against an existing database: `metakg-enrich [--db PATH] [--data DIR]`. Also integrated as `--enrich` / `--enrich-data` flags on `metakg-build` for a single-step build+enrich workflow.
+
+- **`scripts/download_kegg_names.py`** — New bulk-download script that fetches the KEGG compound list (~19 500 entries) and reaction list (~12 400 entries) from `rest.kegg.jp/list/` and saves them as `data/kegg_compound_names.tsv` / `data/kegg_reaction_names.tsv`. Supports `--data DIR`, `--force`, `--quiet`; includes 1-second courtesy pause between requests per KEGG policy.
+
+- **`data/kegg_compound_names.tsv` / `data/kegg_reaction_names.tsv`** — Bulk KEGG name lookup tables (19 571 compounds, 12 384 reactions) committed to the repository; used by `metakg-enrich` Phase 2 and available for offline enrichment without re-downloading.
+
+- **`MetaKG.enrich()` public method** (`src/metakg/orchestrator.py`) — Exposes enrichment via the high-level orchestrator: `kg.enrich(data_dir=None) → EnrichStats`. `build()` gains `enrich=False` and `enrich_data_dir=None` parameters.
+
+### Changed
+
+- **CLI fully migrated from argparse to Click** (`src/metakg/cli.py`) — All CLI commands rewritten with Click decorators (`@click.command`, `@click.group`, `@click.option`). `metakg-simulate` is now a `@click.group()` with shared `--db/--output/--plain/--top` options passed via `ctx.obj` to `fba`, `ode`, `whatif`, and `seed` subcommands. Error handling uses `raise click.ClickException(msg)` and `click.echo(..., err=True)`. Every command and subcommand now supports `--help` automatically. `click >= 8.0` added as a core dependency.
+
+- **`docs/CAPABILITIES.md` updated to v0.2.0** — Added §5 (Name Enrichment) covering both enrichment phases, download script, CLI, and Python API. Updated ODE solver documentation from RK45 to BDF throughout with stiffness warning. Added `ode_method`, `ode_rtol`, `ode_atol`, `ode_max_step` fields to `SimulationConfig` reference. Added `click`, `matplotlib`, and `pandas` to dependency tables. Added `metakg-enrich` to CLI reference.
+
+- **Optional viz dependencies expanded** (`pyproject.toml`) — `matplotlib >= 3.8.0` and `pandas >= 2.0.0` added as optional dependencies, included in the `[viz]` and `[all]` extras.
+
+### Fixed
+
+- **SQLite threading error in Streamlit** (`src/metakg/store.py`) — `sqlite3.connect()` now passes `check_same_thread=False`, resolving "SQLite objects created in a thread can only be used in that same thread" errors that occurred when the Streamlit app cached a connection via `@st.cache_resource` and served requests from worker threads.
+
 ### Changed
 
 - **`store.query_semantic()` renamed to `query_text()`** (`src/metakg/store.py`, `src/metakg/app.py`) — Method renamed to accurately reflect that it performs a text-based substring match, not a true semantic/vector search; semantic search remains in `MetaIndex`. Docstring updated to clarify the distinction and direct users to `MetaIndex` for embedding-based queries.

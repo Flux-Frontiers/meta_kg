@@ -1,7 +1,7 @@
 
 # MetaKG — Complete Capabilities Reference
 
-**v0.1.0** · Metabolic pathway knowledge graph with simulation, semantic search, and MCP tooling.
+**v0.2.0** · Metabolic pathway knowledge graph with simulation, semantic search, and MCP tooling.
 
 ---
 
@@ -11,18 +11,19 @@
 2. [Data Model](#2-data-model)
 3. [File Format Parsers](#3-file-format-parsers)
 4. [Building the Knowledge Graph](#4-building-the-knowledge-graph-metakg-build)
-5. [Semantic Search & Vector Index](#5-semantic-search--vector-index)
-6. [Simulation Engine](#6-simulation-engine)
-   - [FBA — Flux Balance Analysis](#61-fba--flux-balance-analysis)
-   - [ODE — Kinetic Simulation](#62-ode--kinetic-simulation)
-   - [WhatIf — Perturbation Analysis](#63-whatif--perturbation-analysis)
-7. [Kinetic & Regulatory Parameters](#7-kinetic--regulatory-parameters)
-8. [Pathway Analysis](#8-pathway-analysis-metakg-analyze)
-9. [MCP Server & Tools](#9-mcp-server--tools-metakg-mcp)
-10. [CLI Reference](#10-cli-reference)
-11. [Python API Reference](#11-python-api-reference)
-12. [Database Schema](#12-database-schema)
-13. [Dependencies & Extras](#13-dependencies--extras)
+5. [Name Enrichment](#5-name-enrichment-metakg-enrich)
+6. [Semantic Search & Vector Index](#6-semantic-search--vector-index)
+7. [Simulation Engine](#7-simulation-engine)
+   - [FBA — Flux Balance Analysis](#71-fba--flux-balance-analysis)
+   - [ODE — Kinetic Simulation](#72-ode--kinetic-simulation)
+   - [WhatIf — Perturbation Analysis](#73-whatif--perturbation-analysis)
+8. [Kinetic & Regulatory Parameters](#8-kinetic--regulatory-parameters)
+9. [Pathway Analysis](#9-pathway-analysis-metakg-analyze)
+10. [MCP Server & Tools](#10-mcp-server--tools-metakg-mcp)
+11. [CLI Reference](#11-cli-reference)
+12. [Python API Reference](#12-python-api-reference)
+13. [Database Schema](#13-database-schema)
+14. [Dependencies & Extras](#14-dependencies--extras)
 
 ---
 
@@ -42,14 +43,20 @@
   │  (SQLite WAL)  │        │  (vector index)   │
   └───────┬────────┘        └──────────────────┘
           │
+          ▼  enrich.py (optional post-build pass)
+  ┌────────────────┐
+  │  Name Enricher  │  Phase 1: enzyme labels from CATALYZES edges
+  │                 │  Phase 2: KEGG TSV → human-readable names
+  └───────┬────────┘
+          │
     ┌─────┴────────────────────────────────┐
     │              MetaKG                  │  high-level orchestrator
-    │  query · find_path · build · close   │
+    │  build · enrich · query · find_path  │
     └────┬─────────┬──────────┬────────────┘
          │         │          │
          ▼         ▼          ▼
    CLI tools   MCP server   Python API
-  (6 commands) (9 tools)
+  (9 commands) (9 tools)
          │
    ┌─────┴─────────────────────────────────────┐
    │          MetabolicSimulator               │
@@ -57,7 +64,7 @@
    └───────────────────────────────────────────┘
 ```
 
-MetaKG keeps all graph data in a local **SQLite** file (`.metakg/meta.sqlite`) and an optional **LanceDB** directory (`.metakg/lancedb`) for vector-similarity search.  All components interact through a single stable API; the MCP server and CLI are thin wrappers.
+MetaKG keeps all graph data in a local **SQLite** file (`.metakg/meta.sqlite`) and an optional **LanceDB** directory (`.metakg/lancedb`) for vector-similarity search.  An optional enrichment pass replaces bare KEGG accessions with human-readable names stored directly in the database.  All components interact through a single stable API; the MCP server and CLI are thin wrappers.
 
 ---
 
@@ -104,7 +111,7 @@ Edges carry an optional **`evidence`** JSON blob (`{"stoich": 2.0, "compartment"
 MetaNode:
   id              — stable URI-style identifier
   kind            — compound | reaction | enzyme | pathway
-  name            — primary display name
+  name            — primary display name (enriched to human-readable after metakg-enrich)
   description     — free-text for embedding/search
   formula         — molecular formula (compounds)
   charge          — formal charge (compounds)
@@ -142,6 +149,9 @@ Four parsers are registered and tried in order for every file in the data direct
 - `SUBSTRATE_OF` / `PRODUCT_OF` edges from substrate/product lists
 - `CATALYZES` edges wired from gene entries referenced by reactions
 - `CONTAINS` edges: pathway → all reactions
+
+> **Note:** KGML files store compound and reaction names as bare KEGG accessions (e.g. `C00031`, `R00299`).
+> Run `metakg-enrich` after building to replace these with human-readable names.
 
 ### 3.2 SBML — Systems Biology Markup Language
 
@@ -220,6 +230,8 @@ metakg-build \
   --model    all-MiniLM-L6-v2        # SentenceTransformer model
   --no-index                         # skip LanceDB index build
   --wipe                             # delete existing data first
+  --enrich                           # run name enrichment after build
+  --enrich-data  DIR                 # KEGG TSV directory (default: data/)
 ```
 
 **What happens:**
@@ -229,6 +241,7 @@ metakg-build \
 3. All `MetaNode` and `MetaEdge` objects are bulk-written to SQLite
 4. The `xref_index` table is populated by expanding `xrefs` JSON blobs
 5. Unless `--no-index`, compound + enzyme + pathway nodes are embedded and loaded into LanceDB
+6. If `--enrich` is set, name enrichment runs immediately after indexing (see §5)
 
 **Build stats printed to stderr:**
 
@@ -238,13 +251,110 @@ edges: 891 (SUBSTRATE_OF: 234, PRODUCT_OF: 234, CATALYZES: 87, CONTAINS: 336)
 xref_index: 621 rows
 lancedb: 255 rows indexed (dim=384)
 parse_errors: 0
+Enrichment: 87 reaction names from graph, 198 compound names from TSV, 54 reaction names from TSV
 ```
 
 ---
 
-## 5. Semantic Search & Vector Index
+## 5. Name Enrichment — `metakg-enrich`
 
-### 5.1 What is indexed
+KGML-sourced graphs initially carry bare KEGG accessions as node names (e.g. `C00031`,
+`R00710`).  The enrichment pipeline replaces these with human-readable names and stores
+them directly in `meta_nodes.name`, making them available everywhere — CLI, MCP, Streamlit.
+
+### 5.1 Two-phase enrichment
+
+**Phase 1 — no network, always runs:**
+
+For every reaction node still carrying a bare accession name, look up all `CATALYZES`
+edges pointing to it and join the catalysing enzyme gene symbols with ` / `:
+
+```
+R00710  →  "ADH1A / ADH1B / ADH1C"
+```
+
+**Phase 2 — requires downloaded KEGG name TSV files:**
+
+Download the KEGG bulk name lists (~19 500 compounds, ~12 400 reactions) using the
+provided script, then re-run enrichment:
+
+```bash
+# Download KEGG name lists (~30s, 1-second courtesy pause between requests)
+python scripts/download_kegg_names.py
+
+# Apply to the database
+metakg-enrich --db .metakg/meta.sqlite
+```
+
+Phase 2 updates:
+- **Compound names** from `data/kegg_compound_names.tsv` (e.g. `C00031` → `D-Glucose`)
+- **Reaction names** from `data/kegg_reaction_names.tsv` (overrides Phase-1 enzyme labels
+  with canonical KEGG reaction names where available)
+
+Both phases are **idempotent** — safe to run multiple times.
+
+### 5.2 Download script options
+
+```bash
+python scripts/download_kegg_names.py \
+  [--data DIR]   # output directory (default: data/)
+  [--force]      # re-download even if files already exist
+  [--quiet]      # suppress progress output
+```
+
+TSV format produced:
+
+```
+C00031    D-Glucose
+C00022    Pyruvate
+R00710    Acetaldehyde:NAD+ oxidoreductase
+...
+```
+
+### 5.3 Enrichment CLI options
+
+```bash
+metakg-enrich \
+  [--db   .metakg/meta.sqlite]  # database to update
+  [--data DIR]                  # directory containing TSV files (default: data/)
+```
+
+### 5.4 Integrating with build
+
+Pass `--enrich` (and optionally `--enrich-data`) to `metakg-build` to run enrichment
+automatically in one step:
+
+```bash
+metakg-build --data ./pathways --enrich
+# equivalent to:
+metakg-build --data ./pathways && metakg-enrich
+```
+
+### 5.5 Python API
+
+```python
+from metakg import MetaKG
+from metakg.enrich import enrich, EnrichStats
+
+with MetaKG(db_path=".metakg/meta.sqlite") as kg:
+    # Integrated call via orchestrator
+    stats: EnrichStats = kg.enrich(data_dir="data/")
+    print(stats)
+    # Enrichment: 87 reaction names from graph, 198 compound names from TSV, 54 reaction names from TSV
+
+# Or lower-level
+from metakg.store import MetaStore
+from metakg.enrich import enrich_reactions_from_graph, enrich_from_tsv
+store = MetaStore(".metakg/meta.sqlite")
+n = enrich_reactions_from_graph(store)
+n = enrich_from_tsv(store, Path("data/kegg_compound_names.tsv"), "compound")
+```
+
+---
+
+## 6. Semantic Search & Vector Index
+
+### 6.1 What is indexed
 
 **Compounds, enzymes, and pathways** are indexed.  Reactions are excluded (no natural-language description to embed).
 
@@ -261,11 +371,11 @@ The simplest alpha-keto acid; end product of glycolysis;
 substrate of the TCA cycle via pyruvate dehydrogenase.
 ```
 
-### 5.2 Default model
+### 6.2 Default model
 
 `sentence-transformers/all-MiniLM-L6-v2` — 384-dim, MIT licence, ~80 MB.  Any Sentence Transformers model can be substituted via `--model`.
 
-### 5.3 Python usage
+### 6.3 Python usage
 
 ```python
 from metakg import MetaKG
@@ -280,7 +390,7 @@ for hit in result.hits:
 # Fetch a specific compound by any resolvable ID
 cpd = kg.get_compound("cpd:kegg:C00022")   # full ID
 cpd = kg.get_compound("kegg:C00022")       # shorthand
-cpd = kg.get_compound("Pyruvate")          # name lookup
+cpd = kg.get_compound("Pyruvate")          # name lookup (works after enrichment)
 
 # Fetch a reaction with full stoichiometry
 rxn = kg.get_reaction("rxn:kegg:R00196")
@@ -290,7 +400,7 @@ path = kg.find_path("cpd:kegg:C00031", "cpd:kegg:C00022", max_hops=8)
 # → {"path": [...], "hops": 10, "edges": [...]}
 ```
 
-### 5.4 ID resolution
+### 6.4 ID resolution
 
 `store.resolve_id(user_id)` resolves in this order:
 
@@ -300,7 +410,7 @@ path = kg.find_path("cpd:kegg:C00031", "cpd:kegg:C00022", max_hops=8)
 
 ---
 
-## 6. Simulation Engine
+## 7. Simulation Engine
 
 The simulation engine lives in `metakg.simulate`.  It requires `scipy` (`pip install metakg[simulate]`).
 
@@ -326,6 +436,12 @@ class SimulationConfig:
     initial_concentrations: dict[str, float] = {}  # compound_id → mM
     default_concentration: float = 1.0   # fallback initial conc (mM)
 
+    # ODE solver settings (metabolic systems are stiff — use BDF or Radau)
+    ode_method: str = "BDF"              # BDF (default), Radau, RK45 (non-stiff only)
+    ode_rtol: float = 1e-3              # relative tolerance
+    ode_atol: float = 1e-5             # absolute tolerance
+    ode_max_step: float | None = None   # None = adaptive (recommended)
+
     # FBA settings
     objective_reaction: str | None = None  # None → maximise total flux
     maximize: bool = True
@@ -336,9 +452,14 @@ class SimulationConfig:
     vmax_factors: dict[str, float] = {}    # reaction_id → multiplier
 ```
 
+> **Important:** Metabolic systems are biochemically stiff (fast enzyme kinetics coexist with
+> slow substrate depletion).  The default solver **BDF** handles this efficiently.  **Do not use
+> RK45** for metabolic pathways — it will either hang or fail with "repeated convergence
+> failures" as it must take millions of tiny internal steps.
+
 ---
 
-### 6.1 FBA — Flux Balance Analysis
+### 7.1 FBA — Flux Balance Analysis
 
 Finds the steady-state flux distribution that optimises a chosen reaction rate.
 
@@ -401,7 +522,7 @@ metakg-simulate fba --db .metakg/meta.sqlite \
 
 ---
 
-### 6.2 ODE — Kinetic Simulation
+### 7.2 ODE — Kinetic Simulation
 
 Integrates the metabolic system forward in time using Michaelis-Menten rate equations.
 
@@ -427,7 +548,8 @@ d[C_i]/dt = Σ_j  s_ij · v_j(y, t)
 where s_ij < 0 for substrates, s_ij > 0 for products.
 ```
 
-**Solver:** `scipy.integrate.solve_ivp` (RK45 adaptive step, `rtol=1e-4`, `atol=1e-6`).
+**Solver:** `scipy.integrate.solve_ivp` with **BDF** (implicit, stiff-optimized).
+Default tolerances: `rtol=1e-3`, `atol=1e-5`.  Max step: adaptive (no upper limit).
 
 **Default kinetic parameters** (used when no database entry exists):
 - Vmax = 1.0 mM/s
@@ -457,6 +579,7 @@ config = SimulationConfig(
         "cpd:kegg:C00002": 3.0,  # ATP 3 mM
     },
     default_concentration=0.5,
+    ode_method="BDF",   # default; explicit for documentation
 )
 result = sim.run_ode(config)
 # result.t                           → [0.0, 0.2, 0.4, ...]
@@ -476,7 +599,7 @@ metakg-simulate ode --db .metakg/meta.sqlite \
 
 ---
 
-### 6.3 WhatIf — Perturbation Analysis
+### 7.3 WhatIf — Perturbation Analysis
 
 Runs a baseline simulation and a perturbed simulation side-by-side, then reports the differences.
 
@@ -506,7 +629,7 @@ class WhatIfResult:
 ```python
 scenario = WhatIfScenario(
     name="PFK_50pct_inhibition",
-    enzyme_knockouts=["enz:kegg:hsa:5211"],   # PFKL silenced
+    enzyme_knockouts=["enz:kegg:hsa:5211"],    # PFKL silenced
     enzyme_factors={"enz:kegg:hsa:5213": 0.5}, # PFKM at half activity
     initial_conc_overrides={"cpd:kegg:C00158": 2.0}, # citrate 2 mM (ODE only)
 )
@@ -532,9 +655,9 @@ metakg-simulate whatif --db .metakg/meta.sqlite \
 
 ---
 
-## 7. Kinetic & Regulatory Parameters
+## 8. Kinetic & Regulatory Parameters
 
-### 7.1 KineticParam — fields
+### 8.1 KineticParam — fields
 
 ```python
 @dataclass
@@ -569,7 +692,7 @@ class KineticParam:
     measurement_error:    float | None
 ```
 
-### 7.2 RegulatoryInteraction — fields
+### 8.2 RegulatoryInteraction — fields
 
 ```python
 @dataclass
@@ -586,7 +709,7 @@ class RegulatoryInteraction:
     source_database: str | None
 ```
 
-### 7.3 Built-in curated parameter library
+### 8.3 Built-in curated parameter library
 
 Seeded via `metakg-simulate seed` or `seed_kinetics(store)`.  All values are for *Homo sapiens*, pH 7.0, 37°C.
 
@@ -623,7 +746,7 @@ Each entry includes: Km (mM), kcat (s⁻¹), Vmax (mM/s), Keq, ΔG°' (kJ/mol), 
 | Isocitrate DH | ATP | allosteric_inhibitor | 0.5 |
 | G6P DH | NADPH | feedback_inhibitor | 0.15 |
 
-### 7.4 Python API for kinetics
+### 8.4 Python API for kinetics
 
 ```python
 # Seed all built-in values
@@ -656,7 +779,7 @@ store.upsert_kinetic_param(kp)
 
 ---
 
-## 8. Pathway Analysis — `metakg-analyze`
+## 9. Pathway Analysis — `metakg-analyze`
 
 ```bash
 metakg-analyze --db .metakg/meta.sqlite \
@@ -667,7 +790,7 @@ metakg-analyze --db .metakg/meta.sqlite \
 
 Runs seven analysis phases and emits a Markdown (or plain-text) report.
 
-### 8.1 Analysis phases
+### 9.1 Analysis phases
 
 | Phase | What it computes |
 |-------|-----------------|
@@ -679,7 +802,7 @@ Runs seven analysis phases and emits a Markdown (or plain-text) report.
 | **Dead-end metabolites** | Compounds with only one reaction or appearing only as substrate / only as product — hints at pathway boundaries or parsing gaps |
 | **Top enzymes** | Enzymes ranked by reaction coverage |
 
-### 8.2 Biological insights section
+### 9.2 Biological insights section
 
 The report closes with a narrative paragraph covering:
 
@@ -689,7 +812,7 @@ The report closes with a narrative paragraph covering:
 - Dead-end categorisation (boundary metabolites vs. parsing artefacts)
 - Complexity outlier (most multi-substrate reaction)
 
-### 8.3 Python API
+### 9.3 Python API
 
 ```python
 from metakg.analyze import PathwayAnalyzer, render_report
@@ -703,7 +826,7 @@ print(md)
 
 ---
 
-## 9. MCP Server & Tools — `metakg-mcp`
+## 10. MCP Server & Tools — `metakg-mcp`
 
 ```bash
 metakg-mcp --db .metakg/meta.sqlite \
@@ -714,14 +837,13 @@ metakg-mcp --db .metakg/meta.sqlite \
 
 Transport `stdio` (default) connects to Claude Desktop / Claude Code via stdin/stdout.  Transport `sse` starts an HTTP server.
 
-### 9.1 All exposed tools
+### 10.1 All exposed tools
 
 #### `query_pathway(name, k=8)`
 
 Semantic search for pathways by name or description.
 
 ```json
-// → array of pathway records
 [
   {"id": "pwy:kegg:hsa00010", "name": "Glycolysis / Gluconeogenesis",
    "member_count": 32, "distance": 0.12},
@@ -735,7 +857,7 @@ Semantic search for pathways by name or description.
 
 Look up a compound and all its connected reactions.
 
-**Accepts:** `cpd:kegg:C00022`, `kegg:C00022`, or `"Pyruvate"`
+**Accepts:** `cpd:kegg:C00022`, `kegg:C00022`, `"Pyruvate"`, or `"C00022"`
 
 ```json
 {
@@ -757,9 +879,9 @@ Full reaction detail with stoichiometry and enzymes.
 ```json
 {
   "id": "rxn:kegg:R00196",
-  "name": "R00196",
+  "name": "Pyruvate kinase",
   "reversible": false,
-  "substrates": [{"id": "cpd:kegg:C00074", "name": "PEP", "stoich": 1.0}, ...],
+  "substrates": [{"id": "cpd:kegg:C00074", "name": "Phosphoenolpyruvate", "stoich": 1.0}, ...],
   "products":   [{"id": "cpd:kegg:C00022", "name": "Pyruvate", "stoich": 1.0}, ...],
   "enzymes":    [{"id": "enz:kegg:hsa:5315", "name": "PKM", "ec": "2.7.1.40"}]
 }
@@ -792,13 +914,11 @@ Run FBA; returns fluxes enriched with reaction names.
 {
   "status": "optimal",
   "objective_value": 1000.0,
-  "message": "Optimal. Objective = 1000.0",
   "fluxes": {
-    "rxn:kegg:R00299": {"name": "R00299", "flux": 1000.0},
-    "rxn:kegg:R00756": {"name": "R00756", "flux": 1000.0},
-    ...
+    "rxn:kegg:R00299": {"name": "Hexokinase", "flux": 1000.0},
+    "rxn:kegg:R00756": {"name": "Phosphofructokinase", "flux": 1000.0}
   },
-  "shadow_prices": {"cpd:kegg:C00022": -1.0, ...}
+  "shadow_prices": {"cpd:kegg:C00022": -1.0}
 }
 ```
 
@@ -806,19 +926,16 @@ Run FBA; returns fluxes enriched with reaction names.
 
 #### `simulate_ode(pathway_id, t_end=100, t_points=200, initial_concentrations_json="{}", default_concentration=1.0)`
 
-Run kinetic ODE simulation.
+Run kinetic ODE simulation (BDF solver).
 
 ```json
 {
   "status": "ok",
   "message": "Integration OK. t=[0, 100], 200 time points, 45 compounds, 22 reactions.",
   "t": [0.0, 0.5, 1.0, ...],
-  "concentrations": {
-    "cpd:kegg:C00022": [0.0, 0.012, 0.031, ...]
-  },
+  "concentrations": {"cpd:kegg:C00022": [0.0, 0.012, 0.031, ...]},
   "summary": [
-    {"id": "cpd:kegg:C00002", "name": "ATP", "initial_mM": 3.0, "final_mM": 2.87},
-    ...
+    {"id": "cpd:kegg:C00002", "name": "ATP", "initial_mM": 3.0, "final_mM": 2.87}
   ]
 }
 ```
@@ -846,14 +963,11 @@ Baseline vs. perturbed simulation.
 {
   "scenario_name": "HK_knockout",
   "mode": "fba",
-  "baseline_status": "optimal",
-  "perturbed_status": "optimal",
   "baseline_objective": 1000.0,
   "perturbed_objective": 0.0,
   "top_changes": [
-    {"id": "rxn:kegg:R00299", "name": "R00299",
-     "baseline_flux": 1000.0, "perturbed_flux": 0.0, "delta": -1000.0},
-    ...
+    {"id": "rxn:kegg:R00299", "name": "Hexokinase",
+     "baseline_flux": 1000.0, "perturbed_flux": 0.0, "delta": -1000.0}
   ]
 }
 ```
@@ -863,25 +977,6 @@ Baseline vs. perturbed simulation.
 #### `get_kinetic_params(reaction_id)`
 
 Retrieve stored kinetic and regulatory parameters for a reaction.
-
-```json
-{
-  "reaction_id": "rxn:kegg:R00756",
-  "kinetic_params": [
-    {"km": 0.09, "kcat": 120.0, "vmax": 7.1,
-     "equilibrium_constant": 1000.0, "delta_g_prime": -14.2,
-     "source_database": "literature", "literature_reference": "PMID:6296077",
-     "enzyme_name": "PFKL", "confidence_score": 0.8},
-    ...
-  ],
-  "regulatory_interactions": [
-    {"compound_id": "cpd:kegg:C00002", "compound_name": "ATP",
-     "interaction_type": "allosteric_inhibitor", "ki_allosteric": 1.0,
-     "site": "regulatory"},
-    ...
-  ]
-}
-```
 
 ---
 
@@ -899,7 +994,7 @@ Populate the database with curated literature kinetic parameters.
 
 ---
 
-### 9.2 Python: registering tools
+### 10.2 Python: registering tools
 
 ```python
 from metakg import MetaKG
@@ -917,7 +1012,9 @@ register_tools(mcp, kg)
 
 ---
 
-## 10. CLI Reference
+## 11. CLI Reference
+
+All commands use [Click](https://click.palletsprojects.com/) and support `--help` at every level.
 
 ### `metakg-build`
 
@@ -926,8 +1023,26 @@ metakg-build --data <DIR>
              [--db   .metakg/meta.sqlite]
              [--lancedb .metakg/lancedb]
              [--model all-MiniLM-L6-v2]
-             [--no-index]  skip LanceDB index
-             [--wipe]      delete existing data
+             [--no-index]          skip LanceDB index
+             [--wipe]              delete existing data
+             [--enrich]            run name enrichment after building
+             [--enrich-data DIR]   KEGG TSV directory (default: data/)
+```
+
+### `metakg-enrich`
+
+```
+metakg-enrich [--db   .metakg/meta.sqlite]
+              [--data DIR]          directory with kegg_*_names.tsv files
+```
+
+Phase 1 always runs (enzyme labels from CATALYZES edges).
+Phase 2 runs if `kegg_compound_names.tsv` / `kegg_reaction_names.tsv` exist in `--data`.
+
+Download KEGG name files first with:
+
+```bash
+python scripts/download_kegg_names.py [--data DIR] [--force] [--quiet]
 ```
 
 ### `metakg-mcp`
@@ -948,38 +1063,46 @@ metakg-analyze [--db .metakg/meta.sqlite]
                [--plain]
 ```
 
+### `metakg-analyze-basic`
+
+```
+metakg-analyze-basic [--db .metakg/meta.sqlite]
+                     [--output FILE.md]
+                     [--top 20]
+                     [--plain]
+```
+
 ### `metakg-simulate`
 
 ```
+# Shared options (apply to all subcommands):
+metakg-simulate [--db .metakg/meta.sqlite]
+                [--output FILE.md] [--top 25] [--plain]
+                <subcommand>
+
 # Seed kinetic parameters (run once after build):
-metakg-simulate seed [--db .metakg/meta.sqlite] [--force]
+metakg-simulate seed [--force]
 
 # FBA:
-metakg-simulate fba [--db .metakg/meta.sqlite]
-                    [--pathway ID|NAME]
+metakg-simulate fba [--pathway ID|NAME]
                     [--objective RXN_ID]
                     [--minimize]
-                    [--output FILE.md] [--top 25] [--plain]
 
 # ODE kinetic simulation:
-metakg-simulate ode [--db .metakg/meta.sqlite]
-                    [--pathway ID|NAME]
+metakg-simulate ode [--pathway ID|NAME]
                     [--time 100.0]
                     [--points 500]
-                    [--conc CPD_ID:MM ...]     # repeatable
+                    [--conc CPD_ID:MM ...]      # repeatable
                     [--default-conc 1.0]
-                    [--output FILE.md] [--top 25] [--plain]
 
 # What-if perturbation:
-metakg-simulate whatif [--db .metakg/meta.sqlite]
-                        [--pathway ID|NAME]
+metakg-simulate whatif [--pathway ID|NAME]
                         [--mode fba|ode]
                         [--knockout ENZ_ID ...]      # repeatable
                         [--factor ENZ_ID:FACTOR ...]  # repeatable
                         [--conc CPD_ID:MM ...]        # repeatable (ODE)
                         [--name LABEL]
                         [--time 100.0]
-                        [--output FILE.md] [--top 25] [--plain]
 ```
 
 ### `metakg-viz`
@@ -992,7 +1115,7 @@ Launches a **PyVista** 3D graph viewer (requires `pip install metakg[viz3d]`).
 
 ---
 
-## 11. Python API Reference
+## 12. Python API Reference
 
 ### `MetaKG` — high-level orchestrator
 
@@ -1006,12 +1129,18 @@ kg = MetaKG(
     table       = "metakg_nodes",
 )
 
-kg.build(data_dir, wipe=False, build_index=True) → MetabolicBuildStats
-kg.query_pathway(name: str, k: int = 8)          → MetabolicQueryResult
-kg.get_compound(id: str)                          → dict | None
-kg.get_reaction(id: str)                          → dict | None
-kg.find_path(a: str, b: str, max_hops: int = 6)  → dict
-kg.stats()                                        → dict
+kg.build(data_dir, wipe=False, build_index=True,
+         enrich=False, enrich_data_dir=None)  → MetabolicBuildStats
+kg.enrich(data_dir=None)                      → EnrichStats
+kg.query_pathway(name: str, k: int = 8)       → MetabolicQueryResult
+kg.get_compound(id: str)                       → dict | None
+kg.get_reaction(id: str)                       → dict | None
+kg.find_path(a: str, b: str, max_hops: int = 6) → dict
+kg.seed_kinetics(force=False)                  → dict
+kg.simulate_fba(pathway_id=None, ...)          → dict
+kg.simulate_ode(pathway_id=None, ...)          → dict
+kg.simulate_whatif(pathway_id=None, ...)       → dict
+kg.stats()                                     → dict
 kg.close()
 ```
 
@@ -1034,7 +1163,7 @@ store.upsert_regulatory_interactions(list)       → int
 
 # Read — nodes
 store.node(node_id)                              → dict | None
-store.node_by_xref(db_name, ext_id)              → dict | None
+store.node_by_xref(db_name, ext_id)             → dict | None
 store.resolve_id(user_id)                        → str | None
 store.all_nodes(kind=None)                       → list[dict]
 
@@ -1078,16 +1207,28 @@ render_ode_result(result, store=None, top_n=20, markdown=True) → str
 render_whatif_result(result, store=None, top_n=20, markdown=True) → str
 ```
 
+### `EnrichStats` — enrichment result
+
+```python
+from metakg.enrich import EnrichStats
+
+@dataclass
+class EnrichStats:
+    reactions_from_graph: int  # reaction names set from enzyme CATALYZES labels
+    compounds_from_tsv:   int  # compound names updated from KEGG TSV
+    reactions_from_tsv:   int  # reaction names updated from KEGG TSV
+```
+
 ---
 
-## 12. Database Schema
+## 13. Database Schema
 
 ```sql
 -- Nodes
 CREATE TABLE meta_nodes (
     id            TEXT PRIMARY KEY,
     kind          TEXT NOT NULL,    -- compound|reaction|enzyme|pathway
-    name          TEXT NOT NULL,
+    name          TEXT NOT NULL,    -- human-readable after metakg-enrich
     description   TEXT,
     formula       TEXT,
     charge        INTEGER,
@@ -1156,29 +1297,31 @@ CREATE TABLE regulatory_interactions (
 --          kp_enzyme, kp_reaction, ri_enzyme, ri_compound
 ```
 
-SQLite is opened with `PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;` for concurrent read performance.
+SQLite is opened with `PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; check_same_thread=False`
+for concurrent read performance (required for multi-threaded Streamlit deployments).
 
 ---
 
-## 13. Dependencies & Extras
+## 14. Dependencies & Extras
 
 ### Core (always required)
 
 ```toml
-python              = ">=3.10, <3.13"
-lancedb             = ">=0.29.0"
-numpy               = ">=1.24.0"
+python                = "^3.12, <3.13"
+lancedb               = ">=0.29.0"
+numpy                 = ">=1.24.0"
 sentence-transformers = ">=2.7.0"
+click                 = ">=8.0"
 ```
 
 ### Optional extras
 
 | Extra | Package | Purpose |
 |-------|---------|---------|
-| `[simulate]` | `scipy >= 1.11.0` | FBA (linprog/HiGHS) + ODE (solve_ivp) |
+| `[simulate]` | `scipy >= 1.11.0` | FBA (linprog/HiGHS) + ODE (solve_ivp BDF) |
 | `[biopax]` | `rdflib >= 6.0.0` | BioPAX Level 3 RDF/OWL parsing |
 | `[mcp]` | `mcp >= 1.0.0` | FastMCP server framework |
-| `[viz]` | `streamlit >= 1.35.0`, `pyvis >= 0.3.2` | Interactive web UI |
+| `[viz]` | `streamlit >= 1.35.0`, `pyvis >= 0.3.2`, `matplotlib >= 3.8.0`, `pandas >= 2.0.0` | Interactive web UI + plots |
 | `[viz3d]` | `pyvista`, `pyvistaqt`, `PyQt5`, `param` | 3D graph viewer |
 | `[all]` | All of the above | Everything |
 
@@ -1186,6 +1329,8 @@ sentence-transformers = ">=2.7.0"
 pip install metakg[simulate]          # just simulation
 pip install metakg[simulate,mcp]      # simulation + MCP server
 pip install metakg[all]               # everything
+# or with Poetry:
+poetry install --all-extras
 ```
 
 ---
@@ -1199,23 +1344,28 @@ pip install metakg[simulate,mcp]
 # 2. Build the graph from a directory of KGML / SBML / BioPAX / CSV files
 metakg-build --data ./pathways --db .metakg/meta.sqlite
 
-# 3. Seed kinetic parameters from curated literature values
+# 3. Download KEGG name lists and enrich the graph with human-readable names
+python scripts/download_kegg_names.py
+metakg-enrich --db .metakg/meta.sqlite
+# (or combine steps 2–3: metakg-build --data ./pathways --enrich)
+
+# 4. Seed kinetic parameters from curated literature values
 metakg-simulate seed --db .metakg/meta.sqlite
 
-# 4. Run steady-state FBA on glycolysis
+# 5. Run steady-state FBA on glycolysis
 metakg-simulate fba --db .metakg/meta.sqlite --pathway hsa00010 -o fba.md
 
-# 5. Run ODE kinetic simulation for 200 time units
+# 6. Run ODE kinetic simulation for 200 time units (BDF solver, ~0.2s)
 metakg-simulate ode --db .metakg/meta.sqlite --pathway hsa00010 \
     --time 200 --conc cpd:kegg:C00031:5.0 -o ode.md
 
-# 6. Knock out hexokinase and see the cascade
+# 7. Knock out hexokinase and see the cascade
 metakg-simulate whatif --db .metakg/meta.sqlite --pathway hsa00010 \
     --mode fba --knockout enz:kegg:hsa:2538 --name HK_KO -o hk_ko.md
 
-# 7. Run thorough pathway analysis report
+# 8. Run thorough pathway analysis report
 metakg-analyze --db .metakg/meta.sqlite -o analysis.md
 
-# 8. Start MCP server for Claude integration
+# 9. Start MCP server for Claude integration
 metakg-mcp --db .metakg/meta.sqlite --transport stdio
 ```

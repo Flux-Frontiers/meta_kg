@@ -1,14 +1,39 @@
-chore: add pylint configuration and fix test fixture naming
+feat: Click CLI, name enrichment pipeline, and KEGG name data
 
-Add `.pylintrc` with comprehensive linting rules tailored to the MetaKG codebase,
-including settings for scientific code with higher complexity thresholds.
+Migrate CLI from argparse to Click, add two-phase name enrichment
+that replaces bare KEGG accessions with human-readable names, and
+download/commit the KEGG compound and reaction name lookup tables.
 
-Fix unrecognized pylint option: change `max-lines` to `max-module-lines` for
-proper configuration of maximum lines per module.
+CLI changes (src/metakg/cli.py):
+- Full rewrite with Click decorators; every command supports --help
+- metakg-simulate is now a @click.group() with shared --db/--output/
+  --plain/--top options passed via ctx.obj to fba/ode/whatif/seed
+- New metakg-enrich command (also exposed as --enrich/--enrich-data
+  flags on metakg-build for a single-step build+enrich workflow)
+- Error handling via raise click.ClickException(); progress to stderr
+  via click.echo(..., err=True)
+- click >= 8.0 added as core dependency in pyproject.toml
 
-Rename test fixture `kg_with_minimal_pathway` to `kkg_with_minimal_pathway` in
-`tests/test_simulation.py` to eliminate false pylint `redefined-outer-name`
-warnings. This is a common pytest pattern where fixture parameters have the
-same name as their fixtures, and renaming prevents misleading linting warnings.
+Name enrichment (src/metakg/enrich.py, src/metakg/orchestrator.py):
+- Phase 1 (no network): derive reaction labels from CATALYZES edges
+  (e.g. R00710 → "ADH1A / ADH1B / ADH1C")
+- Phase 2 (TSV files): update compound and reaction names from
+  downloaded KEGG name lists; canonical KEGG names override Phase-1
+  enzyme labels where available
+- MetaKG.enrich(data_dir=None) → EnrichStats public method
+- MetabolicBuildStats.enrich_stats field added
 
-Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
+KEGG name data:
+- scripts/download_kegg_names.py: fetches rest.kegg.jp/list/compound
+  and /list/reaction with 1s courtesy pause; supports --force/--quiet
+- data/kegg_compound_names.tsv: 19 571 compound entries
+- data/kegg_reaction_names.tsv: 12 384 reaction entries
+
+Other fixes:
+- store.py: check_same_thread=False fixes Streamlit threading error
+- pyproject.toml: matplotlib >= 3.8.0 and pandas >= 2.0.0 added to
+  [viz] and [all] extras
+- docs/CAPABILITIES.md: updated to v0.2.0 with enrichment section,
+  corrected ODE solver docs (BDF not RK45), updated dep tables
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>

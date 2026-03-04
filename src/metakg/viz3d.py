@@ -91,7 +91,7 @@ def launch(
             print("Launching interactive 3D viewer...")
 
         # Create plotter
-        pl = pv.Plotter(window_size=(width, height))
+        pl = pv.Plotter(window_size=[width, height])
 
         # Add nodes as spheres
         from metakg.primitives import KIND_COMPOUND, KIND_ENZYME, KIND_PATHWAY, KIND_REACTION
@@ -127,7 +127,7 @@ def launch(
             pl.add_mesh(line, color="gray", opacity=0.5, line_width=1)
 
         pl.camera_position = "xy"
-        pl.reset_camera()
+        pl.reset_camera()  # type: ignore[call-arg]
         pl.add_title(f"MetaKG 3D Explorer — {layout_name.capitalize()} Layout")
 
         if export_html:
