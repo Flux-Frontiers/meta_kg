@@ -522,10 +522,7 @@ def create_server(metakg: MetaKG, *, name: str = "metakg"):
     :param name: Server name advertised to MCP clients.
     :return: Configured ``FastMCP`` instance ready to ``.run()``.
     """
-    try:
-        from mcp.server.fastmcp import FastMCP
-    except ImportError as exc:
-        raise ImportError("mcp package not found. Install it with: pip install mcp") from exc
+    from mcp.server.fastmcp import FastMCP
 
     server = FastMCP(
         name,

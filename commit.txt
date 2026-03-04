@@ -1,39 +1,53 @@
-feat: Click CLI, name enrichment pipeline, and KEGG name data
+refactor(cli): split monolithic cli.py into cli/ package with per-command modules
 
-Migrate CLI from argparse to Click, add two-phase name enrichment
-that replaces bare KEGG accessions with human-readable names, and
-download/commit the KEGG compound and reaction name lookup tables.
+The 642-line `src/metakg/cli.py` has been replaced by a proper `src/metakg/cli/`
+package where each command group lives in its own module.  No user-visible
+behaviour changes; all existing entry-point names are preserved.
 
-CLI changes (src/metakg/cli.py):
-- Full rewrite with Click decorators; every command supports --help
-- metakg-simulate is now a @click.group() with shared --db/--output/
-  --plain/--top options passed via ctx.obj to fba/ode/whatif/seed
-- New metakg-enrich command (also exposed as --enrich/--enrich-data
-  flags on metakg-build for a single-step build+enrich workflow)
-- Error handling via raise click.ClickException(); progress to stderr
-  via click.echo(..., err=True)
-- click >= 8.0 added as core dependency in pyproject.toml
+## Structure
 
-Name enrichment (src/metakg/enrich.py, src/metakg/orchestrator.py):
-- Phase 1 (no network): derive reaction labels from CATALYZES edges
-  (e.g. R00710 → "ADH1A / ADH1B / ADH1C")
-- Phase 2 (TSV files): update compound and reaction names from
-  downloaded KEGG name lists; canonical KEGG names override Phase-1
-  enzyme labels where available
-- MetaKG.enrich(data_dir=None) → EnrichStats public method
-- MetabolicBuildStats.enrich_stats field added
+```
+src/metakg/cli/
+├── __init__.py       — re-exports cli group + all entry-point aliases
+├── main.py           — root @click.group() "metakg" with --version
+├── options.py        — shared reusable Click option decorators
+├── _utils.py         — shared helpers (timestamped filenames, arg parsers, output writer)
+├── cmd_analyze.py    — metakg analyze / metakg analyze-basic
+├── cmd_build.py      — metakg build / metakg enrich
+├── cmd_mcp.py        — metakg mcp
+├── cmd_simulate.py   — metakg simulate {fba,ode,whatif,seed}
+├── cmd_viz.py        — metakg viz
+└── cmd_viz3d.py      — metakg viz3d
+```
 
-KEGG name data:
-- scripts/download_kegg_names.py: fetches rest.kegg.jp/list/compound
-  and /list/reaction with 1s courtesy pause; supports --force/--quiet
-- data/kegg_compound_names.tsv: 19 571 compound entries
-- data/kegg_reaction_names.tsv: 12 384 reaction entries
+## pyproject.toml changes
 
-Other fixes:
-- store.py: check_same_thread=False fixes Streamlit threading error
-- pyproject.toml: matplotlib >= 3.8.0 and pandas >= 2.0.0 added to
-  [viz] and [all] extras
-- docs/CAPABILITIES.md: updated to v0.2.0 with enrichment section,
-  corrected ODE solver docs (BDF not RK45), updated dep tables
+- `mcp` promoted from optional `[mcp]` extra to **core dependency** — the MCP
+  server is now always available without any extra install flags
+- `param` optional dependency removed (no longer needed)
+- `[mcp]` extra removed; `[viz3d]` and `[all]` extras updated accordingly
+- New `metakg` top-level script entry point added (`metakg.cli.main:cli`) so
+  `metakg <subcommand>` works as a unified CLI alongside the existing
+  `metakg-build`, `metakg-analyze`, etc. aliases
 
-Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+## mcp_tools.py
+
+- Removed defensive `try/except ImportError` guard around `FastMCP` import
+  (mcp is now a core dep, so the guard is unnecessary)
+
+## docs/
+
+- `docs/INSTALL.md` — new comprehensive step-by-step installation guide
+  covering all extras, pathway download, build, enrich, kinetics seeding,
+  MCP server, web explorer, 3D visualizer, dev install, env vars, and
+  troubleshooting
+- `docs/MCP.md` — new guide for integrating the CodeKG MCP server with
+  Claude Code, Claude Desktop, GitHub Copilot, and Cline
+- `docs/CAPABILITIES.md` — updated dependency tables: `mcp` moved to core,
+  `[mcp]` extra removed, `[viz3d]` pinned versions added, install examples
+  updated to reflect new extras layout; link to INSTALL.md added
+
+## scripts/
+
+- `scripts/install-skill.sh` — copied from code_kg as a placeholder; not yet
+  adapted for MetaKG (WIP, do not rely on)

@@ -1312,26 +1312,37 @@ lancedb               = ">=0.29.0"
 numpy                 = ">=1.24.0"
 sentence-transformers = ">=2.7.0"
 click                 = ">=8.0"
+mcp                   = ">=1.0.0"
 ```
+
+> **Note:** `mcp` is a core dependency — the MCP server is always available without any extra flags.
 
 ### Optional extras
 
-| Extra | Package | Purpose |
-|-------|---------|---------|
+| Extra | Package(s) | Purpose |
+|-------|-----------|---------|
 | `[simulate]` | `scipy >= 1.11.0` | FBA (linprog/HiGHS) + ODE (solve_ivp BDF) |
 | `[biopax]` | `rdflib >= 6.0.0` | BioPAX Level 3 RDF/OWL parsing |
-| `[mcp]` | `mcp >= 1.0.0` | FastMCP server framework |
 | `[viz]` | `streamlit >= 1.35.0`, `pyvis >= 0.3.2`, `matplotlib >= 3.8.0`, `pandas >= 2.0.0` | Interactive web UI + plots |
-| `[viz3d]` | `pyvista`, `pyvistaqt`, `PyQt5`, `param` | 3D graph viewer |
+| `[viz3d]` | `pyvista >= 0.44.0`, `pyvistaqt >= 0.11.0`, `PyQt5 >= 5.15.0` | 3D graph viewer (Qt-embedded PyVista window) |
 | `[all]` | All of the above | Everything |
 
 ```bash
-pip install metakg[simulate]          # just simulation
-pip install metakg[simulate,mcp]      # simulation + MCP server
-pip install metakg[all]               # everything
-# or with Poetry:
-poetry install --all-extras
+# With Poetry (recommended)
+poetry install                        # core + mcp
+poetry install --extras simulate      # + FBA / ODE
+poetry install --extras viz           # + Streamlit web UI
+poetry install --extras viz3d         # + PyVista 3D viewer
+poetry install --extras biopax        # + BioPAX parsing
+poetry install --all-extras           # everything
+
+# With pip (after package release)
+pip install metakg[simulate]
+pip install metakg[simulate,viz]
+pip install metakg[all]
 ```
+
+See [`docs/INSTALL.md`](INSTALL.md) for a full step-by-step installation guide.
 
 ---
 

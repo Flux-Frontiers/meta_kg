@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`metakg` unified CLI entry point** (`pyproject.toml`, `src/metakg/cli/main.py`) — New top-level `metakg` command registered as a `@click.group()` with `--version` support. All subcommands (`build`, `enrich`, `analyze`, `analyze-basic`, `simulate`, `mcp`, `viz`, `viz3d`) are accessible as `metakg <subcommand>` in addition to the existing standalone `metakg-*` aliases.
+
+- **`docs/INSTALL.md`** — New comprehensive step-by-step installation guide covering all install variants (core, simulate, viz, viz3d, biopax, all-extras), pathway data download, graph build, name enrichment, kinetics seeding, MCP server startup, web explorer, 3D visualizer, dev install, environment variables, upgrading, and troubleshooting.
+
+- **`docs/MCP.md`** — New guide for integrating the CodeKG MCP server with Claude Code, Claude Desktop, GitHub Copilot, and Cline; covers quick-start, per-repo `.mcp.json` / `.vscode/mcp.json` configuration, and available MCP tools.
+
+### Changed
+
+- **CLI refactored from monolithic `cli.py` to `cli/` package** (`src/metakg/cli/`) — The 642-line `src/metakg/cli.py` has been replaced by a proper package where each command group lives in its own module. All existing entry-point names and CLI behaviour are preserved.
+  - `cli/__init__.py` — re-exports the root `cli` group and all standalone entry-point aliases
+  - `cli/main.py` — root `@click.group()` with `--version`
+  - `cli/options.py` — shared reusable Click option decorators (`db_option`, `lancedb_option`, `model_option`, `wipe_option`, `data_option`)
+  - `cli/_utils.py` — shared helpers: `_timestamped_filename()`, `_parse_conc_args()`, `_parse_factor_args()`, `_write_output()`
+  - `cli/cmd_analyze.py` — `metakg analyze` / `metakg analyze-basic`
+  - `cli/cmd_build.py` — `metakg build` / `metakg enrich`
+  - `cli/cmd_mcp.py` — `metakg mcp`
+  - `cli/cmd_simulate.py` — `metakg simulate {fba,ode,whatif,seed}`
+  - `cli/cmd_viz.py` — `metakg viz`
+  - `cli/cmd_viz3d.py` — `metakg viz3d`
+
+- **`mcp` promoted to core dependency** (`pyproject.toml`) — `mcp >= 1.0.0` moved from the optional `[mcp]` extra to the core dependency list; the MCP server is now always available without extra install flags. The `[mcp]` extra has been removed; `[viz3d]` and `[all]` extras updated accordingly. `param` optional dependency removed (no longer needed).
+
+- **`mcp_tools.py` import guard removed** — Defensive `try/except ImportError` around `FastMCP` import eliminated now that `mcp` is a core dependency.
+
+- **`docs/CAPABILITIES.md` dependency tables updated** — `mcp` moved to core dependencies table; `[mcp]` extra row removed; `[viz3d]` extra updated with pinned minimum versions (`pyvista >= 0.44.0`, `pyvistaqt >= 0.11.0`, `PyQt5 >= 5.15.0`); install examples updated to reflect new extras layout; link to `docs/INSTALL.md` added.
+
+### Added
+
 - **Name enrichment pipeline** (`src/metakg/enrich.py`) — New module that replaces bare KEGG accessions (`C00031`, `R00710`) with human-readable names stored directly in `meta_nodes.name`. Phase 1 (no network): derives reaction labels from catalysing enzyme gene symbols via `CATALYZES` edges (e.g. `R00710` → `ADH1A / ADH1B / ADH1C`). Phase 2 (requires TSV files): updates compound and reaction names from downloaded KEGG name lists. Both phases are idempotent.
 
 - **`metakg-enrich` CLI command** (`src/metakg/cli.py`, `pyproject.toml`) — Standalone Click command for running name enrichment against an existing database: `metakg-enrich [--db PATH] [--data DIR]`. Also integrated as `--enrich` / `--enrich-data` flags on `metakg-build` for a single-step build+enrich workflow.
