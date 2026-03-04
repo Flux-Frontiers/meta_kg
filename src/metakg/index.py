@@ -102,9 +102,7 @@ class MetaIndex:
         :param table: LanceDB table name.
         """
         self.lancedb_dir = Path(lancedb_dir)
-        self._embedder: Embedder = embedder or SentenceTransformerEmbedder(
-            DEFAULT_MODEL
-        )
+        self._embedder: Embedder = embedder or SentenceTransformerEmbedder(DEFAULT_MODEL)
         self._table_name = table
         self._tbl = None  # lazy LanceDB table handle
 
@@ -112,9 +110,7 @@ class MetaIndex:
     # Build
     # ------------------------------------------------------------------
 
-    def build(
-        self, store: MetaStore, *, wipe: bool = False, batch_size: int = 256
-    ) -> dict:
+    def build(self, store: MetaStore, *, wipe: bool = False, batch_size: int = 256) -> dict:
         """
         Build (or rebuild) the LanceDB vector index from *store*.
 
@@ -221,9 +217,7 @@ class MetaIndex:
         db = lancedb.connect(str(self.lancedb_dir))
 
         table_list = db.list_tables()
-        existing = (
-            table_list.tables if hasattr(table_list, "tables") else list(table_list)
-        )
+        existing = table_list.tables if hasattr(table_list, "tables") else list(table_list)
 
         if self._table_name in existing:
             if wipe:

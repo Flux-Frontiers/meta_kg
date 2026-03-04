@@ -59,6 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Pylint configuration and test fixture naming** (`.pylintrc`, `tests/test_simulation.py`) — Created `.pylintrc` with proper configuration for the codebase; fixed unrecognized `max-lines` option (changed to `max-module-lines`). Renamed fixture `kg_with_minimal_pathway` to `kkg_with_minimal_pathway` to eliminate false pylint `redefined-outer-name` warnings in pytest test functions.
+
 ## [0.2.0] - 2026-02-28
 
 ### Added

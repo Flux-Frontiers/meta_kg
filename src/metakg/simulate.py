@@ -617,8 +617,6 @@ class MetabolicSimulator:
 
         :return: Map ``{reaction_id: {vmax, km, km_by_substrate, equilibrium_constant}}``.
         """
-        import numpy as np
-
         result: dict[str, dict] = {}
         for rxn_id in rxn_ids:
             rows = self._store.kinetic_params_for_reaction(rxn_id)

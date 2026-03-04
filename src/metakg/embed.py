@@ -85,9 +85,7 @@ class SentenceTransformerEmbedder(Embedder):
         :param texts: Input strings to embed.
         :return: List of float32 vectors, one per input string.
         """
-        vecs = self.model.encode(
-            texts, normalize_embeddings=True, show_progress_bar=False
-        )
+        vecs = self.model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
         return [np.asarray(v, dtype="float32").tolist() for v in vecs]
 
     def embed_query(self, query: str) -> list[float]:

@@ -191,12 +191,14 @@ class PathwayAnalyzer:
 
     @property
     def conn(self) -> sqlite3.Connection:
+        """Get or create the database connection."""
         if self._conn is None:
             self._conn = sqlite3.connect(f"file:{self.db_path}?mode=ro", uri=True)
             self._conn.row_factory = sqlite3.Row
         return self._conn
 
     def close(self) -> None:
+        """Close the database connection."""
         if self._conn is not None:
             self._conn.close()
             self._conn = None
@@ -474,9 +476,9 @@ class PathwayAnalyzer:
         pwy_ids = list(membership.keys())
         pairs: list[tuple[int, str, str, list[str]]] = []
 
-        for i in range(len(pwy_ids)):
+        for i, a in enumerate(pwy_ids):
             for j in range(i + 1, len(pwy_ids)):
-                a, b = pwy_ids[i], pwy_ids[j]
+                b = pwy_ids[j]
                 shared_cpd_ids = membership[a] & membership[b]
                 if not shared_cpd_ids:
                     continue

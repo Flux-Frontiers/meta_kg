@@ -1,7 +1,7 @@
-> **Analysis Report Metadata**  
-> - **Generated:** 2026-03-03T14:53:53Z  
-> - **Version:** code-kg 0.5.0  
-> - **Commit:** 9db1942 (main)  
+> **Analysis Report Metadata**
+> - **Generated:** 2026-03-03T14:53:53Z
+> - **Version:** code-kg 0.5.0
+> - **Commit:** 9db1942 (main)
 
 # codeKG_analysis
 

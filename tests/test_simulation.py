@@ -5,7 +5,6 @@ Includes timeout guards to prevent ODE solver hangs.
 """
 
 import json
-from pathlib import Path
 
 import pytest
 
@@ -22,7 +21,7 @@ from metakg.primitives import (
 
 
 @pytest.fixture()
-def kg_with_minimal_pathway(tmp_path):
+def kkg_with_minimal_pathway(tmp_path):
     """
     Create a MetaKG instance with minimal pathway for testing.
 
@@ -80,16 +79,18 @@ def kg_with_minimal_pathway(tmp_path):
             id=node_id(KIND_REACTION, "kegg", "R01786"),
             kind=KIND_REACTION,
             name="Hexokinase",
-            stoichiometry=json.dumps({
-                "substrates": [
-                    {"id": node_id(KIND_COMPOUND, "kegg", "C00031"), "stoich": 1.0},
-                    {"id": node_id(KIND_COMPOUND, "kegg", "C00005"), "stoich": 1.0},
-                ],
-                "products": [
-                    {"id": node_id(KIND_COMPOUND, "kegg", "C00092"), "stoich": 1.0},
-                    {"id": node_id(KIND_COMPOUND, "kegg", "C00008"), "stoich": 1.0},
-                ],
-            }),
+            stoichiometry=json.dumps(
+                {
+                    "substrates": [
+                        {"id": node_id(KIND_COMPOUND, "kegg", "C00031"), "stoich": 1.0},
+                        {"id": node_id(KIND_COMPOUND, "kegg", "C00005"), "stoich": 1.0},
+                    ],
+                    "products": [
+                        {"id": node_id(KIND_COMPOUND, "kegg", "C00092"), "stoich": 1.0},
+                        {"id": node_id(KIND_COMPOUND, "kegg", "C00008"), "stoich": 1.0},
+                    ],
+                }
+            ),
             xrefs='{"kegg": "R01786"}',
             source_format="csv",
         ),
@@ -98,14 +99,16 @@ def kg_with_minimal_pathway(tmp_path):
             id=node_id(KIND_REACTION, "kegg", "R02035"),
             kind=KIND_REACTION,
             name="Gluconeogenesis (simplified)",
-            stoichiometry=json.dumps({
-                "substrates": [
-                    {"id": node_id(KIND_COMPOUND, "kegg", "C00092"), "stoich": 1.0},
-                ],
-                "products": [
-                    {"id": node_id(KIND_COMPOUND, "kegg", "C00022"), "stoich": 1.0},
-                ],
-            }),
+            stoichiometry=json.dumps(
+                {
+                    "substrates": [
+                        {"id": node_id(KIND_COMPOUND, "kegg", "C00092"), "stoich": 1.0},
+                    ],
+                    "products": [
+                        {"id": node_id(KIND_COMPOUND, "kegg", "C00022"), "stoich": 1.0},
+                    ],
+                }
+            ),
             xrefs='{"kegg": "R02035"}',
             source_format="csv",
         ),
@@ -204,9 +207,9 @@ def kg_with_minimal_pathway(tmp_path):
 # =========================================================================
 
 
-def test_simulate_fba_basic(kg_with_minimal_pathway):
+def test_simulate_fba_basic(kkg_with_minimal_pathway):
     """Test basic FBA simulation."""
-    result = kg_with_minimal_pathway.simulate_fba(
+    result = kkg_with_minimal_pathway.simulate_fba(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         maximize=True,
     )
@@ -218,9 +221,9 @@ def test_simulate_fba_basic(kg_with_minimal_pathway):
     assert isinstance(result["fluxes"], dict)
 
 
-def test_simulate_fba_minimize(kg_with_minimal_pathway):
+def test_simulate_fba_minimize(kkg_with_minimal_pathway):
     """Test FBA with minimization."""
-    result = kg_with_minimal_pathway.simulate_fba(
+    result = kkg_with_minimal_pathway.simulate_fba(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         maximize=False,
     )
@@ -229,9 +232,9 @@ def test_simulate_fba_minimize(kg_with_minimal_pathway):
     assert "objective_value" in result
 
 
-def test_simulate_fba_no_pathway(kg_with_minimal_pathway):
+def test_simulate_fba_no_pathway(kkg_with_minimal_pathway):
     """Test FBA with no pathway ID (uses all reactions)."""
-    result = kg_with_minimal_pathway.simulate_fba(
+    result = kkg_with_minimal_pathway.simulate_fba(
         pathway_id=None,
         maximize=True,
     )
@@ -247,9 +250,9 @@ def test_simulate_fba_no_pathway(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(5)  # 5-second timeout to catch hangs
-def test_simulate_ode_bdf_default(kg_with_minimal_pathway):
+def test_simulate_ode_bdf_default(kkg_with_minimal_pathway):
     """Test ODE simulation with default BDF solver."""
-    result = kg_with_minimal_pathway.simulate_ode(
+    result = kkg_with_minimal_pathway.simulate_ode(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         t_end=5.0,
         t_points=20,
@@ -266,9 +269,9 @@ def test_simulate_ode_bdf_default(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(5)  # 5-second timeout
-def test_simulate_ode_bdf_explicit(kg_with_minimal_pathway):
+def test_simulate_ode_bdf_explicit(kkg_with_minimal_pathway):
     """Test ODE simulation with explicit BDF solver specification."""
-    result = kg_with_minimal_pathway.simulate_ode(
+    result = kkg_with_minimal_pathway.simulate_ode(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         t_end=5.0,
         t_points=20,
@@ -284,14 +287,14 @@ def test_simulate_ode_bdf_explicit(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(10)  # 10-second timeout for RK45 on non-stiff system
-def test_simulate_ode_rk45_non_stiff(kg_with_minimal_pathway):
+def test_simulate_ode_rk45_non_stiff(kkg_with_minimal_pathway):
     """
     Test ODE with RK45 on very short integration to verify it doesn't hang.
 
     Note: RK45 should work on non-stiff systems; we use very small t_end
     to ensure it completes quickly even if less efficient than BDF.
     """
-    result = kg_with_minimal_pathway.simulate_ode(
+    result = kkg_with_minimal_pathway.simulate_ode(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         t_end=0.1,  # Very short integration
         t_points=5,
@@ -307,9 +310,9 @@ def test_simulate_ode_rk45_non_stiff(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(5)  # 5-second timeout
-def test_simulate_ode_radau(kg_with_minimal_pathway):
+def test_simulate_ode_radau(kkg_with_minimal_pathway):
     """Test ODE simulation with Radau solver."""
-    result = kg_with_minimal_pathway.simulate_ode(
+    result = kkg_with_minimal_pathway.simulate_ode(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         t_end=5.0,
         t_points=20,
@@ -325,9 +328,9 @@ def test_simulate_ode_radau(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(5)  # 5-second timeout
-def test_simulate_ode_with_default_concentration(kg_with_minimal_pathway):
+def test_simulate_ode_with_default_concentration(kkg_with_minimal_pathway):
     """Test ODE with default concentration for unmapped compounds."""
-    result = kg_with_minimal_pathway.simulate_ode(
+    result = kkg_with_minimal_pathway.simulate_ode(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         t_end=5.0,
         t_points=20,
@@ -340,10 +343,10 @@ def test_simulate_ode_with_default_concentration(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(5)  # 5-second timeout
-def test_simulate_ode_tolerances(kg_with_minimal_pathway):
+def test_simulate_ode_tolerances(kkg_with_minimal_pathway):
     """Test ODE with various tolerance settings."""
     for rtol, atol in [(1e-2, 1e-4), (1e-3, 1e-5), (1e-4, 1e-6)]:
-        result = kg_with_minimal_pathway.simulate_ode(
+        result = kkg_with_minimal_pathway.simulate_ode(
             pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
             t_end=2.0,
             t_points=10,
@@ -362,11 +365,11 @@ def test_simulate_ode_tolerances(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(5)
-def test_simulate_whatif_fba_baseline(kg_with_minimal_pathway):
+def test_simulate_whatif_fba_baseline(kkg_with_minimal_pathway):
     """Test what-if analysis baseline (no perturbation) in FBA mode."""
     scenario = {"name": "baseline", "enzyme_knockouts": []}
 
-    result = kg_with_minimal_pathway.simulate_whatif(
+    result = kkg_with_minimal_pathway.simulate_whatif(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         scenario_json=json.dumps(scenario),
         mode="fba",
@@ -379,14 +382,14 @@ def test_simulate_whatif_fba_baseline(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(5)
-def test_simulate_whatif_fba_knockout(kg_with_minimal_pathway):
+def test_simulate_whatif_fba_knockout(kkg_with_minimal_pathway):
     """Test what-if analysis with enzyme knockout in FBA mode."""
     scenario = {
         "name": "hexokinase_knockout",
         "enzyme_knockouts": [node_id(KIND_ENZYME, "ec", "2.7.1.1")],
     }
 
-    result = kg_with_minimal_pathway.simulate_whatif(
+    result = kkg_with_minimal_pathway.simulate_whatif(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         scenario_json=json.dumps(scenario),
         mode="fba",
@@ -399,14 +402,14 @@ def test_simulate_whatif_fba_knockout(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(5)
-def test_simulate_whatif_fba_inhibition(kg_with_minimal_pathway):
+def test_simulate_whatif_fba_inhibition(kkg_with_minimal_pathway):
     """Test what-if analysis with enzyme inhibition (50%) in FBA mode."""
     scenario = {
         "name": "hexokinase_inhibition",
         "enzyme_factors": {node_id(KIND_ENZYME, "ec", "2.7.1.1"): 0.5},
     }
 
-    result = kg_with_minimal_pathway.simulate_whatif(
+    result = kkg_with_minimal_pathway.simulate_whatif(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         scenario_json=json.dumps(scenario),
         mode="fba",
@@ -418,14 +421,14 @@ def test_simulate_whatif_fba_inhibition(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(10)
-def test_simulate_whatif_ode_mode(kg_with_minimal_pathway):
+def test_simulate_whatif_ode_mode(kkg_with_minimal_pathway):
     """Test what-if analysis in ODE mode (more computationally intensive)."""
     scenario = {
         "name": "knockout",
         "enzyme_knockouts": [node_id(KIND_ENZYME, "ec", "2.7.1.1")],
     }
 
-    result = kg_with_minimal_pathway.simulate_whatif(
+    result = kkg_with_minimal_pathway.simulate_whatif(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         scenario_json=json.dumps(scenario),
         mode="ode",
@@ -444,9 +447,9 @@ def test_simulate_whatif_ode_mode(kg_with_minimal_pathway):
 # =========================================================================
 
 
-def test_seed_kinetics(kg_with_minimal_pathway):
+def test_seed_kinetics(kkg_with_minimal_pathway):
     """Test seeding kinetic parameters."""
-    result = kg_with_minimal_pathway.seed_kinetics(force=False)
+    result = kkg_with_minimal_pathway.seed_kinetics(force=False)
 
     assert isinstance(result, dict)
     assert "kinetic_params_written" in result
@@ -455,13 +458,14 @@ def test_seed_kinetics(kg_with_minimal_pathway):
     assert result["regulatory_interactions_written"] >= 0
 
 
-def test_seed_kinetics_force_overwrite(kg_with_minimal_pathway):
+def test_seed_kinetics_force_overwrite(kkg_with_minimal_pathway):
     """Test re-seeding kinetic parameters with force=True."""
     # Seed once
-    result1 = kg_with_minimal_pathway.seed_kinetics(force=False)
+    result1 = kkg_with_minimal_pathway.seed_kinetics(force=False)
+    assert isinstance(result1, dict)
 
     # Seed again with force=True
-    result2 = kg_with_minimal_pathway.seed_kinetics(force=True)
+    result2 = kkg_with_minimal_pathway.seed_kinetics(force=True)
 
     assert isinstance(result2, dict)
     assert result2["kinetic_params_written"] >= 0
@@ -472,9 +476,9 @@ def test_seed_kinetics_force_overwrite(kg_with_minimal_pathway):
 # =========================================================================
 
 
-def test_simulate_fba_nonexistent_pathway(kg_with_minimal_pathway):
+def test_simulate_fba_nonexistent_pathway(kkg_with_minimal_pathway):
     """Test FBA with non-existent pathway ID."""
-    result = kg_with_minimal_pathway.simulate_fba(
+    result = kkg_with_minimal_pathway.simulate_fba(
         pathway_id="pwy:kegg:nonexistent",
         maximize=True,
     )
@@ -484,9 +488,9 @@ def test_simulate_fba_nonexistent_pathway(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(5)
-def test_simulate_ode_empty_concentrations(kg_with_minimal_pathway):
+def test_simulate_ode_empty_concentrations(kkg_with_minimal_pathway):
     """Test ODE with empty initial concentrations."""
-    result = kg_with_minimal_pathway.simulate_ode(
+    result = kkg_with_minimal_pathway.simulate_ode(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         t_end=2.0,
         t_points=10,
@@ -498,9 +502,9 @@ def test_simulate_ode_empty_concentrations(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(5)
-def test_simulate_ode_very_short_integration(kg_with_minimal_pathway):
+def test_simulate_ode_very_short_integration(kkg_with_minimal_pathway):
     """Test ODE with very short integration time."""
-    result = kg_with_minimal_pathway.simulate_ode(
+    result = kkg_with_minimal_pathway.simulate_ode(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         t_end=0.01,
         t_points=2,
@@ -511,12 +515,12 @@ def test_simulate_ode_very_short_integration(kg_with_minimal_pathway):
     assert "status" in result
 
 
-def test_simulate_whatif_invalid_mode(kg_with_minimal_pathway):
+def test_simulate_whatif_invalid_mode(kkg_with_minimal_pathway):
     """Test what-if with invalid mode raises ValueError."""
     scenario = {"name": "test"}
 
     with pytest.raises(ValueError, match="mode must be"):
-        kg_with_minimal_pathway.simulate_whatif(
+        kkg_with_minimal_pathway.simulate_whatif(
             pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
             scenario_json=json.dumps(scenario),
             mode="invalid",
@@ -529,7 +533,7 @@ def test_simulate_whatif_invalid_mode(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(3)  # BDF should complete well under 3 seconds
-def test_ode_bdf_performance(kg_with_minimal_pathway):
+def test_ode_bdf_performance(kkg_with_minimal_pathway):
     """
     Regression test: BDF solver should complete quickly.
 
@@ -538,7 +542,7 @@ def test_ode_bdf_performance(kg_with_minimal_pathway):
     import time
 
     start = time.time()
-    result = kg_with_minimal_pathway.simulate_ode(
+    result = kkg_with_minimal_pathway.simulate_ode(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         t_end=10.0,
         t_points=50,
@@ -552,14 +556,14 @@ def test_ode_bdf_performance(kg_with_minimal_pathway):
 
 
 @pytest.mark.timeout(3)  # Should not regress to hanging
-def test_ode_no_hardcoded_max_step_hang(kg_with_minimal_pathway):
+def test_ode_no_hardcoded_max_step_hang(kkg_with_minimal_pathway):
     """
     Regression test: Verify ode_max_step=None doesn't cause hanging.
 
     The old code had max_step=t_end/50 which caused hanging on stiff systems.
     This test ensures that default (None) works efficiently.
     """
-    result = kg_with_minimal_pathway.simulate_ode(
+    result = kkg_with_minimal_pathway.simulate_ode(
         pathway_id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
         t_end=10.0,
         t_points=50,

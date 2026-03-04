@@ -9,10 +9,10 @@ Last Revision: 2026-02-28
 """
 
 from metakg.parsers.base import PathwayParser
-from metakg.parsers.kgml import KGMLParser
-from metakg.parsers.sbml import SBMLParser
 from metakg.parsers.biopax import BioPAXParser
 from metakg.parsers.csv_tsv import CSVParser, CSVParserConfig
+from metakg.parsers.kgml import KGMLParser
+from metakg.parsers.sbml import SBMLParser
 
 __all__ = [
     "PathwayParser",

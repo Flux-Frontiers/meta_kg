@@ -312,7 +312,7 @@ def _build_pyvis(
     net.toggle_physics(physics_on)
     temp_file = f"temp_{id(net)}.html"
     net.write_html(temp_file)
-    with open(temp_file) as f:
+    with open(temp_file, encoding="utf-8") as f:
         html_content = f.read()
     os.remove(temp_file)
     return html_content
@@ -436,8 +436,6 @@ def _tab_graph(cfg: dict[str, Any]) -> None:
 
     # Node list
     with st.expander(f"📋 Nodes ({len(filtered_nodes)})", expanded=False):
-        import pandas as pd
-
         ndf = pd.DataFrame(
             [
                 {
@@ -453,8 +451,6 @@ def _tab_graph(cfg: dict[str, Any]) -> None:
 
     # Edges list
     with st.expander(f"🔗 Edges ({len(filtered_edges)})", expanded=False):
-        import pandas as pd
-
         edf = pd.DataFrame(
             [
                 {"Source": e["src"], "Relation": e["rel"], "Target": e["dst"]}

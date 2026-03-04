@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import csv
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from metakg.parsers.base import PathwayParser
@@ -126,8 +126,7 @@ class CSVParser(PathwayParser):
         missing = required - fieldnames
         if missing:
             raise ValueError(
-                f"CSV {path} is missing required columns: {missing}. "
-                f"Available: {fieldnames}"
+                f"CSV {path} is missing required columns: {missing}. Available: {fieldnames}"
             )
 
         nodes: dict[str, MetaNode] = {}
@@ -148,16 +147,21 @@ class CSVParser(PathwayParser):
                 pathway_nodes[pwy_name] = pwy_nid
                 if pwy_nid not in nodes:
                     nodes[pwy_nid] = MetaNode(
-                        id=pwy_nid, kind=KIND_PATHWAY, name=pwy_name,
+                        id=pwy_nid,
+                        kind=KIND_PATHWAY,
+                        name=pwy_name,
                         description=f"Pathway: {pwy_name}",
-                        source_format="csv", source_file=str(path),
+                        source_format="csv",
+                        source_file=str(path),
                     )
             return pathway_nodes[pwy_name]
 
         for row in rows:
             sub_name = _get(row, cfg.substrate)
             prod_name = _get(row, cfg.product)
-            rxn_raw_id = _get(row, cfg.reaction_id) or synthetic_id(KIND_REACTION, f"{sub_name}->{prod_name}")
+            rxn_raw_id = _get(row, cfg.reaction_id) or synthetic_id(
+                KIND_REACTION, f"{sub_name}->{prod_name}"
+            )
             rxn_name = _get(row, cfg.reaction_name) or rxn_raw_id
             enzyme_name = _get(row, cfg.enzyme)
             ec = _get(row, cfg.ec_number)
@@ -174,19 +178,25 @@ class CSVParser(PathwayParser):
             sub_nid = synthetic_id(KIND_COMPOUND, sub_name)
             if sub_nid not in nodes:
                 nodes[sub_nid] = MetaNode(
-                    id=sub_nid, kind=KIND_COMPOUND, name=sub_name,
+                    id=sub_nid,
+                    kind=KIND_COMPOUND,
+                    name=sub_name,
                     description=f"Compound: {sub_name}",
                     formula=sub_formula or None,
-                    source_format="csv", source_file=str(path),
+                    source_format="csv",
+                    source_file=str(path),
                 )
 
             # --- Product compound ---
             prod_nid = synthetic_id(KIND_COMPOUND, prod_name)
             if prod_nid not in nodes:
                 nodes[prod_nid] = MetaNode(
-                    id=prod_nid, kind=KIND_COMPOUND, name=prod_name,
+                    id=prod_nid,
+                    kind=KIND_COMPOUND,
+                    name=prod_name,
                     description=f"Compound: {prod_name}",
-                    source_format="csv", source_file=str(path),
+                    source_format="csv",
+                    source_file=str(path),
                 )
 
             # Accumulate stoichiometry
@@ -200,16 +210,31 @@ class CSVParser(PathwayParser):
             # --- Reaction node ---
             if rxn_nid not in nodes:
                 nodes[rxn_nid] = MetaNode(
-                    id=rxn_nid, kind=KIND_REACTION, name=rxn_name,
+                    id=rxn_nid,
+                    kind=KIND_REACTION,
+                    name=rxn_name,
                     description=f"Reaction: {rxn_name}",
-                    source_format="csv", source_file=str(path),
+                    source_format="csv",
+                    source_file=str(path),
                 )
 
             # Edges: substrate → reaction, reaction → product
-            edges.append(MetaEdge(src=sub_nid, rel=REL_SUBSTRATE_OF, dst=rxn_nid,
-                                   evidence=json.dumps({"stoich": stoich_sub})))
-            edges.append(MetaEdge(src=rxn_nid, rel=REL_PRODUCT_OF, dst=prod_nid,
-                                   evidence=json.dumps({"stoich": stoich_prod})))
+            edges.append(
+                MetaEdge(
+                    src=sub_nid,
+                    rel=REL_SUBSTRATE_OF,
+                    dst=rxn_nid,
+                    evidence=json.dumps({"stoich": stoich_sub}),
+                )
+            )
+            edges.append(
+                MetaEdge(
+                    src=rxn_nid,
+                    rel=REL_PRODUCT_OF,
+                    dst=prod_nid,
+                    evidence=json.dumps({"stoich": stoich_prod}),
+                )
+            )
 
             # --- Enzyme ---
             if enzyme_name:
@@ -222,14 +247,23 @@ class CSVParser(PathwayParser):
                     if enz_uniprot:
                         xrefs["uniprot"] = enz_uniprot
                     nodes[enz_nid] = MetaNode(
-                        id=enz_nid, kind=KIND_ENZYME, name=enzyme_name,
+                        id=enz_nid,
+                        kind=KIND_ENZYME,
+                        name=enzyme_name,
                         description=f"Enzyme: {enzyme_name}" + (f" (EC {ec})" if ec else ""),
                         ec_number=ec or None,
                         xrefs=json.dumps(xrefs) if xrefs else None,
-                        source_format="csv", source_file=str(path),
+                        source_format="csv",
+                        source_file=str(path),
                     )
-                edges.append(MetaEdge(src=enz_nid, rel=REL_CATALYZES, dst=rxn_nid,
-                                       evidence=json.dumps({"ec": ec}) if ec else None))
+                edges.append(
+                    MetaEdge(
+                        src=enz_nid,
+                        rel=REL_CATALYZES,
+                        dst=rxn_nid,
+                        evidence=json.dumps({"ec": ec}) if ec else None,
+                    )
+                )
 
             # --- Pathway ---
             if pwy_name:
@@ -242,14 +276,20 @@ class CSVParser(PathwayParser):
         # Back-fill stoichiometry blobs onto reaction nodes
         for rxn_nid, node in nodes.items():
             if node.kind == KIND_REACTION and node.stoichiometry is None:
-                stoich_blob = json.dumps({
-                    "substrates": rxn_substrates.get(rxn_nid, []),
-                    "products": rxn_products.get(rxn_nid, []),
-                })
+                stoich_blob = json.dumps(
+                    {
+                        "substrates": rxn_substrates.get(rxn_nid, []),
+                        "products": rxn_products.get(rxn_nid, []),
+                    }
+                )
                 nodes[rxn_nid] = MetaNode(
-                    id=node.id, kind=node.kind, name=node.name,
-                    description=node.description, stoichiometry=stoich_blob,
-                    xrefs=node.xrefs, source_format=node.source_format,
+                    id=node.id,
+                    kind=node.kind,
+                    name=node.name,
+                    description=node.description,
+                    stoichiometry=stoich_blob,
+                    xrefs=node.xrefs,
+                    source_format=node.source_format,
                     source_file=node.source_file,
                 )
 

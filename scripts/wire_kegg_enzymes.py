@@ -249,7 +249,7 @@ def main() -> int:
     data_dir = Path(args.data)
     if not data_dir.is_dir():
         print(f"ERROR: data directory not found: {data_dir}", file=sys.stderr)
-        print(f"       Run from the repo root, or pass --data <path>", file=sys.stderr)
+        print("       Run from the repo root, or pass --data <path>", file=sys.stderr)
         return 1
 
     return process_directory(data_dir, dry_run=args.dry_run)

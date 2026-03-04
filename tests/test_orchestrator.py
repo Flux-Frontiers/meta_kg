@@ -48,14 +48,12 @@ def kg_with_data(tmp_path):
             id=node_id(KIND_REACTION, "kegg", "R00200"),
             kind=KIND_REACTION,
             name="Pyruvate dehydrogenase",
-            stoichiometry=json.dumps({
-                "substrates": [
-                    {"id": node_id(KIND_COMPOUND, "kegg", "C00022"), "stoich": 1.0}
-                ],
-                "products": [
-                    {"id": node_id(KIND_COMPOUND, "kegg", "C00031"), "stoich": 1.0}
-                ],
-            }),
+            stoichiometry=json.dumps(
+                {
+                    "substrates": [{"id": node_id(KIND_COMPOUND, "kegg", "C00022"), "stoich": 1.0}],
+                    "products": [{"id": node_id(KIND_COMPOUND, "kegg", "C00031"), "stoich": 1.0}],
+                }
+            ),
             xrefs='{"kegg": "R00200"}',
             source_format="csv",
         ),
@@ -252,12 +250,12 @@ class TestMetaKGGetStats:
         # This test ensures users don't need to access kg.store
         stats = kg_with_data.get_stats()
         # User can access everything they need from stats object
-        assert hasattr(stats, 'total_nodes')
-        assert hasattr(stats, 'total_edges')
-        assert hasattr(stats, 'node_counts')
-        assert hasattr(stats, 'edge_counts')
-        assert hasattr(stats, 'indexed_rows')
-        assert hasattr(stats, 'index_dim')
+        assert hasattr(stats, "total_nodes")
+        assert hasattr(stats, "total_edges")
+        assert hasattr(stats, "node_counts")
+        assert hasattr(stats, "edge_counts")
+        assert hasattr(stats, "indexed_rows")
+        assert hasattr(stats, "index_dim")
 
     def test_get_stats_printable(self, kg_with_data):
         """Test that stats can be printed nicely."""

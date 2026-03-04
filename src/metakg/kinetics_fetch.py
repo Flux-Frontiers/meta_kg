@@ -592,7 +592,7 @@ def seed_kinetics(store: MetaStore, *, force: bool = False) -> tuple[int, int]:
 
     if not force:
         existing_kp_ids = {row["id"] for row in store.all_kinetic_params()}
-        cur = store._conn.execute("SELECT id FROM regulatory_interactions")
+        cur = store._conn.execute("SELECT id FROM regulatory_interactions")  # pylint: disable=protected-access
         existing_ri_ids = {row["id"] for row in cur.fetchall()}
 
     for kegg_rxn_id, kdata in _KEGG_KINETICS.items():

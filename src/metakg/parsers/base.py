@@ -35,7 +35,6 @@ class PathwayParser(ABC):
         :return: Two-tuple ``(nodes, edges)`` ready for insertion into MetaStore.
         :raises ValueError: If the file cannot be parsed by this parser.
         """
-        ...
 
     @property
     @abstractmethod
@@ -46,7 +45,6 @@ class PathwayParser(ABC):
         :return: Tuple of lowercase extensions including the dot,
                  e.g. ``('.xml', '.kgml')``.
         """
-        ...
 
     def can_handle(self, path: Path) -> bool:
         """

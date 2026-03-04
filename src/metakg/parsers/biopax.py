@@ -46,12 +46,12 @@ from metakg.primitives import (
 )
 
 # Lazy import: rdflib is optional
-_RDFLIB_AVAILABLE = False
+_rdflib_available = False
 try:
     import rdflib
     from rdflib import RDF, URIRef
-    from rdflib.namespace import RDFS
-    _RDFLIB_AVAILABLE = True
+
+    _rdflib_available = True
 except ImportError:
     pass
 
@@ -59,7 +59,7 @@ except ImportError:
 _BP = "http://www.biopax.org/release/biopax-level3.owl#"
 
 
-def _uri(local: str) -> "URIRef":
+def _uri(local: str) -> URIRef:
     return URIRef(_BP + local)
 
 
@@ -88,10 +88,9 @@ class BioPAXParser(PathwayParser):
         :raises ImportError: If ``rdflib`` is not installed.
         :raises ValueError: If the file is not parseable as RDF.
         """
-        if not _RDFLIB_AVAILABLE:
+        if not _rdflib_available:
             raise ImportError(
-                "rdflib is required for BioPAX parsing. "
-                "Install it with: pip install rdflib"
+                "rdflib is required for BioPAX parsing. Install it with: pip install rdflib"
             )
 
         g = rdflib.Graph()
@@ -165,12 +164,15 @@ class BioPAXParser(PathwayParser):
             charge = int(charge_s) if charge_s.lstrip("-").isdigit() else None
             if nid not in nodes:
                 nodes[nid] = MetaNode(
-                    id=nid, kind=KIND_COMPOUND, name=name,
+                    id=nid,
+                    kind=KIND_COMPOUND,
+                    name=name,
                     description=_desc(subj) or f"BioPAX compound: {name}",
                     formula=formula or None,
                     charge=charge,
                     xrefs=json.dumps(xr) if xr else None,
-                    source_format="biopax", source_file=str(path),
+                    source_format="biopax",
+                    source_file=str(path),
                 )
 
         # --- Protein → enzyme ---
@@ -181,11 +183,14 @@ class BioPAXParser(PathwayParser):
             ec = _get_literal(subj, bp_ec_number)
             if nid not in nodes:
                 nodes[nid] = MetaNode(
-                    id=nid, kind=KIND_ENZYME, name=name,
+                    id=nid,
+                    kind=KIND_ENZYME,
+                    name=name,
                     description=_desc(subj) or f"BioPAX protein: {name}",
                     ec_number=ec or None,
                     xrefs=json.dumps(xr) if xr else None,
-                    source_format="biopax", source_file=str(path),
+                    source_format="biopax",
+                    source_file=str(path),
                 )
 
         # --- Pathway ---
@@ -197,10 +202,13 @@ class BioPAXParser(PathwayParser):
             pathway_nodes[_str(subj)] = nid
             if nid not in nodes:
                 nodes[nid] = MetaNode(
-                    id=nid, kind=KIND_PATHWAY, name=name,
+                    id=nid,
+                    kind=KIND_PATHWAY,
+                    name=name,
                     description=_desc(subj) or f"BioPAX pathway: {name}",
                     xrefs=json.dumps(xr) if xr else None,
-                    source_format="biopax", source_file=str(path),
+                    source_format="biopax",
+                    source_file=str(path),
                 )
 
         # --- BiochemicalReaction ---
@@ -227,19 +235,34 @@ class BioPAXParser(PathwayParser):
             stoich_blob = json.dumps({"substrates": substrates, "products": products})
             if nid not in nodes:
                 nodes[nid] = MetaNode(
-                    id=nid, kind=KIND_REACTION, name=name,
+                    id=nid,
+                    kind=KIND_REACTION,
+                    name=name,
                     description=_desc(subj) or f"BioPAX reaction: {name}",
                     stoichiometry=stoich_blob,
                     xrefs=json.dumps(xr) if xr else None,
-                    source_format="biopax", source_file=str(path),
+                    source_format="biopax",
+                    source_file=str(path),
                 )
 
             for s in substrates:
-                edges.append(MetaEdge(src=s["id"], rel=REL_SUBSTRATE_OF, dst=nid,
-                                       evidence=json.dumps({"stoich": s["stoich"]})))
+                edges.append(
+                    MetaEdge(
+                        src=s["id"],
+                        rel=REL_SUBSTRATE_OF,
+                        dst=nid,
+                        evidence=json.dumps({"stoich": s["stoich"]}),
+                    )
+                )
             for p in products:
-                edges.append(MetaEdge(src=nid, rel=REL_PRODUCT_OF, dst=p["id"],
-                                       evidence=json.dumps({"stoich": p["stoich"]})))
+                edges.append(
+                    MetaEdge(
+                        src=nid,
+                        rel=REL_PRODUCT_OF,
+                        dst=p["id"],
+                        evidence=json.dumps({"stoich": p["stoich"]}),
+                    )
+                )
 
         # --- Control → CATALYZES / INHIBITS / ACTIVATES ---
         for subj in g.subjects(RDF.type, _uri("Catalysis")):

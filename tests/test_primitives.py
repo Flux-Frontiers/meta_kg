@@ -3,7 +3,6 @@ Tests for code_kg.metakg.primitives — MetaNode, MetaEdge, node_id, synthetic_i
 """
 
 import json
-import pytest
 
 from metakg.primitives import (
     KIND_COMPOUND,
@@ -65,7 +64,9 @@ class TestMetaNode:
 
     def test_xrefs_dict_parses_json(self):
         n = MetaNode(
-            id="cpd:kegg:C00022", kind=KIND_COMPOUND, name="Pyruvate",
+            id="cpd:kegg:C00022",
+            kind=KIND_COMPOUND,
+            name="Pyruvate",
             xrefs='{"kegg": "C00022", "chebi": "CHEBI_15361"}',
         )
         d = n.xrefs_dict()
@@ -79,7 +80,9 @@ class TestMetaNode:
     def test_stoichiometry_dict_parses(self):
         stoich = {"substrates": [{"id": "cpd:kegg:C00031", "stoich": 1.0}], "products": []}
         n = MetaNode(
-            id="rxn:kegg:R00200", kind=KIND_REACTION, name="Glycolysis step 1",
+            id="rxn:kegg:R00200",
+            kind=KIND_REACTION,
+            name="Glycolysis step 1",
             stoichiometry=json.dumps(stoich),
         )
         assert n.stoichiometry_dict()["substrates"][0]["stoich"] == 1.0
@@ -98,7 +101,9 @@ class TestMetaEdge:
 
     def test_evidence_dict_parses(self):
         e = MetaEdge(
-            src="cpd:kegg:C00031", rel="SUBSTRATE_OF", dst="rxn:kegg:R00200",
+            src="cpd:kegg:C00031",
+            rel="SUBSTRATE_OF",
+            dst="rxn:kegg:R00200",
             evidence='{"stoich": 2.0, "compartment": "cytosol"}',
         )
         assert e.evidence_dict()["stoich"] == 2.0

@@ -4,12 +4,12 @@ collect_pathway_data.py — Download real metabolic pathway data for MetaKG.
 
 Downloads KEGG KGML files for a curated set of key human metabolic pathways
 from the KEGG REST API (https://rest.kegg.jp).  Files are saved to the
-``pathways/`` directory, ready for ingestion by ``metakg-build``.
+``data/hsa_pathways/`` directory, ready for ingestion by ``metakg-build``.
 
 Usage::
 
     python scripts/collect_pathway_data.py
-    python scripts/collect_pathway_data.py --out pathways/ --delay 1.2
+    python scripts/collect_pathway_data.py --out data/hsa_pathways --delay 1.2
     python scripts/collect_pathway_data.py --list          # show pathways, don't download
 
 KEGG Usage Terms:
@@ -90,7 +90,9 @@ def fetch_kgml(pathway_id: str, *, timeout: int = 30) -> bytes | None:
     url = KEGG_KGML_URL.format(pathway_id=pathway_id)
     req = urllib.request.Request(
         url,
-        headers={"User-Agent": "MetaKG-data-collector/0.1 (research; https://github.com/Flux-Frontiers/meta_kg)"},
+        headers={
+            "User-Agent": "MetaKG-data-collector/0.1 (research; https://github.com/Flux-Frontiers/meta_kg)"
+        },
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -173,9 +175,9 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     p.add_argument(
         "--out",
-        default="pathways",
+        default="data/hsa_pathways",
         metavar="DIR",
-        help="Output directory for KGML files (default: ./pathways)",
+        help="Output directory for KGML files (default: ./data/hsa_pathways)",
     )
     p.add_argument(
         "--delay",

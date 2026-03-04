@@ -3,8 +3,6 @@ Tests for code_kg.metakg.store — MetaStore SQLite persistence layer.
 """
 
 import json
-import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -30,36 +28,45 @@ def store(tmp_path):
 def _make_nodes():
     glucose = MetaNode(
         id=node_id(KIND_COMPOUND, "kegg", "C00031"),
-        kind=KIND_COMPOUND, name="D-Glucose",
-        description="Hexose sugar", formula="C6H12O6",
+        kind=KIND_COMPOUND,
+        name="D-Glucose",
+        description="Hexose sugar",
+        formula="C6H12O6",
         xrefs='{"kegg": "C00031", "chebi": "CHEBI_4167"}',
         source_format="csv",
     )
     pyruvate = MetaNode(
         id=node_id(KIND_COMPOUND, "kegg", "C00022"),
-        kind=KIND_COMPOUND, name="Pyruvate",
-        description="End product of glycolysis", formula="C3H4O3",
+        kind=KIND_COMPOUND,
+        name="Pyruvate",
+        description="End product of glycolysis",
+        formula="C3H4O3",
         xrefs='{"kegg": "C00022"}',
         source_format="csv",
     )
     rxn = MetaNode(
         id=node_id(KIND_REACTION, "kegg", "R00200"),
-        kind=KIND_REACTION, name="Glycolysis reaction",
-        stoichiometry=json.dumps({
-            "substrates": [{"id": node_id(KIND_COMPOUND, "kegg", "C00031"), "stoich": 1.0}],
-            "products": [{"id": node_id(KIND_COMPOUND, "kegg", "C00022"), "stoich": 2.0}],
-        }),
+        kind=KIND_REACTION,
+        name="Glycolysis reaction",
+        stoichiometry=json.dumps(
+            {
+                "substrates": [{"id": node_id(KIND_COMPOUND, "kegg", "C00031"), "stoich": 1.0}],
+                "products": [{"id": node_id(KIND_COMPOUND, "kegg", "C00022"), "stoich": 2.0}],
+            }
+        ),
         xrefs='{"kegg": "R00200"}',
         source_format="csv",
     )
     pwy = MetaNode(
         id=node_id(KIND_PATHWAY, "kegg", "hsa00010"),
-        kind=KIND_PATHWAY, name="Glycolysis / Gluconeogenesis",
+        kind=KIND_PATHWAY,
+        name="Glycolysis / Gluconeogenesis",
         source_format="csv",
     )
     enz = MetaNode(
         id=node_id(KIND_ENZYME, "ec", "2.7.1.1"),
-        kind=KIND_ENZYME, name="Hexokinase",
+        kind=KIND_ENZYME,
+        name="Hexokinase",
         ec_number="2.7.1.1",
         xrefs='{"ec": "2.7.1.1"}',
         source_format="csv",
@@ -74,10 +81,8 @@ def _make_edges():
     pwy_id = node_id(KIND_PATHWAY, "kegg", "hsa00010")
     enz_id = node_id(KIND_ENZYME, "ec", "2.7.1.1")
     return [
-        MetaEdge(src=glucose_id, rel="SUBSTRATE_OF", dst=rxn_id,
-                 evidence='{"stoich": 1.0}'),
-        MetaEdge(src=rxn_id, rel="PRODUCT_OF", dst=pyruvate_id,
-                 evidence='{"stoich": 2.0}'),
+        MetaEdge(src=glucose_id, rel="SUBSTRATE_OF", dst=rxn_id, evidence='{"stoich": 1.0}'),
+        MetaEdge(src=rxn_id, rel="PRODUCT_OF", dst=pyruvate_id, evidence='{"stoich": 2.0}'),
         MetaEdge(src=enz_id, rel="CATALYZES", dst=rxn_id),
         MetaEdge(src=pwy_id, rel="CONTAINS", dst=rxn_id),
     ]

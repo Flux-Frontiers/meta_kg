@@ -231,7 +231,6 @@ class Layout3D(ABC):
         :param edges: All edges in the graph (used to derive hierarchy).
         :return: Mapping from node ID to ``[x, y, z]`` position.
         """
-        ...
 
 
 # ---------------------------------------------------------------------------

@@ -489,7 +489,7 @@ class MetaStore:
                 cur = bwd[cur]  # type: ignore[assignment]
             return fwd_path + bwd_path
 
-        for hop in range(max_hops * 2 + 2):  # *2 because each BFS step is half a reaction hop
+        for _ in range(max_hops * 2 + 2):  # *2 because each BFS step is half a reaction hop
             # Expand forward
             next_fwd: deque[str] = deque()
             while fwd_queue:

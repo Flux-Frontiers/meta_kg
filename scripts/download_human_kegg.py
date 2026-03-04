@@ -13,12 +13,10 @@ Free for academic and non-profit use.
 """
 
 import argparse
-import os
-from pathlib import Path
-from urllib.request import urlopen
-from urllib.error import URLError
 import sys
-
+from pathlib import Path
+from urllib.error import URLError
+from urllib.request import urlopen
 
 KEGG_FTP_BASE = "https://rest.kegg.jp"
 ORGANISM = "hsa"  # Homo sapiens
@@ -35,8 +33,8 @@ def get_pathway_list(organism: str) -> list[str]:
     try:
         url = f"{KEGG_FTP_BASE}/list/pathway/{organism}"
         with urlopen(url, timeout=10) as response:
-            lines = response.read().decode('utf-8').strip().split('\n')
-            pathways = [line.split('\t')[0] for line in lines if line]
+            lines = response.read().decode("utf-8").strip().split("\n")
+            pathways = [line.split("\t")[0] for line in lines if line]
             return pathways
     except URLError as e:
         print(f"Error fetching pathway list: {e}", file=sys.stderr)
@@ -60,25 +58,19 @@ def download_pathway_kgml(pathway_id: str) -> bytes:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Download human KEGG pathways"
-    )
+    parser = argparse.ArgumentParser(description="Download human KEGG pathways")
     parser.add_argument(
-        "--output", "-o",
+        "--output",
+        "-o",
         type=str,
         default="data/hsa_pathways",
-        help="Output directory for KGML files (default: data/hsa_pathways)"
+        help="Output directory for KGML files (default: data/hsa_pathways)",
     )
     parser.add_argument(
-        "--organism",
-        type=str,
-        default=ORGANISM,
-        help=f"KEGG organism code (default: {ORGANISM})"
+        "--organism", type=str, default=ORGANISM, help=f"KEGG organism code (default: {ORGANISM})"
     )
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be downloaded without downloading"
+        "--dry-run", action="store_true", help="Show what would be downloaded without downloading"
     )
     args = parser.parse_args()
 
@@ -103,8 +95,8 @@ def main():
     for i, pathway_id in enumerate(pathways, 1):
         # Extract short ID for filename
         # API returns 'hsa00010', not 'path:hsa00010'
-        if ':' in pathway_id:
-            short_id = pathway_id.split(':')[1]
+        if ":" in pathway_id:
+            short_id = pathway_id.split(":")[1]
             download_id = pathway_id
         else:
             short_id = pathway_id
@@ -132,7 +124,7 @@ def main():
     print(f"\n{'=' * 60}")
     print(f"Downloaded {success_count}/{len(pathways)} pathways")
     print(f"Location: {output_dir.absolute()}")
-    print(f"\nNext step:")
+    print("\nNext step:")
     print(f"  poetry run metakg-build --data {output_dir} --wipe")
     print(f"{'=' * 60}")
 

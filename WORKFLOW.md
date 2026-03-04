@@ -10,19 +10,19 @@ End-to-end guide from raw pathway data to running simulations and serving an MCP
 KEGG REST API
      │
      ▼
-collect_pathway_data.py        ← optional; pathways/ already committed
-     │  downloads hsa*.xml
+collect_pathway_data.py        ← optional; data/hsa_pathways/ already available
+     │  downloads hsa*.kgml
      ▼
-pathways/*.xml  (KGML)
+data/hsa_pathways/*.kgml  (KGML)
      │
      ▼
-wire_enzymes.py                ← one-time; already applied to committed files
+wire_enzymes.py                ← one-time; already applied to data/hsa_pathways files
      │  injects enzyme="N" into <reaction> elements
      ▼
-pathways/*.xml  (patched)
+data/hsa_pathways/*.kgml  (patched)
      │
      ▼
-metakg-build --data pathways/  ← run once (or --wipe to rebuild)
+metakg-build --data data/hsa_pathways/  ← run once (or --wipe to rebuild)
      │  KGMLParser → MetaNode/MetaEdge
      ├──► .metakg/meta.sqlite   (SQLite knowledge graph)
      └──► .metakg/lancedb/      (vector index for semantic search)
@@ -45,7 +45,7 @@ metakg-simulate seed           ← run once after build
 
 ## Phase 1 — Get Pathway Data
 
-The 11 KGML files in `pathways/` are **already committed** to the repo.
+The 369 KGML files in `data/hsa_pathways/` are **already available** in the repo.
 Skip this phase unless you want to expand the dataset or refresh from KEGG.
 
 ```bash
@@ -53,7 +53,7 @@ Skip this phase unless you want to expand the dataset or refresh from KEGG.
 python scripts/collect_pathway_data.py --list
 
 # Download all 30 pathways (1 s polite delay between KEGG API calls)
-python scripts/collect_pathway_data.py --out pathways/
+python scripts/collect_pathway_data.py --out data/hsa_pathways/
 
 # Download only one metabolic category
 python scripts/collect_pathway_data.py --category energy
@@ -76,7 +76,7 @@ python scripts/wire_enzymes.py
 `wire_enzymes.py` is a one-time data-preparation tool.  It adds a MetaKG
 extension attribute (`enzyme="N"`) to each `<reaction>` element, linking it
 to the catalysing gene entry by KGML integer ID.  The patch has already been
-applied to all files currently in `pathways/` — only re-run it when ingesting
+applied to all files currently in `data/hsa_pathways/` — only re-run it when ingesting
 newly downloaded or refreshed KGML files.
 
 ---
@@ -85,16 +85,16 @@ newly downloaded or refreshed KGML files.
 
 ```bash
 # First build (creates .metakg/ automatically)
-metakg-build --data pathways/
+metakg-build --data data/hsa_pathways/
 
 # Rebuild from scratch (drops existing data)
-metakg-build --data pathways/ --wipe
+metakg-build --data data/hsa_pathways/ --wipe
 
 # Build without the LanceDB vector index (faster, no semantic search)
-metakg-build --data pathways/ --no-index
+metakg-build --data data/hsa_pathways/ --no-index
 
 # Custom paths or embedding model
-metakg-build --data pathways/ \
+metakg-build --data data/hsa_pathways/ \
              --db .metakg/meta.sqlite \
              --lancedb .metakg/lancedb \
              --model all-MiniLM-L6-v2
@@ -256,8 +256,8 @@ Exposes 9 tools to the connected agent:
 ```bash
 pip install metakg[simulate,mcp]
 
-# pathways/ already in repo — skip collect/wire if using committed files
-metakg-build --data pathways/ --wipe
+# data/hsa_pathways/ already in repo — skip collect/wire if using available files
+metakg-build --data data/hsa_pathways/ --wipe
 metakg-simulate seed
 metakg-analyze --output analysis.md
 metakg-simulate fba --pathway hsa00010 --output fba.md

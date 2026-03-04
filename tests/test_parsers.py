@@ -4,15 +4,11 @@ Tests for code_kg.metakg parsers — KGML, SBML, CSV.
 BioPAX tests are omitted here since rdflib is an optional dependency.
 """
 
-import json
 import textwrap
-import tempfile
-from pathlib import Path
 
 import pytest
 
-from metakg.primitives import KIND_COMPOUND, KIND_PATHWAY, KIND_REACTION, KIND_ENZYME
-
+from metakg.primitives import KIND_COMPOUND, KIND_ENZYME, KIND_PATHWAY, KIND_REACTION
 
 # ---------------------------------------------------------------------------
 # KGML parser
@@ -70,6 +66,7 @@ R002,PGI reaction,Glucose-6-phosphate,Fructose-6-phosphate,Phosphoglucose isomer
 class TestKGMLParser:
     def test_parse_returns_nodes_and_edges(self, tmp_path):
         from metakg.parsers.kgml import KGMLParser
+
         f = tmp_path / "hsa00010.xml"
         f.write_text(KGML_SAMPLE)
         parser = KGMLParser()
@@ -79,6 +76,7 @@ class TestKGMLParser:
 
     def test_pathway_node_present(self, tmp_path):
         from metakg.parsers.kgml import KGMLParser
+
         f = tmp_path / "hsa00010.xml"
         f.write_text(KGML_SAMPLE)
         nodes, _ = KGMLParser().parse(f)
@@ -87,6 +85,7 @@ class TestKGMLParser:
 
     def test_reaction_node_present(self, tmp_path):
         from metakg.parsers.kgml import KGMLParser
+
         f = tmp_path / "hsa00010.xml"
         f.write_text(KGML_SAMPLE)
         nodes, _ = KGMLParser().parse(f)
@@ -95,6 +94,7 @@ class TestKGMLParser:
 
     def test_compound_nodes_present(self, tmp_path):
         from metakg.parsers.kgml import KGMLParser
+
         f = tmp_path / "hsa00010.xml"
         f.write_text(KGML_SAMPLE)
         nodes, _ = KGMLParser().parse(f)
@@ -103,6 +103,7 @@ class TestKGMLParser:
 
     def test_substrate_edge_present(self, tmp_path):
         from metakg.parsers.kgml import KGMLParser
+
         f = tmp_path / "hsa00010.xml"
         f.write_text(KGML_SAMPLE)
         _, edges = KGMLParser().parse(f)
@@ -112,18 +113,21 @@ class TestKGMLParser:
 
     def test_can_handle_kgml_extension(self, tmp_path):
         from metakg.parsers.kgml import KGMLParser
+
         f = tmp_path / "test.kgml"
         f.write_text(KGML_SAMPLE)
         assert KGMLParser().can_handle(f)
 
     def test_cannot_handle_non_pathway_xml(self, tmp_path):
         from metakg.parsers.kgml import KGMLParser
+
         f = tmp_path / "test.xml"
         f.write_text('<?xml version="1.0"?><sbml/>')
         assert not KGMLParser().can_handle(f)
 
     def test_invalid_xml_raises_value_error(self, tmp_path):
         from metakg.parsers.kgml import KGMLParser
+
         f = tmp_path / "bad.xml"
         f.write_text("<pathway><unclosed>")
         # can_handle may return False for malformed XML, but parse should raise
@@ -132,6 +136,7 @@ class TestKGMLParser:
 
     def test_source_format_is_kgml(self, tmp_path):
         from metakg.parsers.kgml import KGMLParser
+
         f = tmp_path / "test.xml"
         f.write_text(KGML_SAMPLE)
         nodes, _ = KGMLParser().parse(f)
@@ -139,6 +144,7 @@ class TestKGMLParser:
 
     def test_pathway_has_kegg_xref(self, tmp_path):
         from metakg.parsers.kgml import KGMLParser
+
         f = tmp_path / "test.xml"
         f.write_text(KGML_SAMPLE)
         nodes, _ = KGMLParser().parse(f)
@@ -151,6 +157,7 @@ class TestKGMLParser:
 class TestSBMLParser:
     def test_parse_returns_nodes_and_edges(self, tmp_path):
         from metakg.parsers.sbml import SBMLParser
+
         f = tmp_path / "glycolysis.xml"
         f.write_text(SBML_SAMPLE)
         nodes, edges = SBMLParser().parse(f)
@@ -159,6 +166,7 @@ class TestSBMLParser:
 
     def test_compound_nodes_from_species(self, tmp_path):
         from metakg.parsers.sbml import SBMLParser
+
         f = tmp_path / "glycolysis.xml"
         f.write_text(SBML_SAMPLE)
         nodes, _ = SBMLParser().parse(f)
@@ -167,6 +175,7 @@ class TestSBMLParser:
 
     def test_reaction_node_present(self, tmp_path):
         from metakg.parsers.sbml import SBMLParser
+
         f = tmp_path / "glycolysis.xml"
         f.write_text(SBML_SAMPLE)
         nodes, _ = SBMLParser().parse(f)
@@ -175,6 +184,7 @@ class TestSBMLParser:
 
     def test_stoichiometry_in_edges(self, tmp_path):
         from metakg.parsers.sbml import SBMLParser
+
         f = tmp_path / "glycolysis.xml"
         f.write_text(SBML_SAMPLE)
         _, edges = SBMLParser().parse(f)
@@ -185,12 +195,14 @@ class TestSBMLParser:
 
     def test_cannot_handle_non_sbml_xml(self, tmp_path):
         from metakg.parsers.sbml import SBMLParser
+
         f = tmp_path / "test.xml"
         f.write_text(KGML_SAMPLE)  # KGML, not SBML
         assert not SBMLParser().can_handle(f)
 
     def test_source_format_is_sbml(self, tmp_path):
         from metakg.parsers.sbml import SBMLParser
+
         f = tmp_path / "test.xml"
         f.write_text(SBML_SAMPLE)
         nodes, _ = SBMLParser().parse(f)
@@ -200,6 +212,7 @@ class TestSBMLParser:
 class TestCSVParser:
     def test_parse_returns_nodes_and_edges(self, tmp_path):
         from metakg.parsers.csv_tsv import CSVParser
+
         f = tmp_path / "reactions.csv"
         f.write_text(CSV_SAMPLE)
         nodes, edges = CSVParser().parse(f)
@@ -208,6 +221,7 @@ class TestCSVParser:
 
     def test_compound_nodes_created(self, tmp_path):
         from metakg.parsers.csv_tsv import CSVParser
+
         f = tmp_path / "reactions.csv"
         f.write_text(CSV_SAMPLE)
         nodes, _ = CSVParser().parse(f)
@@ -217,6 +231,7 @@ class TestCSVParser:
 
     def test_enzyme_nodes_with_ec(self, tmp_path):
         from metakg.parsers.csv_tsv import CSVParser
+
         f = tmp_path / "reactions.csv"
         f.write_text(CSV_SAMPLE)
         nodes, _ = CSVParser().parse(f)
@@ -227,6 +242,7 @@ class TestCSVParser:
 
     def test_pathway_node_created(self, tmp_path):
         from metakg.parsers.csv_tsv import CSVParser
+
         f = tmp_path / "reactions.csv"
         f.write_text(CSV_SAMPLE)
         nodes, _ = CSVParser().parse(f)
@@ -236,6 +252,7 @@ class TestCSVParser:
 
     def test_catalyzes_edges_present(self, tmp_path):
         from metakg.parsers.csv_tsv import CSVParser
+
         f = tmp_path / "reactions.csv"
         f.write_text(CSV_SAMPLE)
         _, edges = CSVParser().parse(f)
@@ -244,6 +261,7 @@ class TestCSVParser:
 
     def test_missing_required_column_raises(self, tmp_path):
         from metakg.parsers.csv_tsv import CSVParser
+
         f = tmp_path / "bad.csv"
         f.write_text("reaction_id,enzyme\nR001,HK\n")
         with pytest.raises(ValueError, match="missing required columns"):
@@ -251,6 +269,7 @@ class TestCSVParser:
 
     def test_stoichiometry_blob_on_reaction(self, tmp_path):
         from metakg.parsers.csv_tsv import CSVParser
+
         f = tmp_path / "reactions.csv"
         f.write_text(CSV_SAMPLE)
         nodes, _ = CSVParser().parse(f)
@@ -262,6 +281,7 @@ class TestCSVParser:
 
     def test_tsv_parsing(self, tmp_path):
         from metakg.parsers.csv_tsv import CSVParser
+
         tsv_content = CSV_SAMPLE.replace(",", "\t")
         f = tmp_path / "reactions.tsv"
         f.write_text(tsv_content)
@@ -272,6 +292,7 @@ class TestCSVParser:
 class TestMetabolicGraph:
     def test_extract_directory(self, tmp_path):
         from metakg.graph import MetabolicGraph
+
         # Create a CSV file in tmp directory
         f = tmp_path / "reactions.csv"
         f.write_text(CSV_SAMPLE)
@@ -282,6 +303,7 @@ class TestMetabolicGraph:
 
     def test_extract_mixed_formats(self, tmp_path):
         from metakg.graph import MetabolicGraph
+
         (tmp_path / "reactions.csv").write_text(CSV_SAMPLE)
         (tmp_path / "pathway.xml").write_text(KGML_SAMPLE)
         graph = MetabolicGraph(tmp_path)
@@ -293,6 +315,7 @@ class TestMetabolicGraph:
 
     def test_caches_result(self, tmp_path):
         from metakg.graph import MetabolicGraph
+
         (tmp_path / "reactions.csv").write_text(CSV_SAMPLE)
         graph = MetabolicGraph(tmp_path)
         graph.extract()
@@ -303,6 +326,7 @@ class TestMetabolicGraph:
 
     def test_result_before_extract_raises(self, tmp_path):
         from metakg.graph import MetabolicGraph
+
         graph = MetabolicGraph(tmp_path)
         with pytest.raises(RuntimeError):
             graph.result()

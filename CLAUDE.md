@@ -95,8 +95,8 @@ kg.seed_kinetics()
 ## Typical Workflow
 
 ```bash
-# Build & analyze pathways
-poetry run metakg-build --data ./pathways --wipe
+# Build & analyze pathways (download first: scripts/download_human_kegg.py)
+poetry run metakg-build --data ./data/hsa_pathways --wipe
 poetry run metakg-analyze
 
 # Explore

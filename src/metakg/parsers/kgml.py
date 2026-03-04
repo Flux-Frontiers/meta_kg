@@ -90,7 +90,11 @@ class KGMLParser(PathwayParser):
         org = root.attrib.get("org", "")
 
         # Pathway container node
-        pwy_id = node_id(KIND_PATHWAY, "kegg", pathway_kegg_id) if pathway_kegg_id else synthetic_id(KIND_PATHWAY, pathway_title)
+        pwy_id = (
+            node_id(KIND_PATHWAY, "kegg", pathway_kegg_id)
+            if pathway_kegg_id
+            else synthetic_id(KIND_PATHWAY, pathway_title)
+        )
         pwy_node = MetaNode(
             id=pwy_id,
             kind=KIND_PATHWAY,
@@ -117,7 +121,11 @@ class KGMLParser(PathwayParser):
                     nid = node_id(KIND_COMPOUND, "kegg", kegg_cid)
                     if nid not in nodes:
                         graphics = entry.find("graphics")
-                        label = graphics.attrib.get("name", kegg_cid) if graphics is not None else kegg_cid
+                        label = (
+                            graphics.attrib.get("name", kegg_cid)
+                            if graphics is not None
+                            else kegg_cid
+                        )
                         nodes[nid] = MetaNode(
                             id=nid,
                             kind=KIND_COMPOUND,
@@ -138,8 +146,7 @@ class KGMLParser(PathwayParser):
                 # This avoids creating orphaned enzyme nodes for non-canonical
                 # genes that would never receive a CATALYZES edge.
                 gene_ids = [
-                    raw.replace("hsa:", "").replace("ko:", "").strip()
-                    for raw in enames.split()
+                    raw.replace("hsa:", "").replace("ko:", "").strip() for raw in enames.split()
                 ]
                 if not gene_ids:
                     continue
@@ -149,9 +156,7 @@ class KGMLParser(PathwayParser):
 
                 graphics = entry.find("graphics")
                 label = (
-                    graphics.attrib.get("name", canonical)
-                    if graphics is not None
-                    else canonical
+                    graphics.attrib.get("name", canonical) if graphics is not None else canonical
                 )
 
                 if nid not in nodes:
@@ -184,8 +189,14 @@ class KGMLParser(PathwayParser):
                 prod_name = prod.attrib.get("name", "").replace("cpd:", "").strip()
                 products.append({"id": node_id(KIND_COMPOUND, "kegg", prod_name), "stoich": 1.0})
 
-            stoich_blob = json.dumps({"substrates": substrates, "products": products, "direction": rxn_type})
-            rxn_id = node_id(KIND_REACTION, "kegg", rxn_kegg_id) if rxn_kegg_id else synthetic_id(KIND_REACTION, rxn_elem.attrib.get("id", ""))
+            stoich_blob = json.dumps(
+                {"substrates": substrates, "products": products, "direction": rxn_type}
+            )
+            rxn_id = (
+                node_id(KIND_REACTION, "kegg", rxn_kegg_id)
+                if rxn_kegg_id
+                else synthetic_id(KIND_REACTION, rxn_elem.attrib.get("id", ""))
+            )
             rxn_name = rxn_kegg_id or rxn_elem.attrib.get("id", "unknown")
 
             if rxn_id not in nodes:
@@ -210,15 +221,22 @@ class KGMLParser(PathwayParser):
                 if cid not in nodes:
                     kegg_cid = cid.split(":")[-1]
                     nodes[cid] = MetaNode(
-                        id=cid, kind=KIND_COMPOUND, name=kegg_cid,
+                        id=cid,
+                        kind=KIND_COMPOUND,
+                        name=kegg_cid,
                         description=f"KEGG compound {kegg_cid}",
                         xrefs=json.dumps({"kegg": kegg_cid}),
-                        source_format="kgml", source_file=str(path),
+                        source_format="kgml",
+                        source_file=str(path),
                     )
-                edges.append(MetaEdge(
-                    src=cid, rel=REL_SUBSTRATE_OF, dst=rxn_id,
-                    evidence=json.dumps({"stoich": s["stoich"]}),
-                ))
+                edges.append(
+                    MetaEdge(
+                        src=cid,
+                        rel=REL_SUBSTRATE_OF,
+                        dst=rxn_id,
+                        evidence=json.dumps({"stoich": s["stoich"]}),
+                    )
+                )
 
             # Product edges
             for p in products:
@@ -226,15 +244,22 @@ class KGMLParser(PathwayParser):
                 if cid not in nodes:
                     kegg_cid = cid.split(":")[-1]
                     nodes[cid] = MetaNode(
-                        id=cid, kind=KIND_COMPOUND, name=kegg_cid,
+                        id=cid,
+                        kind=KIND_COMPOUND,
+                        name=kegg_cid,
                         description=f"KEGG compound {kegg_cid}",
                         xrefs=json.dumps({"kegg": kegg_cid}),
-                        source_format="kgml", source_file=str(path),
+                        source_format="kgml",
+                        source_file=str(path),
                     )
-                edges.append(MetaEdge(
-                    src=rxn_id, rel=REL_PRODUCT_OF, dst=cid,
-                    evidence=json.dumps({"stoich": p["stoich"]}),
-                ))
+                edges.append(
+                    MetaEdge(
+                        src=rxn_id,
+                        rel=REL_PRODUCT_OF,
+                        dst=cid,
+                        evidence=json.dumps({"stoich": p["stoich"]}),
+                    )
+                )
 
         # --- Wire enzymes to reactions ---
         # Strategy A: MetaKG extension — <reaction ... enzyme="N"> references

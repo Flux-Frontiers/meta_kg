@@ -68,33 +68,33 @@ def register_tools(mcp, metakg: MetaKG) -> None:
         return result.to_json()
 
     @mcp.tool()
-    def get_compound(id: str) -> str:
+    def get_compound(compound_id: str) -> str:
         """
         Retrieve a compound node by its internal ID or external database ID.
 
         Accepts internal IDs (``cpd:kegg:C00022``), shorthand (``kegg:C00022``),
         or a compound name (case-insensitive).
 
-        :param id: Compound identifier in any supported format.
+        :param compound_id: Compound identifier in any supported format.
         :return: JSON object with compound fields and a ``reactions`` list.
         """
-        node = metakg.get_compound(id)
+        node = metakg.get_compound(compound_id)
         if node is None:
-            return json.dumps({"error": f"compound not found: {id!r}"})
+            return json.dumps({"error": f"compound not found: {compound_id!r}"})
         return json.dumps(node, indent=2, default=str)
 
     @mcp.tool()
-    def get_reaction(id: str) -> str:
+    def get_reaction(reaction_id: str) -> str:
         """
         Retrieve a reaction node with its full substrate/product/enzyme context.
 
-        :param id: Reaction node ID (e.g. ``rxn:kegg:R00200``) or shorthand
+        :param reaction_id: Reaction node ID (e.g. ``rxn:kegg:R00200``) or shorthand
             (e.g. ``kegg:R00200``).
         :return: JSON object with ``substrates``, ``products``, and ``enzymes`` lists.
         """
-        detail = metakg.get_reaction(id)
+        detail = metakg.get_reaction(reaction_id)
         if detail is None:
-            return json.dumps({"error": f"reaction not found: {id!r}"})
+            return json.dumps({"error": f"reaction not found: {reaction_id!r}"})
         return json.dumps(detail, indent=2, default=str)
 
     @mcp.tool()
@@ -152,13 +152,17 @@ def register_tools(mcp, metakg: MetaKG) -> None:
             name = node["name"] if node else rxn_id
             enriched_fluxes[rxn_id] = {"name": name, "flux": flux}
 
-        return json.dumps({
-            "status": result.status,
-            "objective_value": result.objective_value,
-            "message": result.message,
-            "fluxes": enriched_fluxes,
-            "shadow_prices": result.shadow_prices,
-        }, indent=2, default=str)
+        return json.dumps(
+            {
+                "status": result.status,
+                "objective_value": result.objective_value,
+                "message": result.message,
+                "fluxes": enriched_fluxes,
+                "shadow_prices": result.shadow_prices,
+            },
+            indent=2,
+            default=str,
+        )
 
     @mcp.tool()
     def simulate_ode(
@@ -209,21 +213,27 @@ def register_tools(mcp, metakg: MetaKG) -> None:
         for cpd_id, concs in result.concentrations.items():
             node = store.node(cpd_id)
             name = node["name"] if node else cpd_id
-            summary.append({
-                "id": cpd_id,
-                "name": name,
-                "initial_mM": concs[0] if concs else None,
-                "final_mM": concs[-1] if concs else None,
-            })
+            summary.append(
+                {
+                    "id": cpd_id,
+                    "name": name,
+                    "initial_mM": concs[0] if concs else None,
+                    "final_mM": concs[-1] if concs else None,
+                }
+            )
         summary.sort(key=lambda x: (x["final_mM"] or 0.0), reverse=True)
 
-        return json.dumps({
-            "status": result.status,
-            "message": result.message,
-            "t": result.t,
-            "concentrations": result.concentrations,
-            "summary": summary,
-        }, indent=2, default=str)
+        return json.dumps(
+            {
+                "status": result.status,
+                "message": result.message,
+                "t": result.t,
+                "concentrations": result.concentrations,
+                "summary": summary,
+            },
+            indent=2,
+            default=str,
+        )
 
     @mcp.tool()
     def simulate_whatif(
@@ -272,10 +282,7 @@ def register_tools(mcp, metakg: MetaKG) -> None:
         config = SimulationConfig(pathway_id=pwy_id)
 
         # Resolve enzyme IDs in scenario
-        knockouts = [
-            store.resolve_id(e) or e
-            for e in scenario_dict.get("enzyme_knockouts", [])
-        ]
+        knockouts = [store.resolve_id(e) or e for e in scenario_dict.get("enzyme_knockouts", [])]
         factors = scenario_dict.get("enzyme_factors", {})
         resolved_factors = {}
         for enz_id, factor in factors.items():
@@ -287,8 +294,7 @@ def register_tools(mcp, metakg: MetaKG) -> None:
             enzyme_knockouts=knockouts,
             enzyme_factors=resolved_factors,
             initial_conc_overrides={
-                k: float(v)
-                for k, v in scenario_dict.get("initial_conc_overrides", {}).items()
+                k: float(v) for k, v in scenario_dict.get("initial_conc_overrides", {}).items()
             },
         )
 
@@ -318,8 +324,12 @@ def register_tools(mcp, metakg: MetaKG) -> None:
                     {
                         "id": cpd_id,
                         "name": (store.node(cpd_id) or {}).get("name", cpd_id),
-                        "baseline_final_mM": (result.baseline.concentrations or {}).get(cpd_id, [0.0])[-1],  # type: ignore[union-attr]
-                        "perturbed_final_mM": (result.perturbed.concentrations or {}).get(cpd_id, [0.0])[-1],  # type: ignore[union-attr]
+                        "baseline_final_mM": (
+                            (result.baseline.concentrations or {}).get(cpd_id, [0.0])[-1]  # type: ignore[union-attr]
+                        ),
+                        "perturbed_final_mM": (
+                            (result.perturbed.concentrations or {}).get(cpd_id, [0.0])[-1]  # type: ignore[union-attr]
+                        ),
                         "delta_mM": delta,
                     }
                     for cpd_id, delta in result.delta_final_conc.items()
@@ -332,15 +342,19 @@ def register_tools(mcp, metakg: MetaKG) -> None:
         baseline_obj = getattr(result.baseline, "objective_value", None)
         perturbed_obj = getattr(result.perturbed, "objective_value", None)
 
-        return json.dumps({
-            "scenario_name": result.scenario_name,
-            "mode": result.mode,
-            "baseline_status": result.baseline.status,
-            "perturbed_status": result.perturbed.status,
-            "baseline_objective": baseline_obj,
-            "perturbed_objective": perturbed_obj,
-            "top_changes": changes[:25],
-        }, indent=2, default=str)
+        return json.dumps(
+            {
+                "scenario_name": result.scenario_name,
+                "mode": result.mode,
+                "baseline_status": result.baseline.status,
+                "perturbed_status": result.perturbed.status,
+                "baseline_objective": baseline_obj,
+                "perturbed_objective": perturbed_obj,
+                "top_changes": changes[:25],
+            },
+            indent=2,
+            default=str,
+        )
 
     @mcp.tool()
     def get_kinetic_params(reaction_id: str) -> str:
@@ -375,11 +389,15 @@ def register_tools(mcp, metakg: MetaKG) -> None:
             cpd = store.node(reg["compound_id"])
             reg["compound_name"] = cpd["name"] if cpd else reg["compound_id"]
 
-        return json.dumps({
-            "reaction_id": resolved,
-            "kinetic_params": enriched,
-            "regulatory_interactions": regs,
-        }, indent=2, default=str)
+        return json.dumps(
+            {
+                "reaction_id": resolved,
+                "kinetic_params": enriched,
+                "regulatory_interactions": regs,
+            },
+            indent=2,
+            default=str,
+        )
 
     @mcp.tool()
     def seed_kinetics(force: bool = False) -> str:
@@ -401,14 +419,17 @@ def register_tools(mcp, metakg: MetaKG) -> None:
         from metakg.kinetics_fetch import seed_kinetics as _seed
 
         n_kp, n_ri = _seed(metakg.store, force=force)
-        return json.dumps({
-            "kinetic_params_written": n_kp,
-            "regulatory_interactions_written": n_ri,
-            "message": (
-                f"Seeded {n_kp} kinetic parameter row(s) and "
-                f"{n_ri} regulatory interaction row(s)."
-            ),
-        }, indent=2)
+        return json.dumps(
+            {
+                "kinetic_params_written": n_kp,
+                "regulatory_interactions_written": n_ri,
+                "message": (
+                    f"Seeded {n_kp} kinetic parameter row(s) and "
+                    f"{n_ri} regulatory interaction row(s)."
+                ),
+            },
+            indent=2,
+        )
 
 
 def create_server(metakg: MetaKG, *, name: str = "metakg"):
@@ -422,9 +443,7 @@ def create_server(metakg: MetaKG, *, name: str = "metakg"):
     try:
         from mcp.server.fastmcp import FastMCP
     except ImportError as exc:
-        raise ImportError(
-            "mcp package not found. Install it with: pip install mcp"
-        ) from exc
+        raise ImportError("mcp package not found. Install it with: pip install mcp") from exc
 
     server = FastMCP(
         name,

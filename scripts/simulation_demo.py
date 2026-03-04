@@ -69,8 +69,8 @@ def main():
         return
 
     # Use first pathway (shorter one)
-    pathway_id = pathway_result.hits[0]['id']
-    pathway_name = pathway_result.hits[0]['name']
+    pathway_id = pathway_result.hits[0]["id"]
+    pathway_name = pathway_result.hits[0]["name"]
 
     # =========================================================================
     # Demo 1: Seed Kinetic Parameters
@@ -101,9 +101,9 @@ def main():
     print(f"  Objective value:  {result['objective_value']}")
     print(f"  Reactions found:  {len(result['fluxes'])}")
 
-    if result['fluxes']:
-        print(f"\n  Top 3 reactions by flux:")
-        fluxes = sorted(result['fluxes'].items(), key=lambda x: abs(x[1]), reverse=True)
+    if result["fluxes"]:
+        print("\n  Top 3 reactions by flux:")
+        fluxes = sorted(result["fluxes"].items(), key=lambda x: abs(x[1]), reverse=True)
         for rxn_id, flux in fluxes[:3]:
             print(f"    • {rxn_id}: {flux:.6g} mM/s")
 
@@ -114,8 +114,8 @@ def main():
 
     enzymes = kg.store.all_nodes(kind="enzyme")
     if enzymes:
-        enzyme_id = enzymes[0]['id']
-        enzyme_name = enzymes[0].get('name', enzyme_id)
+        enzyme_id = enzymes[0]["id"]
+        enzyme_name = enzymes[0].get("name", enzyme_id)
 
         log_step(f"Knocking out {enzyme_name}")
         start = time.time()
@@ -147,8 +147,8 @@ def main():
     banner("Demo 4: What-If Analysis - Enzyme Inhibition (50%)")
 
     if enzymes:
-        enzyme_id = enzymes[0]['id']
-        enzyme_name = enzymes[0].get('name', enzyme_id)
+        enzyme_id = enzymes[0]["id"]
+        enzyme_name = enzymes[0].get("name", enzyme_id)
 
         log_step(f"Inhibiting {enzyme_name} to 50%")
         start = time.time()
@@ -211,9 +211,9 @@ def main():
     print(f"    • Time points:     {len(result['t'])}")
     print(f"    • Compounds:       {len(result['concentrations'])}")
 
-    if result['concentrations']:
+    if result["concentrations"]:
         print("\n  Final concentrations (sample):")
-        conc_items = list(result['concentrations'].items())[:3]
+        conc_items = list(result["concentrations"].items())[:3]
         for cpd_id, conc_array in conc_items:
             if conc_array:
                 cpd = kg.get_compound(cpd_id)

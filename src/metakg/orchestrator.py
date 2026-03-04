@@ -313,7 +313,7 @@ class MetaKG:
         for h in hits:
             node = self.store.node(h.id)
             if node and node["kind"] == "pathway":
-                cur = self.store._conn.execute(
+                cur = self.store._conn.execute(  # pylint: disable=protected-access
                     "SELECT COUNT(*) FROM meta_edges WHERE src=? AND rel='CONTAINS'",
                     (h.id,),
                 )
@@ -321,16 +321,16 @@ class MetaKG:
                 results.append({**node, "_distance": h.distance, "member_count": member_count})
         return MetabolicQueryResult(query=name, hits=results)
 
-    def get_compound(self, id: str) -> dict | None:
+    def get_compound(self, compound_id: str) -> dict | None:
         """
         Retrieve a compound node by internal or external ID.
 
         Accepts ``cpd:kegg:C00022``, shorthand ``kegg:C00022``, or a plain name.
 
-        :param id: Compound identifier.
+        :param compound_id: Compound identifier.
         :return: Compound node dict with connected reactions, or ``None`` if not found.
         """
-        nid = self.store.resolve_id(id)
+        nid = self.store.resolve_id(compound_id)
         if not nid:
             return None
         node = self.store.node(nid)
@@ -347,14 +347,14 @@ class MetaKG:
 
         return {**node, "reactions": reactions}
 
-    def get_reaction(self, id: str) -> dict | None:
+    def get_reaction(self, reaction_id: str) -> dict | None:
         """
         Retrieve a reaction node with full substrate/product/enzyme context.
 
-        :param id: Reaction node ID or shorthand external ID.
+        :param reaction_id: Reaction node ID or shorthand external ID.
         :return: Reaction detail dict or ``None`` if not found.
         """
-        nid = self.store.resolve_id(id)
+        nid = self.store.resolve_id(reaction_id)
         if not nid:
             return None
         return self.store.reaction_detail(nid)

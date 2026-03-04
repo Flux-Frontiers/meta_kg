@@ -90,10 +90,7 @@ print(rxn["enzymes"])     # [{'ec_number': '4.1.1.1', ...}]
             print("\n--- Output ---")
             substrates = [s["name"] for s in rxn.get("substrates", [])]
             products = [p["name"] for p in rxn.get("products", [])]
-            enzymes = [
-                e.get("ec_number", e.get("name"))
-                for e in rxn.get("enzymes", [])
-            ]
+            enzymes = [e.get("ec_number", e.get("name")) for e in rxn.get("enzymes", [])]
             print(f"Substrates: {substrates}")
             print(f"Products:   {products}")
             print(f"Enzymes:    {enzymes}")
@@ -193,6 +190,7 @@ def main():
 
     except Exception as e:
         import traceback
+
         print(f"\nError: {e}")
         traceback.print_exc()
         print("\nMake sure you've run: poetry run metakg-build --data ./pathways")
