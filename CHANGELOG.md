@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`store.query_semantic()` renamed to `query_text()`** (`src/metakg/store.py`, `src/metakg/app.py`) — Method renamed to accurately reflect that it performs a text-based substring match, not a true semantic/vector search; semantic search remains in `MetaIndex`. Docstring updated to clarify the distinction and direct users to `MetaIndex` for embedding-based queries.
+
+- **CLI `simulate_main()` uses `MetaKG` orchestrator** (`src/metakg/cli.py`) — `seed`, `fba`, `ode`, and `whatif` subcommands now instantiate `MetaKG` via `with MetaKG(db_path=...) as kg:` instead of directly importing `MetaStore` and `MetabolicSimulator`. Brings CLI in line with the public API surface.
+
+- **MCP tool handlers extracted to module-level functions** (`src/metakg/mcp_tools.py`) — All per-tool logic moved from closures inside `register_tools()` to standalone `_mcp_*()` functions at module level, making them unit-testable without a live FastMCP instance. `register_tools()` now delegates to these functions and copies docstrings for MCP schema generation.
+
+- **WORKFLOW.md updated for `wire_kegg_enzymes.py`** — References to the old `wire_enzymes.py` replaced; description expanded to cover the scanning/patching approach and `--dry-run` flag.
+
+### Removed
+
+- **`pathways/` sample KGML files** (`pathways/hsa00010.xml` – `hsa00650.xml`) — 11 hand-authored KGML fixtures removed from version control; real pathway data lives in `data/hsa_pathways/` (not tracked).
+
+- **`scripts/wire_enzymes.py`** — Hardcoded one-shot enzyme wiring script retired; superseded by the more general `scripts/wire_kegg_enzymes.py` (which auto-detects missing enzyme coverage across all KGML files).
+
 ### Fixed
 
 - **KGML multi-gene entry grouping** (`src/metakg/parsers/kgml.py`) — A single KGML `<entry type="gene">` often lists multiple gene IDs (e.g. pyruvate dehydrogenase complex `hsa:5160 hsa:5161 hsa:5162`). The previous parser created one enzyme node per gene but only wired the last-processed gene to its reaction via a CATALYZES edge, leaving all others as orphaned nodes with no edges. Fix: create one canonical group node per entry (keyed on the first gene ID, labelled with KEGG graphics name); all member gene IDs stored as a list in the node's `xrefs` JSON; `entry_map` points to the single node so CATALYZES wiring is correct and complete. Effect across full human KEGG dataset: ~1,797 fewer enzyme nodes, CATALYZES edge count unchanged at 4,165, ~5,255 previously orphaned enzyme nodes eliminated.

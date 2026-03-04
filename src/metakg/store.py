@@ -858,16 +858,16 @@ class GraphStore(MetaStore):
         """
         return self.node(node_id)
 
-    def query_semantic(self, query: str, k: int = 10) -> list[dict]:
+    def query_text(self, query: str, k: int = 10) -> list[dict]:
         """
-        Perform a semantic search query using LanceDB embeddings.
+        Find nodes by substring match on name and description fields.
 
-        This is a simplified stub that returns nodes by name/description match.
-        For full semantic search, integrate with MetaIndex.
+        Text-filter fallback for the Streamlit visualiser.  For true semantic
+        (vector) search use :class:`~metakg.index.MetaIndex`.
 
-        :param query: Query string.
-        :param k: Number of results to return.
-        :return: List of node dicts sorted by relevance.
+        :param query: Query string (case-insensitive substring match).
+        :param k: Maximum number of results to return.
+        :return: List of node dicts sorted by relevance (name match > description match).
         """
         # Simple text-based search if embeddings are not available
         query_lower = query.lower()

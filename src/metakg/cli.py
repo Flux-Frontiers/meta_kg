@@ -504,12 +504,13 @@ def simulate_main(argv: list | None = None) -> None:
                 file=sys.stderr,
             )
             sys.exit(1)
-        from metakg.kinetics_fetch import seed_kinetics
-        from metakg.store import MetaStore
+        from metakg import MetaKG
 
         print(f"Seeding kinetic parameters into {db_path}...", file=sys.stderr)
-        with MetaStore(db_path) as store:
-            n_kp, n_ri = seed_kinetics(store, force=args.force)
+        with MetaKG(db_path=db_path) as kg:
+            result = kg.seed_kinetics(force=args.force)
+        n_kp = result["kinetic_params_written"]
+        n_ri = result["regulatory_interactions_written"]
         print(
             f"Done. Wrote {n_kp} kinetic parameter row(s) and "
             f"{n_ri} regulatory interaction row(s).",
@@ -524,20 +525,20 @@ def simulate_main(argv: list | None = None) -> None:
         )
         sys.exit(1)
 
+    from metakg import MetaKG
     from metakg.simulate import (
-        MetabolicSimulator,
         SimulationConfig,
         WhatIfScenario,
         render_fba_result,
         render_ode_result,
         render_whatif_result,
     )
-    from metakg.store import MetaStore
 
     markdown = not args.plain
 
-    with MetaStore(db_path) as store:
-        sim = MetabolicSimulator(store)
+    with MetaKG(db_path=db_path) as kg:
+        store = kg.store
+        sim = kg.simulator
 
         if args.subcommand == "fba":
             pathway_id = store.resolve_id(args.pathway) if args.pathway else None

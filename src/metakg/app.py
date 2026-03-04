@@ -484,7 +484,7 @@ def _tab_search(cfg: dict[str, Any]) -> None:
         k = st.slider("Number of results", min_value=1, max_value=50, value=10)
 
         try:
-            results = store.query_semantic(query_text, k=k)
+            results = store.query_text(query_text, k=k)
             st.success(f"Found {len(results)} results")
 
             for i, result in enumerate(results, 1):

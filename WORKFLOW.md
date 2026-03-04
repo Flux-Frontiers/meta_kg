@@ -70,14 +70,18 @@ After downloading fresh KGML files, re-run the enzyme wiring step:
 
 ```bash
 # Inject enzyme="N" attributes so the parser can emit CATALYZES edges
-python scripts/wire_enzymes.py
+python scripts/wire_kegg_enzymes.py
+
+# Dry-run to preview changes without writing
+python scripts/wire_kegg_enzymes.py --data data/hsa_pathways --dry-run
 ```
 
-`wire_enzymes.py` is a one-time data-preparation tool.  It adds a MetaKG
-extension attribute (`enzyme="N"`) to each `<reaction>` element, linking it
-to the catalysing gene entry by KGML integer ID.  The patch has already been
-applied to all files currently in `data/hsa_pathways/` — only re-run it when ingesting
-newly downloaded or refreshed KGML files.
+`wire_kegg_enzymes.py` is a one-time data-preparation tool.  It scans all
+KGML files and patches `<reaction>` elements that have no enzyme coverage by
+adding an `enzyme="N"` attribute pointing to the correct gene/ortholog entry
+ID, which lets the parser emit CATALYZES edges.  The patch has already been
+applied to all files currently in `data/hsa_pathways/` — only re-run it when
+ingesting newly downloaded or refreshed KGML files.
 
 ---
 
