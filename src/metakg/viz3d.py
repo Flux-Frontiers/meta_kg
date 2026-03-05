@@ -25,6 +25,12 @@ def launch(
     """
     Launch the 3D metabolic knowledge graph visualizer.
 
+    Optimized for large graphs using:
+    - MultiBlock batching for efficient rendering
+    - Adaptive geometry (cubes for 500+ nodes)
+    - Efficient edge rendering (skip for 5000+ edges)
+    - Proper 3D lighting and anti-aliasing
+
     :param db_path: Path to the MetaKG SQLite database.
     :param lancedb_dir: Path to the LanceDB directory (optional).
     :param layout_name: Layout strategy: "allium" (default) or "cake".
@@ -95,11 +101,33 @@ def launch(
         else:
             print("Launching interactive 3D viewer...")
 
-        # Create plotter
+        # Create plotter with optimized settings
         pl = pv.Plotter(window_size=[width, height])
+        pl.clear_actors()
+        pl.remove_all_lights()
+        pl.enable_anti_aliasing("msaa")
 
-        # Add nodes as spheres
-        from metakg.primitives import KIND_COMPOUND, KIND_ENZYME, KIND_PATHWAY, KIND_REACTION
+        # Setup 3D lighting (key, fill, back lights)
+        key_light = pv.Light(
+            position=(0, 0, 100), color="white", light_type="scene light"
+        )
+        fill_light = pv.Light(
+            position=(0, 100, 0), color="white", light_type="scene light"
+        )
+        back_light = pv.Light(
+            position=(0, 0, -100), color="white", light_type="scene light"
+        )
+        pl.add_light(key_light)
+        pl.add_light(fill_light)
+        pl.add_light(back_light)
+
+        # Node kind to color mapping
+        from metakg.primitives import (
+            KIND_COMPOUND,
+            KIND_ENZYME,
+            KIND_PATHWAY,
+            KIND_REACTION,
+        )
 
         kind_to_color = {
             KIND_PATHWAY: "blue",
@@ -108,7 +136,7 @@ def launch(
             KIND_ENZYME: "orange",
         }
 
-        # Count nodes that will actually be added
+        # Filter nodes/edges that have positions
         positioned_nodes = [n for n in layout_nodes if positions.get(n.id) is not None]
         positioned_edges = [
             e
@@ -116,37 +144,99 @@ def launch(
             if positions.get(e.src) is not None and positions.get(e.dst) is not None
         ]
 
-        print(f"Adding {len(positioned_nodes)} nodes to visualization...", end="", flush=True)
+        n_nodes = len(positioned_nodes)
+        n_edges = len(positioned_edges)
+
+        # Adaptive rendering: use geometry appropriate to graph size
+        use_cubes = n_nodes > 500
+        render_edges = n_edges < 5000  # Skip edges for extremely dense graphs
+        node_size = 0.3 if use_cubes else 0.5
+
+        print(
+            f"Batching {n_nodes} nodes to visualization (adaptive: {'cubes' if use_cubes else 'spheres'})...",
+            end="",
+            flush=True,
+        )
+
+        # Create MultiBlocks grouped by node kind for efficient batching
+        node_blocks = {}
+        for kind in [KIND_PATHWAY, KIND_REACTION, KIND_COMPOUND, KIND_ENZYME]:
+            node_blocks[kind] = pv.MultiBlock()
+
+        # Add nodes to their respective MultiBlocks
         node_count = 0
-        progress_step = max(1, len(positioned_nodes) // 10)
+        progress_step = max(1, n_nodes // 10)
         for node in positioned_nodes:
             pos = positions[node.id]
-            color = kind_to_color.get(node.kind, "gray")
-            size = 0.5  # node size
-            sphere = pv.Sphere(radius=size, center=pos)
-            pl.add_mesh(sphere, color=color, opacity=0.8)
+
+            # Create geometry (cube or sphere)
+            if use_cubes:
+                mesh = pv.Cube(
+                    center=pos,
+                    x_length=node_size,
+                    y_length=node_size,
+                    z_length=node_size,
+                )
+            else:
+                mesh = pv.Sphere(radius=node_size, center=pos)
+
+            node_blocks[node.kind].append(mesh)
             node_count += 1
+
             if progress_step > 0 and node_count % progress_step == 0:
                 print(".", end="", flush=True)
+
+        # Add all node blocks to plotter (one call per kind)
+        for kind, block in node_blocks.items():
+            if block.n_blocks > 0:
+                color = kind_to_color.get(kind, "gray")
+                pl.add_mesh(
+                    block,
+                    color=color,
+                    opacity=0.85,
+                    smooth_shading=not use_cubes,
+                    show_edges=False,
+                    name=f"nodes_{kind}",
+                )
+
         print(" done")
 
-        # Add edges as lines
-        print(f"Adding {len(positioned_edges)} edges to visualization...", end="", flush=True)
-        edge_count = 0
-        progress_step = max(1, len(positioned_edges) // 10)
-        for edge in positioned_edges:
-            src_pos = positions[edge.src]
-            dst_pos = positions[edge.dst]
-            line = pv.Line(src_pos, dst_pos)
-            pl.add_mesh(line, color="gray", opacity=0.5, line_width=1)
-            edge_count += 1
-            if progress_step > 0 and edge_count % progress_step == 0:
-                print(".", end="", flush=True)
-        print(" done")
+        # Add edges (skip for very dense graphs)
+        if render_edges:
+            print(f"Batching {n_edges} edges to visualization...", end="", flush=True)
 
-        print("Setting up camera and title...", end="", flush=True)
-        pl.camera_position = "xy"
-        pl.reset_camera()  # type: ignore[call-arg]
+            edge_block = pv.MultiBlock()
+            edge_count = 0
+            progress_step = max(1, n_edges // 10)
+
+            for edge in positioned_edges:
+                src_pos = positions[edge.src]
+                dst_pos = positions[edge.dst]
+
+                # Use lines for edges (more efficient than tubes for large counts)
+                line = pv.Line(src_pos, dst_pos)
+                edge_block.append(line)
+
+                edge_count += 1
+                if progress_step > 0 and edge_count % progress_step == 0:
+                    print(".", end="", flush=True)
+
+            if edge_block.n_blocks > 0:
+                pl.add_mesh(
+                    edge_block,
+                    color="gray",
+                    opacity=0.4,
+                    line_width=1,
+                    name="edges",
+                )
+
+            print(" done")
+        else:
+            print(f"Skipping {n_edges} edges (graph too dense for readable rendering)")
+
+        print("Setting up camera and rendering...", end="", flush=True)
+        pl.reset_camera()
+        pl.view_xy()
         pl.add_title(f"MetaKG 3D Explorer — {layout_name.capitalize()} Layout")
         print(" done")
 
