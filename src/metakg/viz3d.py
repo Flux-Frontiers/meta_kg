@@ -56,21 +56,26 @@ def launch(
 
     try:
         # Load nodes and edges
+        print("Loading nodes...", end="", flush=True)
         nodes_data = store.query_nodes()
+        print(f" {len(nodes_data)} loaded")
+
+        print("Loading edges...", end="", flush=True)
         edges_data = store.query_edges()
+        print(f" {len(edges_data)} loaded")
 
         if not nodes_data:
             print("WARNING: No nodes found in the database")
             store.close()
             return
 
-        print(f"Loaded {len(nodes_data)} nodes and {len(edges_data)} edges")
-
         # Convert to layout nodes and edges
         from metakg.layout3d import LayoutEdge, LayoutNode
 
+        print("Converting to layout format...", end="", flush=True)
         layout_nodes = [LayoutNode.from_dict(n) for n in nodes_data]
         layout_edges = [LayoutEdge.from_dict(e) for e in edges_data]
+        print(" done")
 
         # Select and compute layout
         from metakg.layout3d import AlliumLayout, LayerCakeLayout, Layout3D
@@ -80,9 +85,9 @@ def launch(
         else:  # default: allium
             layout = AlliumLayout()
 
+        print(f"Computing {layout_name.capitalize()} layout positions...", end="", flush=True)
         positions = layout.compute(layout_nodes, layout_edges)
-
-        print(f"Using {layout_name.capitalize()} layout")
+        print(" done")
 
         # Create PyVista mesh
         if export_html or export_png:
@@ -103,40 +108,58 @@ def launch(
             KIND_ENZYME: "orange",
         }
 
-        for node in layout_nodes:
-            pos = positions.get(node.id)
-            if pos is None:
-                continue
+        # Count nodes that will actually be added
+        positioned_nodes = [n for n in layout_nodes if positions.get(n.id) is not None]
+        positioned_edges = [
+            e
+            for e in layout_edges
+            if positions.get(e.src) is not None and positions.get(e.dst) is not None
+        ]
 
+        print(f"Adding {len(positioned_nodes)} nodes to visualization...", end="", flush=True)
+        node_count = 0
+        progress_step = max(1, len(positioned_nodes) // 10)
+        for node in positioned_nodes:
+            pos = positions[node.id]
             color = kind_to_color.get(node.kind, "gray")
             size = 0.5  # node size
-
-            # Add sphere for this node
             sphere = pv.Sphere(radius=size, center=pos)
             pl.add_mesh(sphere, color=color, opacity=0.8)
+            node_count += 1
+            if progress_step > 0 and node_count % progress_step == 0:
+                print(".", end="", flush=True)
+        print(" done")
 
         # Add edges as lines
-        for edge in layout_edges:
-            src_pos = positions.get(edge.src)
-            dst_pos = positions.get(edge.dst)
-            if src_pos is None or dst_pos is None:
-                continue
-
-            # Create line
+        print(f"Adding {len(positioned_edges)} edges to visualization...", end="", flush=True)
+        edge_count = 0
+        progress_step = max(1, len(positioned_edges) // 10)
+        for edge in positioned_edges:
+            src_pos = positions[edge.src]
+            dst_pos = positions[edge.dst]
             line = pv.Line(src_pos, dst_pos)
             pl.add_mesh(line, color="gray", opacity=0.5, line_width=1)
+            edge_count += 1
+            if progress_step > 0 and edge_count % progress_step == 0:
+                print(".", end="", flush=True)
+        print(" done")
 
+        print("Setting up camera and title...", end="", flush=True)
         pl.camera_position = "xy"
         pl.reset_camera()  # type: ignore[call-arg]
         pl.add_title(f"MetaKG 3D Explorer — {layout_name.capitalize()} Layout")
+        print(" done")
 
         if export_html:
-            print(f"Exporting to HTML: {export_html}")
+            print(f"Exporting to HTML: {export_html}...", end="", flush=True)
             pl.export_html(str(export_html))
+            print(" done")
         elif export_png:
-            print(f"Exporting to PNG: {export_png}")
+            print(f"Exporting to PNG: {export_png}...", end="", flush=True)
             pl.screenshot(str(export_png))
+            print(" done")
         else:
+            print("Launching interactive viewer...")
             pl.show()
 
     finally:
