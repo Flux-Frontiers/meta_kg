@@ -15,10 +15,12 @@ Phase 2 — requires downloaded KEGG name TSV files (see download_kegg_names.py)
     • Reaction nodes: canonical KEGG reaction names from
       ``data/kegg_reaction_names.tsv``
       (e.g. "R00710" → "Acetaldehyde:NAD+ oxidoreductase").
-      These override the Phase-1 enzyme-label if a canonical name exists.
+      Always replaces Phase 1 enzyme-labels with canonical names (if available),
+      ensuring structural KEGG names take priority over enriched gene symbols.
 
-Both phases are idempotent: running enrichment twice on the same database
-produces the same result.
+Both phases are idempotent: running enrichment multiple times produces the
+same result. Phase 2 always prioritizes canonical KEGG names over Phase 1's
+gene symbol labels, ensuring stability.
 
 Public API
 ----------
@@ -69,9 +71,14 @@ class EnrichStats:
 # Helpers
 # ---------------------------------------------------------------------------
 
-# Patterns for "bare KEGG accession" names — these are the ones we want to replace
+# Patterns for "bare KEGG accession" names — these are the ones we want to replace.
+# _BARE_COMPOUND matches standard KEGG compound IDs (e.g. "C00031").
+# _BARE_REACTION matches standard KEGG reaction IDs (e.g. "R00710") AND
+#   synthetic-style short IDs produced by KGML parser when a reaction element
+#   lacks an "rn:" name attribute (e.g. "1662", "pj1662", "12").
 _BARE_COMPOUND = re.compile(r"^C\d{5}$")
 _BARE_REACTION = re.compile(r"^R\d{5}$")
+_BARE_REACTION_SYNTHETIC = re.compile(r"^[A-Za-z]{0,4}\d{1,6}$")
 
 
 def _is_bare_compound(name: str) -> bool:
@@ -79,7 +86,14 @@ def _is_bare_compound(name: str) -> bool:
 
 
 def _is_bare_reaction(name: str) -> bool:
-    return bool(_BARE_REACTION.match(name))
+    """
+    Return True if *name* looks like an un-enriched reaction identifier.
+
+    Matches:
+    - Standard KEGG reaction accessions: ``R00710``
+    - Short synthetic IDs from KGML parser (no ``rn:`` attribute): ``1662``, ``pj1662``
+    """
+    return bool(_BARE_REACTION.match(name)) or bool(_BARE_REACTION_SYNTHETIC.match(name))
 
 
 # ---------------------------------------------------------------------------
@@ -181,7 +195,10 @@ def enrich_from_tsv(store, tsv_path: Path, kind: str, *, quiet: bool = False) ->
     """
     Update node names from a KEGG list TSV file.
 
-    Only rows whose current ``name`` is a bare KEGG accession are updated.
+    Extracts the bare KEGG accession from each node's ID (e.g., "C00031" from
+    "cpd:kegg:C00031") and looks it up in the TSV. This allows Phase 2 to
+    override Phase 1 enrichment (gene symbols) with canonical KEGG names,
+    ensuring structural/canonical names take priority over enriched labels.
 
     :param store: Open :class:`~metakg.store.MetaStore` instance.
     :param tsv_path: Path to the TSV file (kegg_compound_names.tsv or
@@ -198,22 +215,25 @@ def enrich_from_tsv(store, tsv_path: Path, kind: str, *, quiet: bool = False) ->
     kegg_names = _load_kegg_tsv(tsv_path)
     conn = store._conn
 
-    is_bare = _is_bare_compound if kind == "compound" else _is_bare_reaction
-
+    # Extract all nodes of the target kind
     cur = conn.execute("SELECT id, name FROM meta_nodes WHERE kind = ?", (kind,))
-    rows = [(r["id"], r["name"]) for r in cur if is_bare(r["name"])]
+    rows = [(r["id"], r["name"]) for r in cur]
 
     updated = 0
     cur2 = conn.cursor()
     for node_id, old_name in rows:
-        # old_name IS the bare accession for both compounds and reactions
-        canonical = kegg_names.get(old_name)
-        if canonical:
-            cur2.execute(
-                "UPDATE meta_nodes SET name = ? WHERE id = ?",
-                (canonical, node_id),
-            )
-            updated += 1
+        # Extract bare KEGG accession from node ID
+        # Format: cpd:kegg:C00031 or rxn:kegg:R00710 → last segment
+        parts = node_id.split(":")
+        if len(parts) >= 3 and parts[1] == "kegg":
+            accession = parts[-1]  # e.g., "C00031" or "R00710"
+            canonical = kegg_names.get(accession)
+            if canonical:
+                cur2.execute(
+                    "UPDATE meta_nodes SET name = ? WHERE id = ?",
+                    (canonical, node_id),
+                )
+                updated += 1
 
     conn.commit()
     return updated
