@@ -27,14 +27,12 @@ from metakg.cli.options import (
 @db_option
 @lancedb_option
 @model_option
-@click.option(
-    "--no-index", is_flag=True, help="Skip building the LanceDB vector index."
-)
+@click.option("--no-index", is_flag=True, help="Skip building the LanceDB vector index.")
 @wipe_option
 @click.option(
-    "--enrich",
+    "--no-enrich",
     is_flag=True,
-    help="Run name enrichment after building.",
+    help="Skip name enrichment after building (enrichment runs by default).",
 )
 @click.option(
     "--enrich-data",
@@ -54,7 +52,7 @@ def build(
     model: str,
     no_index: bool,
     wipe: bool,
-    enrich: bool,
+    no_enrich: bool,
     enrich_data: str | None,
     no_seed_kinetics: bool,
 ) -> None:
@@ -74,7 +72,7 @@ def build(
         data_dir=data_dir,
         wipe=wipe,
         build_index=not no_index,
-        enrich=enrich,
+        enrich=not no_enrich,
         enrich_data_dir=enrich_data,
         seed_kinetics=not no_seed_kinetics,
     )
@@ -110,9 +108,7 @@ def enrich(db: str, data: str | None) -> None:
     """
     db_path = Path(db)
     if not db_path.exists():
-        raise click.ClickException(
-            f"database not found: {db_path}\nRun 'metakg build' first."
-        )
+        raise click.ClickException(f"database not found: {db_path}\nRun 'metakg build' first.")
 
     from metakg import MetaKG
 
@@ -127,13 +123,11 @@ def enrich(db: str, data: str | None) -> None:
 @db_option
 @lancedb_option
 @model_option
+@click.option("--no-index", is_flag=True, help="Skip building the LanceDB vector index.")
 @click.option(
-    "--no-index", is_flag=True, help="Skip building the LanceDB vector index."
-)
-@click.option(
-    "--enrich",
+    "--no-enrich",
     is_flag=True,
-    help="Run name enrichment after building.",
+    help="Skip name enrichment after building (enrichment runs by default).",
 )
 @click.option(
     "--enrich-data",
@@ -152,7 +146,7 @@ def update(
     lancedb: str,
     model: str,
     no_index: bool,
-    enrich: bool,
+    no_enrich: bool,
     enrich_data: str | None,
     no_seed_kinetics: bool,
 ) -> None:
@@ -174,7 +168,7 @@ def update(
         data_dir=data_dir,
         wipe=False,
         build_index=not no_index,
-        enrich=enrich,
+        enrich=not no_enrich,
         enrich_data_dir=enrich_data,
         seed_kinetics=not no_seed_kinetics,
     )

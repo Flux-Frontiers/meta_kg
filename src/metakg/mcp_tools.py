@@ -219,7 +219,7 @@ def _mcp_simulate_ode(
                 "final_mM": concs[-1] if concs else None,
             }
         )
-    summary.sort(key=lambda x: (x["final_mM"] or 0.0), reverse=True)
+    summary.sort(key=lambda x: x["final_mM"] or 0.0, reverse=True)
 
     return json.dumps(
         {

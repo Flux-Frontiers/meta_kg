@@ -36,6 +36,7 @@ from metakg.primitives import (
     REL_SUBSTRATE_OF,
     MetaEdge,
     MetaNode,
+    _kegg_pathway_category,
     node_id,
     synthetic_id,
 )
@@ -103,11 +104,16 @@ class KGMLParser(PathwayParser):
             xrefs=json.dumps({"kegg": pathway_kegg_id}) if pathway_kegg_id else None,
             source_format="kgml",
             source_file=str(path),
+            category=_kegg_pathway_category(pathway_kegg_id),
         )
         nodes[pwy_id] = pwy_node
 
         # Map KGML entry id (integer) → MetaNode id for reaction wiring
         entry_map: dict[str, str] = {}
+
+        # Strategy C: gene/ortholog reaction= attr → enzyme MetaNode id
+        # (KEGG reaction accession like "R00200" → canonical enzyme node id)
+        reaction_attr_map: dict[str, str] = {}
 
         # --- Entries ---
         for entry in root.findall("entry"):
@@ -172,6 +178,16 @@ class KGMLParser(PathwayParser):
                     )
 
                 entry_map[entry_id] = nid
+
+                # Strategy C: record reaction= attribute for fallback wiring
+                reaction_attr = entry.attrib.get("reaction", "")
+                for tok in reaction_attr.split():
+                    kegg_rxn = tok.replace("rn:", "").strip()
+                    if kegg_rxn:
+                        # First match wins; genes preferred over orthologs
+                        # (entry processing visits gene entries before orthologs
+                        # for the same reaction in well-formed KGML files)
+                        reaction_attr_map.setdefault(kegg_rxn, nid)
 
         # --- Reactions ---
         for rxn_elem in root.findall("reaction"):
@@ -266,8 +282,11 @@ class KGMLParser(PathwayParser):
         #   the id of a gene entry that catalyses this reaction.
         # Strategy B: Real KEGG convention — the reaction element's own "id"
         #   matches the gene entry "id" (one gene entry per reaction).
-        # Both are checked so the parser handles both real KEGG files and
-        # the hand-authored MetaKG sample files.
+        # Strategy C: gene/ortholog entry carries a reaction="rn:RXXXXX"
+        #   attribute that directly names the reaction it catalyses.
+        #   This is the standard KEGG way to express catalysis and serves as
+        #   the fallback when A and B both fail (e.g. when the reaction
+        #   element id differs from the gene entry id).
         for rxn_elem in root.findall("reaction"):
             rxn_kegg_id = rxn_elem.attrib.get("name", "").replace("rn:", "").strip()
             rxn_nid = (
@@ -278,7 +297,8 @@ class KGMLParser(PathwayParser):
             if rxn_nid not in nodes:
                 continue
 
-            # Check both strategies for the enzyme entry id
+            # Strategies A and B: entry_map-based lookup
+            wired = False
             candidate_ids: list[str] = []
             enz_attr = rxn_elem.attrib.get("enzyme", "")
             if enz_attr:
@@ -293,6 +313,55 @@ class KGMLParser(PathwayParser):
                 enz_nid = entry_map[cand]
                 if enz_nid in nodes and nodes[enz_nid].kind == KIND_ENZYME:
                     edges.append(MetaEdge(src=enz_nid, rel=REL_CATALYZES, dst=rxn_nid))
+                    wired = True
                     break  # one enzyme entry per reaction is enough
+
+            # Strategy C: fall back to reaction= attribute map
+            if not wired and rxn_kegg_id:
+                enz_nid_c = reaction_attr_map.get(rxn_kegg_id)
+                if (
+                    enz_nid_c is not None
+                    and enz_nid_c in nodes
+                    and nodes[enz_nid_c].kind == KIND_ENZYME
+                ):
+                    edges.append(MetaEdge(src=enz_nid_c, rel=REL_CATALYZES, dst=rxn_nid))
+
+        # --- Attach unreacted entry nodes to their pathway via CONTAINS ---
+        # Gene/ortholog entries that were never linked to a reaction, and
+        # compound entries not referenced as any substrate/product, would
+        # otherwise become isolated nodes with zero edges.  Connecting them
+        # to their source pathway via CONTAINS keeps them reachable and avoids
+        # spurious "isolated node" counts in analysis reports.
+        # (Also fixes isolated *pathway* nodes whose files have no reactions.)
+        #
+        # Note: compound entries may list multiple cpd: names (entry_map only
+        # stores the last one); iterate the raw name attribute to catch all.
+        wired_enz: set[str] = {e.src for e in edges if e.rel == REL_CATALYZES}
+        wired_cpd: set[str] = {
+            nid
+            for e in edges
+            for nid in (e.src, e.dst)
+            if e.rel in (REL_SUBSTRATE_OF, REL_PRODUCT_OF)
+        }
+        pwy_contains: set[str] = {e.dst for e in edges if e.src == pwy_id and e.rel == REL_CONTAINS}
+        for entry in root.findall("entry"):
+            etype = entry.attrib.get("type", "")
+            eid = entry.attrib.get("id", "")
+            if etype == "compound":
+                # Handle all compound IDs in this entry (not just the last one)
+                for raw_name in entry.attrib.get("name", "").split():
+                    cid = node_id(KIND_COMPOUND, "kegg", raw_name.replace("cpd:", "").strip())
+                    if cid in nodes and cid not in pwy_contains and cid not in wired_cpd:
+                        edges.append(MetaEdge(src=pwy_id, rel=REL_CONTAINS, dst=cid))
+                        pwy_contains.add(cid)
+                        wired_cpd.add(cid)
+            elif etype in ("gene", "ortholog"):
+                if eid not in entry_map:
+                    continue
+                nid = entry_map[eid]
+                if nid in nodes and nid not in pwy_contains and nid not in wired_enz:
+                    edges.append(MetaEdge(src=pwy_id, rel=REL_CONTAINS, dst=nid))
+                    pwy_contains.add(nid)
+                    wired_enz.add(nid)
 
         return list(nodes.values()), edges

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 
 # ---------------------------------------------------------------------------
@@ -25,6 +26,65 @@ KIND_ENZYME = "enzyme"
 KIND_PATHWAY = "pathway"
 
 ALL_KINDS = (KIND_COMPOUND, KIND_REACTION, KIND_ENZYME, KIND_PATHWAY)
+
+# ---------------------------------------------------------------------------
+# Pathway category constants  (based on KEGG BRITE hierarchy)
+# ---------------------------------------------------------------------------
+
+PATHWAY_CATEGORY_METABOLIC = "metabolic"
+PATHWAY_CATEGORY_TRANSPORT = "transport"
+PATHWAY_CATEGORY_GIP = "genetic_info_processing"
+PATHWAY_CATEGORY_SIGNALING = "signaling"
+PATHWAY_CATEGORY_CELLULAR = "cellular_process"
+PATHWAY_CATEGORY_ORGANISMAL = "organismal_system"
+PATHWAY_CATEGORY_DISEASE = "human_disease"
+PATHWAY_CATEGORY_DRUG = "drug_development"
+
+ALL_PATHWAY_CATEGORIES: tuple[str, ...] = (
+    PATHWAY_CATEGORY_METABOLIC,
+    PATHWAY_CATEGORY_TRANSPORT,
+    PATHWAY_CATEGORY_GIP,
+    PATHWAY_CATEGORY_SIGNALING,
+    PATHWAY_CATEGORY_CELLULAR,
+    PATHWAY_CATEGORY_ORGANISMAL,
+    PATHWAY_CATEGORY_DISEASE,
+    PATHWAY_CATEGORY_DRUG,
+)
+
+
+def _kegg_pathway_category(pathway_id: str) -> str | None:
+    """
+    Map a KEGG pathway ID to its biological category.
+
+    Uses the 5-digit numeric suffix of the pathway identifier to determine
+    which BRITE tier the pathway belongs to.
+
+    :param pathway_id: Identifier such as ``hsa00010`` or ``hsa04110``.
+    :return: One of the ``PATHWAY_CATEGORY_*`` constants, or ``None`` if
+        the ID cannot be parsed.
+    """
+    m = re.search(r"(\d{5})$", pathway_id)
+    if not m:
+        return None
+    num = int(m.group(1))
+    if num < 2000:
+        return PATHWAY_CATEGORY_METABOLIC
+    if num < 3000:
+        return PATHWAY_CATEGORY_TRANSPORT
+    if num < 4000:
+        return PATHWAY_CATEGORY_GIP
+    if num < 4100:
+        return PATHWAY_CATEGORY_SIGNALING
+    if num < 4500:
+        return PATHWAY_CATEGORY_CELLULAR
+    if num < 5000:
+        return PATHWAY_CATEGORY_ORGANISMAL
+    if num < 6000:
+        return PATHWAY_CATEGORY_DISEASE
+    if num < 8000:
+        return PATHWAY_CATEGORY_DRUG
+    return None
+
 
 # ---------------------------------------------------------------------------
 # Edge relation constants
@@ -116,6 +176,9 @@ class MetaNode:
     :param xrefs: JSON-serialised cross-reference dict (e.g. ``{"kegg": "C00022", "chebi": "CHEBI_15361"}``).
     :param source_format: Parser format that produced this node (``kgml``, ``biopax``, ``sbml``, ``csv``).
     :param source_file: Absolute path to the originating file.
+    :param category: Biological category for pathway nodes (one of the
+        ``PATHWAY_CATEGORY_*`` constants, e.g. ``metabolic``). ``None`` for
+        non-pathway nodes.
     """
 
     id: str
@@ -129,6 +192,7 @@ class MetaNode:
     xrefs: str | None = None  # JSON blob
     source_format: str = ""
     source_file: str | None = None
+    category: str | None = None
 
     def xrefs_dict(self) -> dict[str, str]:
         """

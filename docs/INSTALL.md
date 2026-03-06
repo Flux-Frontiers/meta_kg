@@ -21,6 +21,7 @@
 5. [Downloading Pathway Data](#5-downloading-pathway-data)
 6. [Building the Knowledge Graph](#6-building-the-knowledge-graph)
 7. [Name Enrichment](#7-name-enrichment)
+7a. [Pathway Categories](#7a-pathway-categories)
 8. [Seeding Kinetic Parameters](#8-seeding-kinetic-parameters)
 9. [Running the MCP Server](#9-running-the-mcp-server)
 10. [Running the Web Explorer](#10-running-the-web-explorer)
@@ -308,7 +309,7 @@ metakg-build --data ./data/hsa_pathways
 ```
 
 This wipes any existing database and rebuilds from scratch using default paths:
-`.metakg/meta.sqlite` for SQLite and `.metakg/lancedb` for the vector index.
+`.metakg/meta.sqlite` for SQLite and `.metakg/lancedb` for the vector index. Enrichment (human-readable names) is enabled by default.
 
 ### Full build with all options
 
@@ -330,7 +331,7 @@ metakg-build \
 | `--model NAME` | `all-MiniLM-L6-v2` | Sentence-transformer model for embeddings |
 | `--no-index` | off | Skip building the LanceDB vector index |
 | `--no-wipe` | off | Keep existing data instead of wiping before build |
-| `--enrich` | off | Run name enrichment immediately after build |
+| `--no-enrich` | off | Skip name enrichment (on by default) |
 | `--enrich-data DIR` | `data/` | Directory containing KEGG name TSV files |
 
 ### Expected output (full human metabolome)
@@ -339,9 +340,10 @@ metakg-build \
 Building MetaKG from ./data/hsa_pathways...
 data_root   : ./data/hsa_pathways
 db_path     : .metakg/meta.sqlite
-nodes       : 22290  {'compound': 5115, 'reaction': 2139, 'enzyme': 14667, 'pathway': 369}
-edges       : 11298  {'SUBSTRATE_OF': 2551, 'PRODUCT_OF': 2532, 'CATALYZES': 2406, 'CONTAINS': 3809}
-indexed     : 20151 vectors  dim=384
+nodes       : 17050  {'compound': 5115, 'reaction': 2139, 'enzyme': 9427, 'pathway': 369}
+edges       : 40166  {'SUBSTRATE_OF': 2551, 'PRODUCT_OF': 2532, 'CATALYZES': 2394, 'CONTAINS': 32689}
+isolated    : 0
+indexed     : 14911 vectors  dim=384
 ```
 
 > **First build note:** The sentence-transformer model (`all-MiniLM-L6-v2`, ~80 MB) is downloaded automatically on first use and cached in `~/.cache/huggingface/`. Subsequent builds are much faster.
@@ -363,30 +365,33 @@ metakg-build --data ./new_pathways --no-wipe
 
 ## 7. Name Enrichment
 
-KGML files store compound and reaction names as bare KEGG accessions (e.g., `C00031`, `R00710`). The enrichment step replaces these with human-readable names.
+KGML files store compound and reaction names as bare KEGG accessions (e.g., `C00031`, `R00710`). The enrichment step replaces these with human-readable names and runs **by default** during `metakg-build`.
 
-### Step 1 — Download KEGG name lists
-
-```bash
-poetry run python scripts/download_kegg_names.py
-```
-
-This downloads two TSV files to `data/`:
-- `data/kegg_compound_names.tsv` — ~19,500 compound names (e.g., `C00031 → D-Glucose`)
-- `data/kegg_reaction_names.tsv` — ~12,400 reaction names
-
-**Options:**
-
-```
---data DIR     Output directory (default: data/)
---force        Re-download even if files already exist
---quiet        Suppress progress output
-```
-
-### Step 2 — Run enrichment
+### Default behavior
 
 ```bash
-metakg-enrich --db .metakg/meta.sqlite
+metakg-build --data ./data/hsa_pathways
+```
+
+The build automatically runs enrichment in two phases:
+
+- **Phase 1** (always runs, no network needed): Reaction nodes with bare accession names get labels derived from their catalysing enzymes (e.g., `R00710 → "ADH1A / ADH1B / ADH1C"`)
+- **Phase 2** (runs if KEGG name TSV files are present): Compound and reaction names are replaced with canonical KEGG names (e.g., `C00031 → "D-Glucose"`, `R00710 → "Acetaldehyde:NAD+ oxidoreductase"`)
+
+### Skipping enrichment
+
+To build without enrichment:
+
+```bash
+metakg-build --data ./data/hsa_pathways --no-enrich
+```
+
+### Manual enrichment (optional)
+
+If you want to enrich an existing database separately (e.g., after downloading new KEGG name files):
+
+```bash
+metakg-enrich --db .metakg/meta.sqlite --data data/
 ```
 
 **Options:**
@@ -396,17 +401,80 @@ metakg-enrich --db .metakg/meta.sqlite
 | `--db PATH` | `.metakg/meta.sqlite` | Database to update |
 | `--data DIR` | `data/` | Directory containing KEGG TSV files |
 
-**What happens:**
+### Download KEGG name lists (optional)
 
-- **Phase 1** (always runs, no network needed): Reaction nodes with bare accession names get labels derived from their catalysing enzymes (e.g., `R00710 → "ADH1A / ADH1B / ADH1C"`)
-- **Phase 2** (runs if TSV files are present): Compound and reaction names are replaced with canonical KEGG names (e.g., `C00031 → "D-Glucose"`, `R00710 → "Acetaldehyde:NAD+ oxidoreductase"`)
+For Phase 2 enrichment to use canonical KEGG names, download the name lists:
+
+```bash
+poetry run python scripts/download_kegg_names.py
+```
+
+This downloads two TSV files to `data/`:
+- `data/kegg_compound_names.tsv` — ~19,500 compound names
+- `data/kegg_reaction_names.tsv` — ~12,400 reaction names
 
 Both phases are idempotent — safe to run multiple times.
 
-### Combined build + enrich
+---
 
-```bash
-metakg-build --data ./data/hsa_pathways --enrich
+## 7a. Pathway Categories
+
+Each pathway node is automatically tagged with a **category** based on its KEGG ID range. This enables type-based queries and rendering in visualizers.
+
+### Category mapping
+
+| KEGG ID range | Category | Value string |
+|---|---|---|
+| 00xxx – 01xxx | Metabolic | `"metabolic"` |
+| 02xxx | Transport | `"transport"` |
+| 03xxx | Genetic information processing | `"genetic_info_processing"` |
+| 04010 – 04099 | Cell signaling | `"signaling"` |
+| 04100 – 04499 | Cellular processes | `"cellular_process"` |
+| 04500 – 04999 | Organismal systems | `"organismal_system"` |
+| 05xxx | Human diseases | `"human_disease"` |
+| 07xxx | Drug development | `"drug_development"` |
+
+### Using categories
+
+**Python API:**
+
+```python
+from metakg import MetaKG
+from metakg.primitives import PATHWAY_CATEGORY_METABOLIC
+
+kg = MetaKG()
+
+# All metabolic pathways
+metabolic_pathways = kg.store.all_nodes(kind="pathway", category="metabolic")
+
+# All human disease pathways
+disease_pathways = kg.store.all_nodes(kind="pathway", category="human_disease")
+```
+
+**SQL:**
+
+```sql
+-- Pathway count by category
+SELECT category, COUNT(*) FROM meta_nodes
+WHERE kind='pathway'
+GROUP BY category;
+
+-- All signaling pathways
+SELECT name FROM meta_nodes
+WHERE kind='pathway' AND category='signaling'
+ORDER BY name;
+```
+
+**Distribution (369 human pathways):**
+
+```
+metabolic                99
+organismal_system        98
+human_disease            84
+cellular_process         39
+genetic_info_processing  29
+signaling                19
+transport                 1
 ```
 
 ---

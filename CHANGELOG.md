@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Pathway category provenance** (`src/metakg/primitives.py`) — New `category` field on `MetaNode` and 8 `PATHWAY_CATEGORY_*` constants (`metabolic`, `transport`, `genetic_info_processing`, `signaling`, `cellular_process`, `organismal_system`, `human_disease`, `drug_development`), derived from the 5-digit KEGG numeric suffix via `_kegg_pathway_category()`. All 369 human pathways are categorized after a fresh build.
+
+- **Category persistence in SQLite** (`src/metakg/store.py`) — `category TEXT` column added to `meta_nodes` schema. `_migrate()` runs on every open and transparently adds the column to existing databases via `ALTER TABLE`. `all_nodes()` now accepts an optional `category=` filter alongside the existing `kind=` filter.
+
+- **Category set in KGML parser** (`src/metakg/parsers/kgml.py`) — `_kegg_pathway_category()` is called when constructing each pathway `MetaNode` so category is populated at parse time.
+
+- **Strategy C enzyme wiring** (`src/metakg/parsers/kgml.py`) — New fallback wiring strategy reads the `reaction=` attribute on gene/ortholog `<entry>` elements to link enzymes to reactions when Strategies A and B fail. Eliminates the last class of unwired enzymes in real KEGG KGML files.
+
+- **CONTAINS fallback for isolated nodes** (`src/metakg/parsers/kgml.py`) — Gene, ortholog, and compound entries that are not wired into any reaction are now connected to their pathway node via `CONTAINS` edges, reducing isolated node count from 12,245 → 0.
+
+- **Agent slash commands** — New `.claude/commands/` entries (`metakg-build.md`, `metakg-simulate.md`, `metakg-viz.md`) and matching `.vscode/*.prompt.md` prompt files for all core MetaKG and CodeKG workflows.
+
+- **`SESSION-NOTES-2026-03-06.md`** — Handoff document summarising all changes made in this session for the next agent/developer.
+
+### Changed
+
+- **Enrichment default-on** (`src/metakg/cli/cmd_build.py`, `src/metakg/orchestrator.py`) — `--enrich` flag renamed to `--no-enrich` (inverted logic). Enrichment now runs by default on both `metakg-build` and `metakg-update`. `MetaKG.build(enrich=False)` default changed to `True`.
+
+- **CLAUDE.md updated** — CodeKG Commands section reverted to `codekg-*` standalone command style; Typical Workflow section updated to invoke commands directly (no `poetry run` prefix needed in activated venv).
+
+### Fixed
+
+- **`all_nodes()` category filter** (`src/metakg/store.py`) — Query now builds WHERE clause dynamically to support combined `kind` + `category` filtering without SQL injection risk.
+
+---
+
 ### Changed
 
 - **`metakg-build` default behavior** — Now wipes existing database and vector index by default (safer, more predictable). Use `--no-wipe` flag to add files incrementally instead of replacing.

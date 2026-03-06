@@ -29,7 +29,7 @@ poetry install --all-extras  # Full install with viz, viz3d, mcp
 
 | Command | Purpose |
 |---------|---------|
-| `metakg-build --data DIR` | Parse pathways → SQLite + LanceDB (wipes first by default) |
+| `metakg-build --data DIR` | Parse pathways → SQLite + LanceDB (wipes & enriches by default) |
 | `metakg-update --data DIR` | Incrementally add new files without wiping |
 | `metakg-analyze [--output FILE]` | 7-phase pathway analysis |
 | `metakg-viz [--port 8500]` | 2D Streamlit explorer |
@@ -41,6 +41,7 @@ poetry install --all-extras  # Full install with viz, viz3d, mcp
 - `--lancedb PATH`: Vector index (default: `.metakg/lancedb`)
 - `--no-wipe`: Keep existing data (default: wipe before build)
 - `--no-index`: Skip LanceDB (SQLite only)
+- `--no-enrich`: Skip enrichment (on by default)
 
 **MCP tools:** `query_pathway`, `get_compound`, `get_reaction`, `find_path`, `seed_kinetics`, `simulate_fba`, `simulate_ode`, `simulate_whatif`
 
@@ -55,9 +56,9 @@ metakg-viz3d [--layout allium|cake] [--db PATH] [--width W] [--height H]
 - `cake`: Concentric rings by topological distance (layer-based)
 
 **In the UI:**
-- **Pathway Filter**: Select single pathway or "(All Pathways)"
+- **Pathway Filter**: Select single pathway or "(All Pathways)" — category filtering coming soon
 - **Layout Selector**: Switch between Allium and LayerCake (recomputes positions)
-- **Visibility Toggles**: Show/hide edges, isolated nodes, labels
+- **Visibility Toggles**: Show/hide edges, labels, enzyme detail
 - **Render Graph**: Apply staged changes (filters + toggles) to the visualization
 
 **Workflow:**
@@ -66,6 +67,40 @@ metakg-viz3d [--layout allium|cake] [--db PATH] [--width W] [--height H]
 3. Adjust visibility toggles
 4. Click "Render Graph" to render
 5. Switch layouts dynamically from the sidebar
+
+---
+
+## Pathway Categories
+
+Each pathway is tagged with a **category** based on KEGG ID ranges (metabolic, signaling, disease, etc.). Use categories to filter and organize networks by biological domain.
+
+**Constants available in `metakg.primitives`:**
+```python
+PATHWAY_CATEGORY_METABOLIC          # 00xxx–01xxx
+PATHWAY_CATEGORY_TRANSPORT          # 02xxx
+PATHWAY_CATEGORY_GIP                # 03xxx (genetic info processing)
+PATHWAY_CATEGORY_SIGNALING          # 04010–04099
+PATHWAY_CATEGORY_CELLULAR           # 04100–04499
+PATHWAY_CATEGORY_ORGANISMAL         # 04500–04999
+PATHWAY_CATEGORY_DISEASE            # 05xxx (human disease)
+PATHWAY_CATEGORY_DRUG               # 07xxx (drug development)
+```
+
+**Query by category:**
+```python
+from metakg import MetaKG
+from metakg.primitives import PATHWAY_CATEGORY_METABOLIC
+
+kg = MetaKG()
+pathways = kg.store.all_nodes(kind="pathway", category=PATHWAY_CATEGORY_METABOLIC)
+```
+
+**SQL:**
+```sql
+SELECT COUNT(*), category FROM meta_nodes
+WHERE kind='pathway'
+GROUP BY category;
+```
 
 ---
 
@@ -102,10 +137,14 @@ kg.seed_kinetics()
 
 | Command | Purpose |
 |---------|---------|
-| `codekg-build-sqlite --repo DIR [--wipe]` | Structural analysis → SQLite |
-| `codekg-build-lancedb --repo DIR [--wipe]` | Embeddings → LanceDB |
-| `codekg-query --q QUERY [--k 8]` | Semantic code search |
-| `codekg-mcp --repo DIR` | MCP server |
+| `codekg-build [--repo DIR] [--wipe]` | Full pipeline: AST → SQLite → LanceDB |
+| `codekg-build-sqlite [--repo DIR] [--wipe]` | Structural analysis → SQLite only |
+| `codekg-build-lancedb [--repo DIR] [--wipe]` | Embeddings → LanceDB (requires SQLite already built) |
+| `codekg-query QUERY [--k 8] [--hop 1]` | Semantic + graph search, ranked summary |
+| `codekg-pack QUERY [--k 8] [--hop 1]` | Source-grounded snippet packs |
+| `codekg-mcp [--repo DIR]` | MCP server |
+| `codekg-analyze [--repo DIR]` | Architectural analysis report |
+| `codekg-viz` / `codekg-viz3d` | Streamlit / PyVista visualizer |
 
 **Query strategy:**
 - `k=8, hop=1`: standard exploration
@@ -149,29 +188,27 @@ R00710       acetaldehyde:NAD+ oxidoreductase  Acetaldehyde ...  C00084 + C00003
 # 1. Download pathway KGML files
 python scripts/download_human_kegg.py --output data/hsa_pathways
 
-# 2. (Optional) Download enrichment name files for compound & reaction names
-python scripts/download_kegg_names.py         # compound + reaction bulk names
-python scripts/download_kegg_reactions.py \   # per-reaction detail with EC numbers
-  --kgml-dir data/hsa_pathways
+# 2. (Optional) Download KEGG name lists for canonical names in enrichment
+python scripts/download_kegg_names.py
 
-# 3. Build & analyze pathways
-poetry run metakg-build --data ./data/hsa_pathways
+# 3. Build & analyze pathways (enrichment runs by default)
+metakg-build --data ./data/hsa_pathways
 
-# 4. (Optional) Enrich DB with reaction names & EC numbers
-poetry run metakg enrich --db .metakg/meta.sqlite
+# 4. Seed kinetic parameters from literature
+metakg-simulate seed
 
-# 5. Analyze
-poetry run metakg-analyze
+# 5. Run analysis report
+metakg-analyze
 
 # Explore (choose your view)
-poetry run metakg-viz           # 2D Streamlit explorer
-poetry run metakg-viz3d --layout allium    # 3D visualization (allium or cake)
-poetry run metakg-mcp           # MCP server for Claude
+metakg-viz           # 2D Streamlit explorer
+metakg-viz3d --layout allium    # 3D visualization (allium or cake)
+metakg-mcp           # MCP server for Claude
 
 # Optional: analyze codebase
-poetry run codekg-build-sqlite --repo . --wipe
-poetry run codekg-build-lancedb --repo . --wipe
-poetry run codekg-query --q "orchestrator pipeline"
+codekg-build --repo . --wipe
+codekg-query "orchestrator pipeline"
+codekg-pack "pathway category provenance"
 ```
 
 ---
@@ -183,3 +220,5 @@ poetry run codekg-query --q "orchestrator pipeline"
 - **ODE solvers:** Metabolic systems are stiff → use BDF (not RK45)
 - **CodeKG node ID:** `fn:src/path/file.py:Class.method`
 - **Rebuild:** Use `--wipe` after major refactors to avoid stale data
+- **Graph quality:** No isolated nodes (all 17K+ nodes are wired), all pathways categorized
+- **Enrichment:** Now default-on during build; use `--no-enrich` to skip

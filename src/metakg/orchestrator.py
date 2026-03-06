@@ -266,7 +266,7 @@ class MetaKG:
         *,
         wipe: bool = False,
         build_index: bool = True,
-        enrich: bool = False,
+        enrich: bool = True,
         enrich_data_dir: str | Path | None = None,
         seed_kinetics: bool = True,
     ) -> MetabolicBuildStats:
