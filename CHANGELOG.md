@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Enhanced 3D visualization CLI options** (`src/metakg/cli/cmd_viz3d.py`) — `metakg-viz3d` now supports:
+  - `--layout {allium|cake}` — Select spatial layout strategy (Hub-spoke Allium vs concentric LayerCake)
+  - `--width` / `--height` — Configure window dimensions (1400x900 default)
+  - `--export-html PATH` / `--export-png PATH` — Batch export to file instead of interactive window
+  - Improved error handling: check database existence before launching visualizer
+
+- **Improved Fibonacci disk layout algorithm** (`src/metakg/layout3d.py`) — Renamed `_golden_spiral_2d()` → `fibonacci_disk()` for clarity; enhanced docstrings. Tuned LayerCake parameters: layer gap 12→6 (tighter), disc radius 28→35 (wider), minimum spread 4→20 (prevent clamping on small pathways). Enzyme nodes moved to Z-level 3 (separate from compounds).
+
+- **3D Visualization Documentation** (`CLAUDE.md`) — New section covering layout modes, in-UI controls (pathway filter, layout selector, visibility toggles), and recommended workflow.
+
+- **Data Download Scripts Reference** (`CLAUDE.md`) — Documented all three KEGG download scripts with options and output formats. Clarified single-step vs multi-step enrichment pipelines.
+
+- **`scripts/download_kegg_reactions.py`** — New script for bulk downloading KEGG reaction details (name, definition, equation, EC numbers). Supports scanning local KGML files for reaction IDs (faster) or querying KEGG link endpoint. Output: `data/kegg_reaction_detail.tsv`.
+
+- **MetaKG Architecture Article** (`article/metakg_article.md`) — Comprehensive article explaining dual-layer architecture (SQLite + LanceDB), four query modalities, and comparison with existing systems (KEGG, BioCyc, Reactome, etc.).
+
+- **Architecture Infographic Guide** (`article/metakg_architecture_infographic.md`) — Visual walkthrough of system components and data flow.
+
 - **`metakg` unified CLI entry point** (`pyproject.toml`, `src/metakg/cli/main.py`) — New top-level `metakg` command registered as a `@click.group()` with `--version` support. All subcommands (`build`, `enrich`, `analyze`, `analyze-basic`, `simulate`, `mcp`, `viz`, `viz3d`) are accessible as `metakg <subcommand>` in addition to the existing standalone `metakg-*` aliases.
 
 - **`docs/INSTALL.md`** — New comprehensive step-by-step installation guide covering all install variants (core, simulate, viz, viz3d, biopax, all-extras), pathway data download, graph build, name enrichment, kinetics seeding, MCP server startup, web explorer, 3D visualizer, dev install, environment variables, upgrading, and troubleshooting.

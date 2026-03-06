@@ -43,6 +43,29 @@ poetry install --all-extras  # Full install with viz, viz3d, mcp
 
 **MCP tools:** `query_pathway`, `get_compound`, `get_reaction`, `find_path`, `seed_kinetics`, `simulate_fba`, `simulate_ode`, `simulate_whatif`
 
+### 3D Visualization (`metakg-viz3d`)
+
+```bash
+metakg-viz3d [--layout allium|cake] [--db PATH] [--width W] [--height H]
+```
+
+**Layout modes:**
+- `allium` (default): Hub-spoke layout with pathways at center, reactions radially distributed
+- `cake`: Concentric rings by topological distance (layer-based)
+
+**In the UI:**
+- **Pathway Filter**: Select single pathway or "(All Pathways)"
+- **Layout Selector**: Switch between Allium and LayerCake (recomputes positions)
+- **Visibility Toggles**: Show/hide edges, isolated nodes, labels
+- **Render Graph**: Apply staged changes (filters + toggles) to the visualization
+
+**Workflow:**
+1. Start with `--layout cake` for metabolic flow visualization
+2. Select a pathway (e.g., Glycolysis)
+3. Adjust visibility toggles
+4. Click "Render Graph" to render
+5. Switch layouts dynamically from the sidebar
+
 ---
 
 ## Simulations
@@ -92,16 +115,57 @@ kg.seed_kinetics()
 
 ---
 
+## Data Download Scripts
+
+| Script | Purpose | Output |
+|--------|---------|--------|
+| `scripts/download_human_kegg.py` | Download all hsa KGML pathway files | `data/hsa_pathways/*.kgml` |
+| `scripts/download_kegg_names.py` | Bulk-download compound + reaction name lists | `data/kegg_compound_names.tsv`, `data/kegg_reaction_names.tsv` |
+| `scripts/download_kegg_reactions.py` | Per-reaction detail: name, definition, equation, EC numbers | `data/kegg_reaction_detail.tsv` |
+
+**Reaction detail download (EC numbers):**
+```bash
+# From local KGML files (faster, no extra network call for ID list):
+python scripts/download_kegg_reactions.py --kgml-dir data/hsa_pathways
+
+# From KEGG link endpoint (~2000 reactions across all hsa pathways):
+python scripts/download_kegg_reactions.py
+
+# Options: --force (re-download), --dry-run (list IDs only), --delay SECS
+```
+
+Output format (`data/kegg_reaction_detail.tsv`):
+```
+reaction_id  name                              definition        equation           ec_numbers
+R00710       acetaldehyde:NAD+ oxidoreductase  Acetaldehyde ...  C00084 + C00003 …  1.2.1.3; 1.2.1.4
+```
+
+---
+
 ## Typical Workflow
 
 ```bash
-# Build & analyze pathways (download first: scripts/download_human_kegg.py)
+# 1. Download pathway KGML files
+python scripts/download_human_kegg.py --output data/hsa_pathways
+
+# 2. (Optional) Download enrichment name files for compound & reaction names
+python scripts/download_kegg_names.py         # compound + reaction bulk names
+python scripts/download_kegg_reactions.py \   # per-reaction detail with EC numbers
+  --kgml-dir data/hsa_pathways
+
+# 3. Build & analyze pathways
 poetry run metakg-build --data ./data/hsa_pathways --wipe
+
+# 4. (Optional) Enrich DB with reaction names & EC numbers
+poetry run metakg enrich --db .metakg/meta.sqlite
+
+# 5. Analyze
 poetry run metakg-analyze
 
-# Explore
-poetry run metakg-viz           # Web explorer
-poetry run metakg-mcp           # MCP server
+# Explore (choose your view)
+poetry run metakg-viz           # 2D Streamlit explorer
+poetry run metakg-viz3d --layout allium    # 3D visualization (allium or cake)
+poetry run metakg-mcp           # MCP server for Claude
 
 # Optional: analyze codebase
 poetry run codekg-build-sqlite --repo . --wipe

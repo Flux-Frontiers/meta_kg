@@ -110,16 +110,21 @@ def fibonacci_annulus(
     return points
 
 
-def _golden_spiral_2d(
+def fibonacci_disk(
     samples: int,
     radius: float = 1.0,
     center: np.ndarray | None = None,
     z: float = 0.0,
 ) -> list[np.ndarray]:
     """
-    Place *samples* points in the XY plane using a golden-angle disc spiral.
+    Place *samples* points in the XY plane using a Fibonacci (golden-angle) disc.
 
-    :param samples: Number of points.
+    Points are distributed via the golden-angle spiral with radii scaled by
+    ``sqrt(i / n)`` so packing density is uniform across the disk area.
+    This is the standard Fibonacci disk / sunflower-seed packing adapted from
+    *repo_vis* ``pkg_visualizer/utility.py``.
+
+    :param samples: Number of points to generate.
     :param radius: Outer radius of the disc.
     :param center: XY centre (Z component ignored; overridden by *z*).
     :param z: Fixed Z coordinate for all output points.
@@ -130,7 +135,7 @@ def _golden_spiral_2d(
     if samples <= 0:
         return []
 
-    phi = np.pi * (3.0 - np.sqrt(5.0))
+    phi = np.pi * (3.0 - np.sqrt(5.0))  # golden angle in radians
     points: list[np.ndarray] = []
     for i in range(samples):
         r = radius * np.sqrt(i / max(samples - 1, 1))
@@ -139,6 +144,10 @@ def _golden_spiral_2d(
         y = r * np.sin(theta)
         points.append(center + np.array([x, y, z]))
     return points
+
+
+# Backward-compat alias used by AlliumLayout and unit tests.
+_golden_spiral_2d = fibonacci_disk
 
 
 # ---------------------------------------------------------------------------
@@ -380,7 +389,7 @@ _KIND_ZLEVEL: dict[str, int] = {
     "pathway": 0,
     "reaction": 1,
     "compound": 2,
-    "enzyme": 2,
+    "enzyme": 3,
 }
 
 
@@ -406,8 +415,8 @@ class LayerCakeLayout(Layout3D):
 
     def __init__(
         self,
-        layer_gap: float = 12.0,
-        disc_radius: float = 28.0,
+        layer_gap: float = 6.0,
+        disc_radius: float = 35.0,
     ) -> None:
         """
         Initialise layout parameters.
@@ -443,8 +452,8 @@ class LayerCakeLayout(Layout3D):
             z = level * self.layer_gap
             # Scale disc radius proportionally to the layer's node count
             r = self.disc_radius * np.sqrt(len(layer_nodes) / n_total)
-            r = max(r, 4.0)  # minimum spread
-            pts = _golden_spiral_2d(len(layer_nodes), radius=r, z=z)
+            r = max(r, 20.0)  # minimum spread (prevent clamping on small pathways)
+            pts = fibonacci_disk(len(layer_nodes), radius=r, z=z)
             for n, pt in zip(layer_nodes, pts):
                 positions[n.id] = pt
 

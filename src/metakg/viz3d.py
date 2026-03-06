@@ -369,12 +369,12 @@ def _build_qt_window(
 
         # Optionally filter isolated nodes (no edge connecting to another visible node).
         if not state.show_isolated:
-            connected_ids: set[str] = set()
+            connected_node_ids: set[str] = set()
             for e in layout_edges:
                 if e.src in candidate_ids and e.dst in candidate_ids:
-                    connected_ids.add(e.src)
-                    connected_ids.add(e.dst)
-            candidate_nodes = [n for n in candidate_nodes if n.id in connected_ids]
+                    connected_node_ids.add(e.src)
+                    connected_node_ids.add(e.dst)
+            candidate_nodes = [n for n in candidate_nodes if n.id in connected_node_ids]
             candidate_ids = {n.id for n in candidate_nodes}
 
         # Filter edges to those connecting visible nodes.
@@ -456,7 +456,7 @@ def _build_qt_window(
                         center=center,
                         direction=direction,
                         radius=edge_radius,
-                        height=height,
+                        height=float(height),
                         resolution=4,
                     )
                     edge_block.append(cyl)
@@ -546,14 +546,14 @@ def _build_qt_window(
     # Left control panel (QDockWidget)
     # -----------------------------------------------------------------------
     dock = QDockWidget("Controls", window)
-    dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+    dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)  # type: ignore[attr-defined]
     dock.setFeatures(QDockWidget.DockWidgetMovable | QDockWidget.DockWidgetFloatable)
 
     panel = QWidget()
     panel.setMinimumWidth(240)
     panel.setMaximumWidth(300)
     layout = QVBoxLayout(panel)
-    layout.setAlignment(Qt.AlignTop)
+    layout.setAlignment(Qt.AlignTop)  # type: ignore[attr-defined]
     layout.setSpacing(10)
     layout.setContentsMargins(10, 12, 10, 12)
 
@@ -726,7 +726,7 @@ def _build_qt_window(
 
     panel.setLayout(layout)
     dock.setWidget(panel)
-    window.addDockWidget(Qt.LeftDockWidgetArea, dock)
+    window.addDockWidget(Qt.LeftDockWidgetArea, dock)  # type: ignore[attr-defined]
 
     # Don't render on startup for large graphs—let user filter first.
     # Window shows immediately; user clicks "Render Graph" to load.
