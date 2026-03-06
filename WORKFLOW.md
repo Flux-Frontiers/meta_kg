@@ -85,17 +85,21 @@ ingesting newly downloaded or refreshed KGML files.
 
 ---
 
-## Phase 2 — Build Both Databases
+## Phase 2 — Build Both Databases & Seed Kinetics
 
 ```bash
 # First build (creates .metakg/ automatically)
+# ✓ Builds SQLite + LanceDB + seeds kinetic parameters automatically
 metakg-build --data data/hsa_pathways/
 
-# Rebuild from scratch (drops existing data)
+# Rebuild from scratch (drops existing data + re-seeds kinetics)
 metakg-build --data data/hsa_pathways/ --wipe
 
 # Build without the LanceDB vector index (faster, no semantic search)
 metakg-build --data data/hsa_pathways/ --no-index
+
+# Skip kinetic seeding (rarely needed)
+metakg-build --data data/hsa_pathways/ --no-seed-kinetics
 
 # Custom paths or embedding model
 metakg-build --data data/hsa_pathways/ \
@@ -104,7 +108,12 @@ metakg-build --data data/hsa_pathways/ \
              --model all-MiniLM-L6-v2
 ```
 
-Both the SQLite graph and LanceDB vector index are built by default.
+By default, `metakg-build` automatically:
+1. Parses pathway KGML files → SQLite graph
+2. Builds xref index
+3. Builds LanceDB vector index (if `--no-index` not set)
+4. **Seeds kinetic parameters from literature** (if `--no-seed-kinetics` not set)
+
 The build prints a stat block on completion:
 
 ```
@@ -113,28 +122,27 @@ edges: 891 (SUBSTRATE_OF: 234, PRODUCT_OF: 234, CATALYZES: 87, CONTAINS: 336)
 xref_index: 621 rows
 lancedb: 255 rows indexed (dim=384)
 parse_errors: 0
+kinetic_parameters: 26 rows
+regulatory_interactions: 13 rows
 ```
 
 ---
 
-## Phase 3 — Seed Kinetic Parameters
+## Phase 3 — Manual Kinetic Parameter Updates (Optional)
+
+If you need to re-seed or force-overwrite kinetic parameters:
 
 ```bash
-# Populate from curated literature values (safe to run multiple times)
-metakg-simulate seed
-
 # Overwrite existing rows (use after updating kinetics_fetch.py)
 metakg-simulate seed --force
 ```
 
-This populates two tables in the SQLite database:
+Kinetics are automatically populated with 26 key reactions and 13 allosteric regulatory rules from curated literature sources (Mulquiney & Kuchel, BRENDA, eQuilibrator).
 
 | Table | Content |
 |-------|---------|
-| `kinetic_parameters` | Km, kcat, Vmax, Ki, ΔG°', Keq for 26 key reactions |
-| `regulatory_interactions` | 13 allosteric rules (PFK, PK, HK, CS, IDH, G6PD) |
-
-Run once after every `metakg-build --wipe`.
+| `kinetic_parameters` | Km, kcat, Vmax, Ki, ΔG°', Keq |
+| `regulatory_interactions` | Allosteric rules (PFK, PK, HK, CS, IDH, G6PD) |
 
 ---
 
@@ -262,7 +270,7 @@ pip install metakg[simulate,mcp]
 
 # data/hsa_pathways/ already in repo — skip collect/wire if using available files
 metakg-build --data data/hsa_pathways/ --wipe
-metakg-simulate seed
+# ✓ Kinetic parameters are now seeded automatically during build
 metakg-analyze --output analysis.md
 metakg-simulate fba --pathway hsa00010 --output fba.md
 metakg-mcp

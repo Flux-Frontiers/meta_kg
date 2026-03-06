@@ -4918,5 +4918,5 @@ viz3d = ["PyQt5", "param", "pyvista", "pyvistaqt"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = "^3.12, <3.13"
-content-hash = "529cea3a78b7b5a7716e66cf8facbdda2785eb7f84129222992c4bf605dd74b7"
+python-versions = ">=3.12, <3.13"
+content-hash = "0a20ad319e761e7a988c017391f808f221a0742e767098a69ae61fb8bfdfb8de"

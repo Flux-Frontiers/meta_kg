@@ -34,6 +34,9 @@ from metakg.cli.options import data_option, db_option, lancedb_option, model_opt
     metavar="DIR",
     help="Directory containing kegg_compound_names.tsv / kegg_reaction_names.tsv (default: data/).",
 )
+@click.option(
+    "--no-seed-kinetics", is_flag=True, help="Skip seeding kinetic parameters after building."
+)
 def build(
     data: str,
     db: str,
@@ -43,6 +46,7 @@ def build(
     wipe: bool,
     enrich: bool,
     enrich_data: str | None,
+    no_seed_kinetics: bool,
 ) -> None:
     """Build the MetaKG metabolic knowledge graph from pathway files."""
     data_dir = Path(data).resolve()
@@ -59,6 +63,7 @@ def build(
         build_index=not no_index,
         enrich=enrich,
         enrich_data_dir=enrich_data,
+        seed_kinetics=not no_seed_kinetics,
     )
     click.echo(str(stats), err=True)
 

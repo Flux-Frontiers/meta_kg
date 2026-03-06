@@ -101,19 +101,22 @@ natural-language semantic search over the same entities. This design delivers
 four orthogonal query modalities---natural-language pathway discovery,
 structural neighbourhood traversal, shortest-path search between metabolites,
 and stoichiometric detail assembly---without forcing the user to choose between
-relational precision and semantic exploration. Beyond querying, \textsc{MetaKG}
-integrates three simulation modalities directly into the knowledge graph: Flux
-Balance Analysis for steady-state flux optimisation, kinetic ODE integration
-with Michaelis-Menten rate laws (seeded from BRENDA and SABIO-RK) using an
-implicit stiff solver, and what-if perturbation analysis for enzyme knockouts
-and substrate overrides. Interactive exploration is supported by a 2D Streamlit
-graph browser and a 3D PyVista visualiser with Fibonacci-annulus and
-layer-stratified layouts (both under active development). All capabilities are
-exposed through a unified Python API, command-line interface, and
-Model~Context~Protocol (MCP) server, making \textsc{MetaKG} a first-class data
-source for AI reasoning systems. We demonstrate the system on the complete
-\textit{Homo sapiens} metabolome---all 369 KEGG pathways ingested as a single
-queryable graph (22,290 nodes, 11,298 edges, 20,151 indexed embeddings)---with
+relational precision and semantic exploration. A post-build name-enrichment
+pipeline replaces bare KEGG accessions with human-readable names sourced from
+KEGG bulk name lists, making all query results immediately interpretable.
+Beyond querying, \textsc{MetaKG} integrates three simulation modalities
+directly into the knowledge graph: Flux Balance Analysis for steady-state flux
+optimisation, kinetic ODE integration with Michaelis-Menten rate laws (seeded
+from BRENDA and SABIO-RK) using an implicit stiff solver (BDF), and what-if
+perturbation analysis for enzyme knockouts and substrate overrides. Interactive
+exploration is supported by a 2D Streamlit graph browser and a 3D PyVista
+visualiser with Fibonacci-annulus and layer-stratified layouts (both under
+active development). All capabilities are exposed through a unified Python API,
+command-line interface, and Model~Context~Protocol (MCP) server exposing nine
+typed tools, making \textsc{MetaKG} a first-class data source for AI reasoning
+systems. We demonstrate the system on the complete \textit{Homo sapiens}
+metabolome---all 369 KEGG pathways ingested as a single queryable graph
+(17,050 nodes, 11,286 edges, 9,427 enzymes, 20,151 indexed embeddings)---with
 structural queries completing in 10--50\,ms, semantic searches in
 100--500\,ms, and kinetic simulations in under 400\,ms on commodity
 hardware.\footnote{All timings measured on a 2024 MacBook Pro (Apple M3
@@ -218,9 +221,9 @@ after setup. This is a deliberate design choice. Unlike live database mirrors,
 version-controlled snapshot. Users rebuild when input files change, enabling
 reproducible analysis, offline workflows, and integration into research
 pipelines. The system scales to organism-scale pathway corpora: the complete
-\textit{Homo sapiens} metabolome (369 KEGG pathways, 22,290 nodes, 11,298
-edges) builds in 30--60~seconds, and queries complete in milliseconds to
-seconds.
+\textit{Homo sapiens} metabolome (369 KEGG pathways, 17,050 nodes, 11,286
+edges, 9,427 enzymes) builds in 30--60~seconds, and queries complete in
+milliseconds to seconds.
 
 \subsection{Design Goals}
 
@@ -246,8 +249,9 @@ seconds.
 
 The remainder of this paper is organised as follows. Section~\ref{sec:design}
 describes the data model and system architecture. Section~\ref{sec:parsers}
-covers the format-specific parsers. Section~\ref{sec:storage} details the
-storage and indexing layers. Section~\ref{sec:query} describes the query API.
+covers the format-specific parsers. Section~\ref{sec:enrich} describes the
+name-enrichment pipeline. Section~\ref{sec:storage} details the storage and
+indexing layers. Section~\ref{sec:query} describes the query API.
 Section~\ref{sec:viz} covers the visualisation components.
 Section~\ref{sec:mcp} describes the MCP server. Section~\ref{sec:usage}
 walks through a complete worked example. Section~\ref{sec:discussion}
@@ -388,12 +392,17 @@ Pathway files (KGML / SBML / BioPAX / CSV)
   MetaIndex  ----> LanceDB
   (sentence-transformer embeddings)
         |
+  Name Enricher (optional post-build pass)
+  Phase 1: enzyme labels from CATALYZES edges
+  Phase 2: KEGG TSV -> human-readable names
+        |
   Query API + CLI + MCP server
   \end{lstlisting}
   \caption{MetaKG data pipeline. Format-specific parsers produce a stream of
   normalised \texttt{MetaNode} and \texttt{MetaEdge} objects that are merged
   by stable identifier, persisted to SQLite, and indexed as dense vectors in
-  LanceDB.}
+  LanceDB. An optional name-enrichment pass replaces bare KEGG accessions with
+  human-readable names.}
   \label{fig:arch}
 \end{figure}
 
@@ -416,6 +425,59 @@ extensions. The parser dispatcher examines each file, selects the appropriate
 handler, and produces a unified stream of nodes and edges. These are then
 merged by stable identifier in the MetaStore layer. Detailed parser
 specifications for each format appear in Appendix~\ref{sec:parsers-detail}.
+
+% ---------------------------------------------------------------------------
+\section{Name Enrichment}
+\label{sec:enrich}
+% ---------------------------------------------------------------------------
+
+KGML-sourced graphs initially carry bare KEGG accessions as node names
+(e.g.\ \texttt{C00031}, \texttt{R00710}). While these identifiers are
+unambiguous, they are not human-readable and impede exploratory analysis.
+\textsc{MetaKG} provides an optional post-build enrichment pipeline that
+replaces accessions with canonical names and stores them directly in
+\texttt{meta\_nodes.name}, making them available everywhere---CLI, MCP,
+Streamlit, and the Python API.
+
+\subsection{Two-Phase Enrichment}
+
+Enrichment proceeds in two phases, both idempotent and safe to re-run:
+
+\begin{description}[leftmargin=*,itemsep=3pt]
+  \item[Phase~1 (no network, always runs).] For every reaction node still
+    carrying a bare accession name, the enricher looks up all
+    \texttt{CATALYZES} edges pointing to it and joins the catalysing enzyme
+    gene symbols with a slash separator:
+    \begin{center}
+      \texttt{R00710} $\to$ \texttt{ADH1A / ADH1B / ADH1C}
+    \end{center}
+    This phase requires no external data and runs immediately after build.
+
+  \item[Phase~2 (requires downloaded KEGG name lists).] KEGG publishes bulk
+    name lists for compounds ($\sim$19,500 entries) and reactions
+    ($\sim$12,400 entries). A provided download script fetches these files
+    once; subsequent enrichment runs read them locally:
+    \begin{lstlisting}[style=bash]
+python scripts/download_kegg_names.py
+metakg-enrich --db .metakg/meta.sqlite
+    \end{lstlisting}
+    Phase~2 updates compound names (e.g.\ \texttt{C00031} $\to$
+    \texttt{D-Glucose}) and reaction names (e.g.\ \texttt{R00710} $\to$
+    \texttt{Acetaldehyde:NAD\textsuperscript{+} oxidoreductase}), overriding
+    Phase~1 enzyme labels where canonical KEGG names are available.
+\end{description}
+
+Both phases can be combined with the build step via the \texttt{--enrich}
+flag:
+
+\begin{lstlisting}[style=bash]
+metakg-build --data ./pathways --enrich
+\end{lstlisting}
+
+After enrichment, all query results---including MCP tool responses and
+Streamlit displays---show human-readable names rather than bare accessions.
+The enrichment is stored in the database, so it persists across sessions
+without re-running.
 
 % ---------------------------------------------------------------------------
 \section{Storage and Indexing}
@@ -648,18 +710,30 @@ figures).
 The Model Context Protocol (MCP)~\citep{anthropic2024mcp} is a lightweight
 JSON-RPC standard that lets large-language-model assistants call typed tool
 functions. \textsc{MetaKG} implements an MCP server exposing the knowledge
-graph through four tools:
+graph through nine typed tools:
 
 \begin{description}[leftmargin=*,itemsep=2pt]
   \item[\texttt{query\_pathway(name, k)}] Semantic pathway search. Returns
     up to \texttt{k} pathway nodes whose descriptions are closest to the
     query in embedding space, along with their member-reaction counts.
   \item[\texttt{get\_compound(id)}] Returns a compound node with its
-    connected reactions, accepting any supported identifier format.
+    connected reactions, accepting any supported identifier format
+    (full URI, shorthand, or display name).
   \item[\texttt{get\_reaction(id)}] Returns full stoichiometric detail for
-    a single reaction.
+    a single reaction, including substrates, products, and catalysing enzymes.
   \item[\texttt{find\_path(a, b, max\_hops)}] Returns the shortest metabolic
-    path between two compounds.
+    path between two compounds via bidirectional BFS.
+  \item[\texttt{simulate\_fba(pathway\_id, ...)}] Runs Flux Balance Analysis
+    on a pathway and returns the optimal flux distribution and shadow prices.
+  \item[\texttt{simulate\_ode(pathway\_id, ...)}] Runs kinetic ODE simulation
+    (BDF solver) and returns time-course concentration trajectories.
+  \item[\texttt{simulate\_whatif(pathway\_id, scenario\_json, mode)}]
+    Compares baseline and perturbed simulations; supports enzyme knockouts,
+    activity scaling, and substrate overrides.
+  \item[\texttt{get\_kinetic\_params(reaction\_id)}] Retrieves stored kinetic
+    and regulatory parameters (Km, Vmax, kcat, Ki, $\Delta G^{\circ\prime}$) for a reaction.
+  \item[\texttt{seed\_kinetics(force)}] Populates the database with curated
+    literature kinetic parameters from BRENDA, SABIO-RK, and published models.
 \end{description}
 
 The server starts with:
@@ -777,7 +851,7 @@ Path length: 9 steps
 \end{lstlisting}
 
 The query resolves in milliseconds on the local SQLite index. The algorithm
-scales efficiently to the complete human metabolome (22,290 nodes, 11,298
+scales efficiently to the complete human metabolome (17,050 nodes, 11,286
 edges) using bidirectional BFS with early termination. Typical shortest-path
 queries complete in 10--50~ms.
 
@@ -851,13 +925,14 @@ xref index.
 \label{sec:impl}
 % ---------------------------------------------------------------------------
 
-\textbf{Dependencies.} The core package requires Python~3.10--3.12,
+\textbf{Dependencies.} The core package requires Python~3.12,
 \texttt{lancedb$\,\geq\,$0.29}, \texttt{numpy$\,\geq\,$1.24}, and
 \texttt{sentence-transformers$\,\geq\,$2.7}. No network connection is needed
-at run time once the embedding model has been downloaded. BioPAX support
-requires the optional \texttt{rdflib} package; the 2D and 3D visualisers
-need optional extras installed via \texttt{poetry install --extras viz}
-or \texttt{--extras viz3d}.
+at run time once the embedding model has been downloaded. Simulation support
+(FBA and ODE) requires the optional \texttt{scipy$\,\geq\,$1.11} package
+installed via \texttt{--extras simulate}. BioPAX support requires the optional
+\texttt{rdflib} package; the 2D and 3D visualisers need optional extras
+installed via \texttt{poetry install --extras viz} or \texttt{--extras viz3d}.
 
 \textbf{Installation.}
 
@@ -962,13 +1037,13 @@ the SBML parser preserves all information needed to reconstruct a COBRApy
 model.
 
 \textbf{Performance on complete human metabolome.} The complete
-\textit{Homo sapiens} metabolome (369 KEGG pathways, 22,290 nodes, 11,298
+\textit{Homo sapiens} metabolome (369 KEGG pathways, 17,050 nodes, 11,286
 edges, 20,151 vector embeddings) shows the following performance
 characteristics:
 
 \begin{table}[H]
   \centering
-  \caption{Performance on the complete human metabolome (22K nodes, 11K edges).
+  \caption{Performance on the complete human metabolome (17K nodes, 11K edges).
   All timings measured on a 2024 MacBook Pro (Apple M3 Max, 36\,GB RAM, 1\,TB SSD).}
   \label{tab:performance}
   \small
@@ -1015,10 +1090,13 @@ stoichiometric---through a single API, CLI, and LLM-accessible MCP interface.
 The core contributions are: (1)~a stable, deterministic identifier scheme
 enabling reproducible cross-format merging without external services; (2)~a
 dual-layer storage architecture (SQLite + LanceDB) that eliminates the forced
-choice between relational precision and semantic expressivity; (3)~four
-unified query modalities accessible to analysts at all levels of programming
-expertise; and (4)~a forward-looking MCP server that makes metabolic knowledge
-graphs first-class data sources for AI assistants.
+choice between relational precision and semantic expressivity; (3)~a
+two-phase name-enrichment pipeline that replaces bare KEGG accessions with
+human-readable names, making all query results immediately interpretable
+without network access; (4)~four unified query modalities accessible to
+analysts at all levels of programming expertise; and (5)~a forward-looking
+MCP server exposing nine typed tools that make metabolic knowledge graphs
+first-class data sources for AI assistants.
 
 The design philosophy---local-first, self-contained, snapshot-based---is
 deliberate and represents a clean separation from live database mirrors. This

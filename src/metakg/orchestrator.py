@@ -268,9 +268,10 @@ class MetaKG:
         build_index: bool = True,
         enrich: bool = False,
         enrich_data_dir: str | Path | None = None,
+        seed_kinetics: bool = True,
     ) -> MetabolicBuildStats:
         """
-        Full pipeline: parse → SQLite → enrich → LanceDB.
+        Full pipeline: parse → SQLite → enrich → LanceDB → seed kinetics.
 
         :param data_dir: Directory of pathway files.  If omitted, only the
             SQLite → LanceDB step is run (useful for re-indexing existing data).
@@ -281,6 +282,8 @@ class MetaKG:
         :param enrich_data_dir: Directory containing ``kegg_compound_names.tsv``
             and ``kegg_reaction_names.tsv``.  Defaults to the repo-level
             ``data/`` directory.
+        :param seed_kinetics: Populate kinetic parameters from literature
+            after building. Safe to call multiple times (idempotent by default).
         :return: :class:`MetabolicBuildStats`.
         """
         parse_errors: list[dict] = []
@@ -306,6 +309,9 @@ class MetaKG:
             idx_stats = self.index.build(self.store, wipe=wipe)
             idx_rows = idx_stats["indexed_rows"]
             idx_dim = idx_stats["dim"]
+
+        if seed_kinetics:
+            self.seed_kinetics(force=wipe)
 
         return MetabolicBuildStats(
             data_root=str(data_dir) if data_dir else "",
