@@ -1,159 +1,112 @@
-# Release Notes — v0.2.0
+# Release Notes — v0.3.0
 
-> Released: 2026-02-28
+> Released: 2026-03-06
 
 ## Added
 
-- **Comprehensive Metabolic Simulation Documentation** — Expanded CLI reference, API guide, and scientific article with complete examples for all three simulation modalities
-  - CLAUDE.md: New "Simulation and Analysis" section with detailed examples for FBA, kinetic ODE integration, and what-if perturbation analysis
-  - README.md: New "Metabolic Simulations" section with runnable code examples and ODE solver configuration guide
-  - article/metakg.tex: New "Metabolic Simulations" subsection explaining solver architecture and parameter seeding
-  - Comprehensive explanation of why BDF solver is optimal for metabolic systems (inherent stiffness from fast enzyme kinetics + slow substrate dynamics)
-  - All ODE parameters documented: ode_method, ode_rtol, ode_atol, ode_max_step with defaults and rationale
+- **Pathway category provenance** (`src/metakg/primitives.py`) — New `category` field on `MetaNode` and 8 `PATHWAY_CATEGORY_*` constants (`metabolic`, `transport`, `genetic_info_processing`, `signaling`, `cellular_process`, `organismal_system`, `human_disease`, `drug_development`), derived from the 5-digit KEGG numeric suffix via `_kegg_pathway_category()`. All 369 human pathways are categorized after a fresh build.
 
-- **Comprehensive Unit Tests for Metabolic Simulations** — 21 new tests covering all simulation modalities with timeout guards
-  - FBA tests: Basic FBA, minimize mode, nonexistent pathway handling
-  - ODE tests: BDF (default), RK45 (non-stiff), Radau, custom tolerances, max_step behavior, edge cases, stiffness handling
-  - What-if tests: FBA mode (baseline/knockout/inhibition), ODE mode with perturbations
-  - Kinetics tests: seed_kinetics, force overwrite, repeated seeding
-  - Regression tests: BDF completes <2s on integration (prevents hanging), ode_max_step=None doesn't cause hanging
-  - Timeout guards: @pytest.mark.timeout(3-10s) on all ODE/what-if tests prevents test runner lock-up
+- **Category persistence in SQLite** (`src/metakg/store.py`) — `category TEXT` column added to `meta_nodes` schema. `_migrate()` runs on every open and transparently adds the column to existing databases via `ALTER TABLE`. `all_nodes()` now accepts an optional `category=` filter alongside the existing `kind=` filter.
 
-- **Updated Orchestrator Docstrings** — Clarified ODE parameters in simulate_ode() and simulate_whatif() method documentation
-  - Corrected default ode_method from "LSODA" to "BDF" with stiffness explanation
-  - Updated ode_rtol, ode_atol with relaxed defaults (1e-3, 1e-5) optimized for convergence on stiff systems
-  - Documented ode_max_step=None as recommended to let solver adapt adaptively
+- **Category set in KGML parser** (`src/metakg/parsers/kgml.py`) — `_kegg_pathway_category()` is called when constructing each pathway `MetaNode` so category is populated at parse time.
 
-- **Public Statistics API** — New `MetabolicRuntimeStats` dataclass and `MetaKG.get_stats()` method for clean, type-safe access to knowledge graph statistics
-  - Encapsulates total nodes/edges, node counts by kind, edge counts by relation
-  - Includes optional vector index statistics (indexed rows and embedding dimension)
-  - Provides `__str__()` for nicely formatted output and `to_dict()` for serialization
-  - Eliminates internal `.store` exposure in public API
-  - Exported in `metakg` module for public use
+- **Strategy C enzyme wiring** (`src/metakg/parsers/kgml.py`) — New fallback wiring strategy reads the `reaction=` attribute on gene/ortholog `<entry>` elements to link enzymes to reactions when Strategies A and B fail. Eliminates the last class of unwired enzymes in real KEGG KGML files.
 
-- **Comprehensive Unit Tests for Orchestrator** — 14 new tests for `MetabolicRuntimeStats` and `MetaKG.get_stats()`
-  - Tests basic construction, serialization, and string representation
-  - Tests stats accuracy with real data (node/edge counts)
-  - Tests edge cases (empty database, multiple calls consistency)
-  - Tests API cleanliness (no internal implementation exposure)
+- **CONTAINS fallback for isolated nodes** (`src/metakg/parsers/kgml.py`) — Gene, ortholog, and compound entries that are not wired into any reaction are now connected to their pathway node via `CONTAINS` edges, reducing isolated node count from 12,245 → 0.
 
-- **Simulation Demo Script** — `scripts/simulation_demo.py` demonstrating metabolic pathway simulations
-  - Example 1: Seeding kinetic parameters from literature (BRENDA/SABIO-RK)
-  - Example 2: Flux Balance Analysis (FBA) for steady-state flux prediction
-  - Example 3: FBA with custom objective reaction
-  - Example 4: Kinetic ODE simulation for time-course dynamics
-  - Example 5: Enzyme knockout perturbation analysis
-  - Example 6: Enzyme partial inhibition (50%) perturbation analysis
+- **Agent slash commands** — New `.claude/commands/` entries (`metakg-build.md`, `metakg-simulate.md`, `metakg-viz.md`) and matching `.vscode/*.prompt.md` prompt files for all core MetaKG and CodeKG workflows.
 
-- **Consistent Project Badges** — Enhanced README with project status badges matching CodeKG style
-  - Python version badge showing supported versions (3.10, 3.11, 3.12)
-  - Version badge (0.2.0) with link to releases
-  - Poetry dependency manager badge
-  - Updated license badge for Elastic License 2.0
+- **`SESSION-NOTES-2026-03-06.md`** — Handoff document summarising all changes made in this session for the next agent/developer.
 
-- **CodeKG Sister Project Reference** — Added prominent reference to CodeKG in README
-  - Sister Project section highlighting CodeKG's role in enabling semantic analysis of MetaKG's own codebase
-  - Added CodeKG to Acknowledgments section as primary enabling technology
+- **Enhanced 3D visualization CLI options** (`src/metakg/cli/cmd_viz3d.py`) — `metakg-viz3d` now supports layout selection, window sizing, and batch export modes.
 
-- **Architecture Diagram in README** — Integrated visual architecture diagram (`docs/metaKG_arch.png`) into the Architecture section
-  - Provides quick visual overview of system components and organization
-  - Complements detailed file structure documentation
+- **Improved Fibonacci disk layout algorithm** (`src/metakg/layout3d.py`) — Renamed `_golden_spiral_2d()` → `fibonacci_disk()` for clarity; enhanced docstrings and tuned LayerCake parameters for better visualization.
 
-- **CodeKG Integration for Codebase Analysis** — MetaKG can now be analyzed using CodeKG's knowledge graph tools
-  - Built static analysis graph (SQLite): 3,136 nodes, 2,920 edges across 27 modules
-  - Built semantic vector index (LanceDB): 290 vectors with 384-dimensional embeddings
-  - Configured MCP servers for Claude Code, GitHub Copilot, Kilo Code, and Cline
-  - Enables tools like `query_codebase`, `pack_snippets`, `callers` for code exploration
+- **3D Visualization Documentation** (`CLAUDE.md`) — New section covering layout modes, in-UI controls, and recommended workflow.
 
-- **Comprehensive CLI Documentation** — Added `CLAUDE.md` with complete reference for both MetaKG and CodeKG commands
-  - MetaKG commands: `metakg-build`, `metakg-analyze`, `metakg-viz`, `metakg-viz3d`, `metakg-mcp`
-  - CodeKG commands: `codekg-build-sqlite`, `codekg-build-lancedb`, `codekg-query`, `codekg-mcp`
-  - MCP tool documentation with usage examples and query strategies
-  - Typical workflows and combined MetaKG + CodeKG usage patterns
-  - All examples include `poetry run` activation for virtual environment
+- **Data Download Scripts Reference** (`CLAUDE.md`) — Documented all three KEGG download scripts with options and output formats.
 
-- **MCP Server Configuration** — Added MCP server definitions for multiple clients
-  - `.mcp.json` for Claude Code and Kilo Code
-  - `.vscode/mcp.json` for GitHub Copilot integration
+- **`scripts/download_kegg_reactions.py`** — New script for bulk downloading KEGG reaction details (name, definition, equation, EC numbers).
 
-- **Interactive Web Visualization** — Streamlit-based metabolic knowledge graph explorer
-  - Graph Browser tab for visualizing pathways, reactions, compounds, and enzymes
-  - Semantic Search tab for querying nodes by description and keywords
-  - Node Details tab for exploring comprehensive node information
-  - Pyvis-based interactive graph rendering with filtering and legend controls
+- **MetaKG Architecture Article** (`article/metakg_article.md`) — Comprehensive article explaining dual-layer architecture (SQLite + LanceDB), four query modalities, and comparison with existing systems.
 
-- **3D Metabolic Pathway Visualization** — PyVista-powered 3D interactive visualizer
-  - Allium layout strategy: each pathway rendered as a "Giant Allium plant" with reactions/compounds as the spherical head
-  - LayerCake layout strategy: vertical stratification by node kind with golden-angle spiral distribution
-  - Interactive 3D rendering with color coding by metabolic entity type
-  - Export to HTML and PNG formats
+- **Architecture Infographic Guide** (`article/metakg_architecture_infographic.md`) — Visual walkthrough of system components and data flow.
 
-- **Layout Algorithms** (`src/metakg/layout3d.py`)
-  - Fibonacci spatial utilities for uniform point distribution on spheres and annuli
-  - AlliumLayout class for plant-inspired botanical visualization
-  - LayerCakeLayout class for stratified hierarchical visualization
-  - Extensible Layout3D abstract base class for custom layout implementations
+- **`metakg` unified CLI entry point** (`pyproject.toml`, `src/metakg/cli/main.py`) — New top-level `metakg` command with `--version` support and all subcommands accessible as `metakg <subcommand>`.
 
-- **CLI Commands**
-  - `metakg-viz` — Launch Streamlit web explorer with database and port configuration
-  - `metakg-viz3d` — Launch 3D PyVista visualizer with layout and export options
+- **`docs/INSTALL.md`** — New comprehensive step-by-step installation guide covering all install variants and workflows.
 
-- **GraphStore Wrapper** (`src/metakg/store.py`)
-  - Convenience compatibility layer wrapping MetaStore with visualization-friendly methods
-  - `query_nodes()` — Query nodes with optional kind filtering
-  - `query_edges()` — Query edges with optional source/destination filtering
-  - `query_semantic()` — Text-based semantic search (extensible for embeddings)
-  - `get_node()` — Fetch individual nodes by ID
+- **`docs/MCP.md`** — New guide for integrating the CodeKG MCP server with Claude Code, Claude Desktop, GitHub Copilot, and Cline.
 
-- **Dependencies**
-  - Optional visualization extras: `viz` (Streamlit + pyvis), `viz3d` (PyVista + PyQt5)
-  - Updated pyproject.toml with streamlit, pyvis, pyvista, pyvistaqt, PyQt5, and param dependencies
+- **Name enrichment pipeline** (`src/metakg/enrich.py`) — New module replacing bare KEGG accessions with human-readable names. Phase 1: derives labels from enzyme symbols. Phase 2: updates from KEGG name lists.
 
-- **Documentation**
-  - Comprehensive README.md with quick start, architecture, commands, and API examples
-  - Detailed feature descriptions and usage patterns
-  - Performance characteristics and installation variants
+- **`metakg-enrich` CLI command** — Standalone command for running name enrichment against existing databases.
+
+- **`scripts/download_kegg_names.py`** — Bulk-download script for KEGG compound and reaction name lists (19,571 compounds, 12,384 reactions).
+
+- **`data/kegg_compound_names.tsv` / `data/kegg_reaction_names.tsv`** — Bulk KEGG name lookup tables committed to repository for offline enrichment.
+
+- **`MetaKG.enrich()` public method** (`src/metakg/orchestrator.py`) — Exposes enrichment via the high-level orchestrator.
+
+- **`scripts/wire_kegg_enzymes.py`** — Analysis and patching utility for enzyme coverage across KGML files.
+
+- **`metakg-analyze-basic` CLI entry point** — New command exposing original structured analysis report style.
+
+- **Timestamped output filenames** — `metakg-analyze`, `metakg-analyze-basic`, and `metakg-simulate` now write to auto-named files when `--output` is not specified.
+
+- **`code-kg` core dependency** — Added as production dependency for codebase analysis capabilities.
+
+- **Polished MetaKG Thorough Analysis Report** (`src/metakg/thorough_analysis.py`) — New module providing formatted analysis output with executive summary, risk indicators, and structured recommendations.
 
 ## Changed
 
-- **Codebase Formatting & Maintainability Improvements** — Comprehensive code cleanup across all modules for consistency and maintainability
-  - Added author attribution and revision timestamps to all module docstrings (20 files)
-  - Standardized import ordering (alphabetical) across all modules
-  - Improved code readability with consistent line-breaking and comment alignment
-  - Reformatted SQL queries for better readability (multi-line formatting)
-  - Applied consistent __all__ list formatting and inline comment alignment
-  - Enhanced docstring formatting in data classes and analysis functions
-  - All changes pass Ruff formatting, type checking, and linting standards
+- **Enrichment default-on** — `--enrich` flag renamed to `--no-enrich` (inverted logic). Enrichment now runs by default.
 
-- **Article Examples API Cleanup** — Updated `scripts/article_examples.py` to use public `kg.get_stats()` instead of internal `kg.store.stats()`
-  - Uses typed `MetabolicRuntimeStats` object with attribute access instead of dict access
-  - Gracefully handles optional index statistics with `.get()` calls
-  - Demonstrates proper API usage patterns for users
+- **CLAUDE.md updated** — CodeKG Commands section reverted to standalone command style.
 
-- **License Migration to Elastic License 2.0** — Updated from PolyForm Noncommercial to Elastic License 2.0 to align with sister project CodeKG
-  - Updated `pyproject.toml` license field to `Elastic-2.0`
-  - Added `LICENSE` file with complete Elastic License 2.0 terms
-  - Updated README license badge with link to official license page
+- **`metakg-build` default behavior** — Now wipes existing database by default. Use `--no-wipe` for incremental updates.
 
-- **Orchestrator Class** — Renamed `MetaKG` source file from `metakg.py` to `orchestrator.py` for clarity and to eliminate namespace shadowing
-- **Import Paths** — Updated all references from `metakg.metakg` to `metakg.orchestrator` in `__init__.py`, `mcp_tools.py`, and `app.py`
-- **pyproject.toml** — Added optional visualization dependencies and `viz` + `viz3d` extras, plus CodeKG CLI entry points
-- **src/metakg/cli.py** — Added `viz_main()` and `viz3d_main()` entry points for new CLI commands
-- **src/metakg/store.py** — Extended with GraphStore compatibility wrapper class
+- **New `metakg-update` command** — Convenience alias for `metakg-build --no-wipe`.
+
+- **CLI option definition refactored** (`src/metakg/cli/options.py`) — Better clarity in inverted flags.
+
+- **CLI refactored from monolithic `cli.py` to `cli/` package** — 642-line monolithic CLI split into modular per-command files while preserving all entry-point names and behavior.
+
+- **`mcp` promoted to core dependency** — `mcp >= 1.0.0` moved to core; MCP server always available without extra install flags.
+
+- **`docs/CAPABILITIES.md` dependency tables updated** — Reflects core/optional dependency changes.
+
+- **CLI fully migrated from argparse to Click** — All commands rewritten with Click decorators; full `--help` support across all commands.
+
+- **`store.query_semantic()` renamed to `query_text()`** — Accurately reflects text-based substring matching behavior.
+
+- **CLI `simulate_main()` uses `MetaKG` orchestrator** — Brings CLI in line with public API surface.
+
+- **MCP tool handlers extracted to module-level functions** — Improves unit testability.
+
+- **WORKFLOW.md updated** — References to enzyme wiring utilities updated.
+
+- **`metakg-analyze` always writes to file** — Removed stdout fallback for consistency.
+
+- **CLAUDE.md refactored** — Condensed to table-driven quick reference.
+
+- **`pyproject.toml` scripts cleaned up** — Removed duplicate `codekg-*` entries now provided by `code-kg` package.
 
 ## Fixed
 
-- **Pylance Type Checking Issues** — Added `MetaIndex.stats()` method to resolve type errors in `MetaKG.get_stats()`
-  - Returns indexed row count and embedding dimension from LanceDB index
-  - Gracefully handles missing or unavailable index
+- **`all_nodes()` category filter** — Query builds WHERE clause dynamically for safe combined filtering.
 
-- **Code Quality & Linting**
-  - Fixed import ordering in `scripts/simulation_demo.py`, `src/metakg/orchestrator.py`, and `tests/test_orchestrator.py` to comply with Ruff I001
-  - Removed f-string prefixes from non-placeholder strings in `scripts/simulation_demo.py` (Ruff F541)
-  - Removed unused imports (`tempfile`, `pathlib.Path`) from `tests/test_orchestrator.py`
-  - All changes pass Ruff linting and mypy type checking
+- **SQLite threading error in Streamlit** — Added `check_same_thread=False` to resolve threading issues in web visualizer.
 
-- **Critical Namespace Shadowing Bug** — `src/metakg/metakg.py` was shadowing the metakg package namespace, preventing imports of submodules like `graph.py` and breaking all CLI commands. Resolved by renaming to `orchestrator.py` and updating all import statements.
+- **KGML multi-gene entry grouping** — Multi-gene entries now create canonical group nodes with all members referenced, eliminating ~5,255 orphaned nodes.
+
+- **xref index expansion for list-valued entries** — Each member gene ID now gets individual `xref_index` row for transparent per-gene lookup.
+
+- **Name enrichment Phase 2 now loads canonical KEGG reaction names** — Phase 2 now extracts KEGG accession from immutable node ID, allowing 1,771 canonical reaction names to load.
+
+- **3D visualization now displays KEGG reaction function names in enzyme sidebar** — Sidebar shows reactions with canonical KEGG function names.
+
+- **Pylint configuration and test fixture naming** — Created `.pylintrc` with proper configuration; fixed fixture naming for pylint compatibility.
 
 ---
 
