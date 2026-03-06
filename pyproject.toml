@@ -89,6 +89,7 @@ pylint = "^4.0.5"
 
 metakg                = "metakg.cli.main:cli"
 metakg-build          = "metakg.cli:build_main"
+metakg-update         = "metakg.cli:update_main"
 metakg-enrich         = "metakg.cli:enrich_main"
 metakg-mcp            = "metakg.cli:mcp_main"
 metakg-viz            = "metakg.cli:viz_main"

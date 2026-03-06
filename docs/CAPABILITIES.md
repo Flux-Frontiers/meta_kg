@@ -152,6 +152,8 @@ Four parsers are registered and tried in order for every file in the data direct
 
 > **Note:** KGML files store compound and reaction names as bare KEGG accessions (e.g. `C00031`, `R00299`).
 > Run `metakg-enrich` after building to replace these with human-readable names.
+>
+> **Scope:** Only metabolic KGML files (those containing `<reaction>` elements, typically `hsa000xx` series) are parsed. Signalling, disease, and cellular-process pathways that use only `<relation>` elements are silently skipped.
 
 ### 3.2 SBML — Systems Biology Markup Language
 
@@ -229,9 +231,15 @@ metakg-build \
   --lancedb  .metakg/lancedb         # LanceDB vector index directory
   --model    all-MiniLM-L6-v2        # SentenceTransformer model
   --no-index                         # skip LanceDB index build
-  --wipe                             # delete existing data first
+  --no-wipe                          # keep existing data (default: wipe before build)
   --enrich                           # run name enrichment after build
   --enrich-data  DIR                 # KEGG TSV directory (default: data/)
+```
+
+To incrementally add files without wiping, use `metakg-update` (same options, always merges):
+
+```bash
+metakg-update --data <DIR>
 ```
 
 **What happens:**
@@ -1024,9 +1032,23 @@ metakg-build --data <DIR>
              [--lancedb .metakg/lancedb]
              [--model all-MiniLM-L6-v2]
              [--no-index]          skip LanceDB index
-             [--wipe]              delete existing data
+             [--no-wipe]           keep existing data (default: wipe before build)
              [--enrich]            run name enrichment after building
              [--enrich-data DIR]   KEGG TSV directory (default: data/)
+```
+
+### `metakg-update`
+
+Incrementally merge new pathway files into an existing database without wiping.
+
+```
+metakg-update --data <DIR>
+              [--db   .metakg/meta.sqlite]
+              [--lancedb .metakg/lancedb]
+              [--model all-MiniLM-L6-v2]
+              [--no-index]
+              [--enrich]
+              [--enrich-data DIR]
 ```
 
 ### `metakg-enrich`

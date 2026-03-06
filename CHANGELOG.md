@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`metakg-build` default behavior** — Now wipes existing database and vector index by default (safer, more predictable). Use `--no-wipe` flag to add files incrementally instead of replacing.
+  - Renamed `--wipe` flag → `--no-wipe` (inverted logic, default=True)
+  - Updated docstring to clarify wipe-by-default behavior
+  - Updated all documentation (CLAUDE.md, README.md, WORKFLOW.md) to reflect new defaults
+- **New `metakg-update` command** (`src/metakg/cli/cmd_build.py`) — Convenience alias for `metakg-build --no-wipe`. Provides explicit intent: incrementally merge new pathway files into an existing database without wiping. Supports the same enrichment and kinetics-seeding options as `build`.
+- **CLI option definition refactored** (`src/metakg/cli/options.py`) — `wipe_option` now uses Click's `flag_value=False, default=True` pattern for better clarity in inverted flags.
+
 ### Added
 
 - **Enhanced 3D visualization CLI options** (`src/metakg/cli/cmd_viz3d.py`) — `metakg-viz3d` now supports:

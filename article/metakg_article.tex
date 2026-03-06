@@ -763,7 +763,7 @@ carbohydrate metabolism, lipid metabolism, and signaling networks.
 \subsection{Building the Knowledge Graph}
 
 \begin{lstlisting}[style=bash, caption={Building the complete human metabolome knowledge graph.}]
-$ metakg-build --data ./data/hsa_pathways --wipe
+$ metakg-build --data ./data/hsa_pathways
 Building MetaKG from ./data/hsa_pathways...
 data_root   : ./data/hsa_pathways
 db_path     : .metakg/meta.sqlite
@@ -774,8 +774,10 @@ edges       : 11298  {'CATALYZES': 2406, 'CONTAINS': 3809,
 indexed     : 20151 vectors  dim=384
 \end{lstlisting}
 
-The \texttt{--wipe} flag clears any prior database before parsing; omitting it
-allows incremental addition of new pathway files to an existing graph.
+By default, \texttt{metakg-build} wipes the existing database and vector index
+before parsing (the safest, most predictable behaviour). To incrementally merge
+new pathway files instead, use the \texttt{--no-wipe} flag or the convenience
+command \texttt{metakg-update --data ./pathways}.
 
 \subsection{Structural Queries via the Python API}
 
@@ -911,7 +913,7 @@ hsa00010.xml    # KGML (KEGG)
 R-HSA-70171.owl # BioPAX (Reactome)
 custom_rxns.csv # CSV (in-house data)
 
-$ metakg-build --data ./pathways --wipe
+$ metakg-build --data ./pathways
 \end{lstlisting}
 
 The parser dispatcher examines the root XML element of each \texttt{.xml} or
@@ -948,9 +950,9 @@ callers should create one \texttt{MetaKG} instance per process or protect a
 shared instance with a lock.
 
 \textbf{Incremental rebuild.} The stable ID scheme makes incremental builds
-straightforward. Running \texttt{metakg-build} without \texttt{--wipe} issues
-\texttt{INSERT OR REPLACE} statements, updating existing nodes and appending
-new ones without duplicating entries.
+straightforward. Running \texttt{metakg-build} with \texttt{--no-wipe} (or using
+the convenience command \texttt{metakg-update}) issues \texttt{INSERT OR REPLACE}
+statements, updating existing nodes and appending new ones without duplicating entries.
 
 \textbf{Codebase self-analysis.} \textsc{MetaKG} is itself analysed with its
 sister tool \textsc{CodeKG}~\citep{fluxfrontiers2025codekg}, which builds a

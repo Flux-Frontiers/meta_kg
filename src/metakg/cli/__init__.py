@@ -12,11 +12,11 @@ Standalone entry-point aliases (referenced by pyproject.toml [tool.poetry.script
 are re-exported here so that e.g. ``metakg.cli:build_main`` resolves correctly.
 """
 
-from metakg.cli import (
+from metakg.cli import (  # noqa: F401  — registers simulate (fba/ode/whatif/seed)
     cmd_analyze,  # noqa: F401  — registers analyze, analyze-basic
-    cmd_build,  # noqa: F401  — registers build, enrich
+    cmd_build,  # noqa: F401  — registers build, update, enrich
     cmd_mcp,  # noqa: F401  — registers mcp
-    cmd_simulate,  # noqa: F401  — registers simulate (fba/ode/whatif/seed)
+    cmd_simulate,
     cmd_viz,  # noqa: F401  — registers viz
     cmd_viz3d,  # noqa: F401  — registers viz3d
 )
@@ -25,7 +25,7 @@ from metakg.cli import (
 # Standalone entry-point aliases — must be importable as ``metakg.cli:<name>``
 # ---------------------------------------------------------------------------
 from metakg.cli.cmd_analyze import analyze_basic_main, analyze_main  # noqa: F401
-from metakg.cli.cmd_build import build_main, enrich_main  # noqa: F401
+from metakg.cli.cmd_build import build_main, enrich_main, update_main  # noqa: F401
 from metakg.cli.cmd_mcp import mcp_main  # noqa: F401
 from metakg.cli.cmd_simulate import simulate_main  # noqa: F401
 from metakg.cli.cmd_viz import viz_main  # noqa: F401

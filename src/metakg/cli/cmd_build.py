@@ -13,7 +13,13 @@ from pathlib import Path
 import click
 
 from metakg.cli.main import cli
-from metakg.cli.options import data_option, db_option, lancedb_option, model_option, wipe_option
+from metakg.cli.options import (
+    data_option,
+    db_option,
+    lancedb_option,
+    model_option,
+    wipe_option,
+)
 
 
 @cli.command("build")
@@ -21,7 +27,9 @@ from metakg.cli.options import data_option, db_option, lancedb_option, model_opt
 @db_option
 @lancedb_option
 @model_option
-@click.option("--no-index", is_flag=True, help="Skip building the LanceDB vector index.")
+@click.option(
+    "--no-index", is_flag=True, help="Skip building the LanceDB vector index."
+)
 @wipe_option
 @click.option(
     "--enrich",
@@ -35,7 +43,9 @@ from metakg.cli.options import data_option, db_option, lancedb_option, model_opt
     help="Directory containing kegg_compound_names.tsv / kegg_reaction_names.tsv (default: data/).",
 )
 @click.option(
-    "--no-seed-kinetics", is_flag=True, help="Skip seeding kinetic parameters after building."
+    "--no-seed-kinetics",
+    is_flag=True,
+    help="Skip seeding kinetic parameters after building.",
 )
 def build(
     data: str,
@@ -48,7 +58,10 @@ def build(
     enrich_data: str | None,
     no_seed_kinetics: bool,
 ) -> None:
-    """Build the MetaKG metabolic knowledge graph from pathway files."""
+    """Build the MetaKG metabolic knowledge graph from pathway files.
+
+    Wipes the existing database and vector index before building (default).
+    Use --no-wipe to add files incrementally instead."""
     data_dir = Path(data).resolve()
     if not data_dir.exists():
         raise click.ClickException(f"data directory not found: {data_dir}")
@@ -97,7 +110,9 @@ def enrich(db: str, data: str | None) -> None:
     """
     db_path = Path(db)
     if not db_path.exists():
-        raise click.ClickException(f"database not found: {db_path}\nRun 'metakg build' first.")
+        raise click.ClickException(
+            f"database not found: {db_path}\nRun 'metakg build' first."
+        )
 
     from metakg import MetaKG
 
@@ -107,9 +122,76 @@ def enrich(db: str, data: str | None) -> None:
     click.echo(str(stats), err=True)
 
 
+@cli.command("update")
+@data_option
+@db_option
+@lancedb_option
+@model_option
+@click.option(
+    "--no-index", is_flag=True, help="Skip building the LanceDB vector index."
+)
+@click.option(
+    "--enrich",
+    is_flag=True,
+    help="Run name enrichment after building.",
+)
+@click.option(
+    "--enrich-data",
+    default=None,
+    metavar="DIR",
+    help="Directory containing kegg_compound_names.tsv / kegg_reaction_names.tsv (default: data/).",
+)
+@click.option(
+    "--no-seed-kinetics",
+    is_flag=True,
+    help="Skip seeding kinetic parameters after building.",
+)
+def update(
+    data: str,
+    db: str,
+    lancedb: str,
+    model: str,
+    no_index: bool,
+    enrich: bool,
+    enrich_data: str | None,
+    no_seed_kinetics: bool,
+) -> None:
+    """Incrementally add new pathway files to an existing MetaKG database.
+
+    Unlike ``build``, this command does not wipe the database first — it
+    merges newly parsed nodes and edges on top of the existing graph.  Use
+    this when you have added new KGML/SBML files and want to avoid a full
+    rebuild."""
+    data_dir = Path(data).resolve()
+    if not data_dir.exists():
+        raise click.ClickException(f"data directory not found: {data_dir}")
+
+    from metakg import MetaKG
+
+    kg = MetaKG(db_path=db, lancedb_dir=lancedb, model=model)
+    click.echo(f"Updating MetaKG from {data_dir} (no wipe)...", err=True)
+    stats = kg.build(
+        data_dir=data_dir,
+        wipe=False,
+        build_index=not no_index,
+        enrich=enrich,
+        enrich_data_dir=enrich_data,
+        seed_kinetics=not no_seed_kinetics,
+    )
+    click.echo(str(stats), err=True)
+
+    if stats.parse_errors:
+        click.echo(f"\n{len(stats.parse_errors)} file(s) failed to parse:", err=True)
+        for err in stats.parse_errors:
+            click.echo(f"  {err['file']}: {err['error']}", err=True)
+
+    kg.close()
+
+
 # ---------------------------------------------------------------------------
 # Standalone entry-point aliases (pyproject.toml [tool.poetry.scripts])
 # ---------------------------------------------------------------------------
 
 build_main = build
+update_main = update
 enrich_main = enrich

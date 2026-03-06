@@ -30,9 +30,12 @@ model_option = click.option(
 )
 
 wipe_option = click.option(
-    "--wipe",
+    "--no-wipe",
+    "wipe",
     is_flag=True,
-    help="Wipe existing data before building.",
+    flag_value=False,
+    default=True,
+    help="Skip wiping existing data before building (default: wipe).",
 )
 
 data_option = click.option(

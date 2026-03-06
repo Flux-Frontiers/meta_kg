@@ -29,7 +29,8 @@ poetry install --all-extras  # Full install with viz, viz3d, mcp
 
 | Command | Purpose |
 |---------|---------|
-| `metakg-build --data DIR [--wipe]` | Parse pathways → SQLite + LanceDB |
+| `metakg-build --data DIR` | Parse pathways → SQLite + LanceDB (wipes first by default) |
+| `metakg-update --data DIR` | Incrementally add new files without wiping |
 | `metakg-analyze [--output FILE]` | 7-phase pathway analysis |
 | `metakg-viz [--port 8500]` | 2D Streamlit explorer |
 | `metakg-viz3d [--layout allium\|cake]` | 3D PyVista visualization |
@@ -38,7 +39,7 @@ poetry install --all-extras  # Full install with viz, viz3d, mcp
 **Common options:**
 - `--db PATH`: SQLite db (default: `.metakg/meta.sqlite`)
 - `--lancedb PATH`: Vector index (default: `.metakg/lancedb`)
-- `--wipe`: Clear before building
+- `--no-wipe`: Keep existing data (default: wipe before build)
 - `--no-index`: Skip LanceDB (SQLite only)
 
 **MCP tools:** `query_pathway`, `get_compound`, `get_reaction`, `find_path`, `seed_kinetics`, `simulate_fba`, `simulate_ode`, `simulate_whatif`
@@ -154,7 +155,7 @@ python scripts/download_kegg_reactions.py \   # per-reaction detail with EC numb
   --kgml-dir data/hsa_pathways
 
 # 3. Build & analyze pathways
-poetry run metakg-build --data ./data/hsa_pathways --wipe
+poetry run metakg-build --data ./data/hsa_pathways
 
 # 4. (Optional) Enrich DB with reaction names & EC numbers
 poetry run metakg enrich --db .metakg/meta.sqlite

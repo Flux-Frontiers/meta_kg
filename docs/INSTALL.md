@@ -307,7 +307,8 @@ The build step parses all pathway files and writes the graph to SQLite + LanceDB
 metakg-build --data ./data/hsa_pathways
 ```
 
-This uses default paths: `.metakg/meta.sqlite` for SQLite and `.metakg/lancedb` for the vector index.
+This wipes any existing database and rebuilds from scratch using default paths:
+`.metakg/meta.sqlite` for SQLite and `.metakg/lancedb` for the vector index.
 
 ### Full build with all options
 
@@ -316,8 +317,7 @@ metakg-build \
   --data     ./data/hsa_pathways \
   --db       .metakg/meta.sqlite \
   --lancedb  .metakg/lancedb \
-  --model    all-MiniLM-L6-v2 \
-  --wipe
+  --model    all-MiniLM-L6-v2
 ```
 
 **Options:**
@@ -329,7 +329,7 @@ metakg-build \
 | `--lancedb PATH` | `.metakg/lancedb` | LanceDB vector index directory |
 | `--model NAME` | `all-MiniLM-L6-v2` | Sentence-transformer model for embeddings |
 | `--no-index` | off | Skip building the LanceDB vector index |
-| `--wipe` | off | Delete existing data before building |
+| `--no-wipe` | off | Keep existing data instead of wiping before build |
 | `--enrich` | off | Run name enrichment immediately after build |
 | `--enrich-data DIR` | `data/` | Directory containing KEGG name TSV files |
 
@@ -348,13 +348,16 @@ indexed     : 20151 vectors  dim=384
 
 ### Rebuilding
 
-The build is idempotent. Use `--wipe` to start fresh:
+The build wipes and rebuilds by default. To **add** new pathway files to an
+existing database without wiping, use `metakg-update` or pass `--no-wipe`:
 
 ```bash
-metakg-build --data ./data/hsa_pathways --wipe
-```
+# Merge new files into the existing graph
+metakg-update --data ./new_pathways
 
-Without `--wipe`, existing nodes and edges are merged (upserted).
+# Equivalent explicit flag on build
+metakg-build --data ./new_pathways --no-wipe
+```
 
 ---
 
@@ -403,7 +406,7 @@ Both phases are idempotent — safe to run multiple times.
 ### Combined build + enrich
 
 ```bash
-metakg-build --data ./data/hsa_pathways --enrich --wipe
+metakg-build --data ./data/hsa_pathways --enrich
 ```
 
 ---
@@ -658,10 +661,11 @@ git pull
 poetry update
 
 # Rebuild the knowledge graph after significant updates
-metakg-build --data ./data/hsa_pathways --wipe
+metakg-build --data ./data/hsa_pathways
 ```
 
-If the database schema has changed (check `CHANGELOG.md`), always rebuild with `--wipe` rather than merging into an old database.
+If the database schema has changed (check `CHANGELOG.md`), always use `metakg-build`
+(which wipes by default) rather than `metakg-update` to avoid merging into an old schema.
 
 ---
 
@@ -755,10 +759,10 @@ ls data/hsa_pathways/*.kgml | wc -l
 
 ### LanceDB index missing — semantic search returns no results
 
-The vector index must be built during `metakg-build`. If you used `--no-index`, rebuild without it:
+The vector index must be built during `metakg-build`. If you used `--no-index`, rebuild:
 
 ```bash
-metakg-build --data ./data/hsa_pathways --wipe
+metakg-build --data ./data/hsa_pathways
 ```
 
 ### ODE simulation hangs or fails with "repeated convergence failures"
@@ -815,7 +819,7 @@ poetry run python scripts/download_human_kegg.py --output data/hsa_pathways
 poetry run python scripts/download_kegg_names.py
 
 # 5. Build the knowledge graph with enrichment in one step
-metakg-build --data ./data/hsa_pathways --enrich --wipe
+metakg-build --data ./data/hsa_pathways --enrich
 
 # 6. Seed kinetic parameters from curated literature
 metakg-simulate seed

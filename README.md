@@ -53,7 +53,7 @@ poetry run python scripts/download_human_kegg.py --output data/hsa_pathways --dr
 
 ```bash
 # Parse pathway files and build the KG
-metakg-build --data ./data/hsa_pathways --db .metakg/meta.sqlite --lancedb .metakg/lancedb --wipe
+metakg-build --data ./data/hsa_pathways --db .metakg/meta.sqlite --lancedb .metakg/lancedb
 
 # Output:
 # Building MetaKG from ./data/hsa_pathways...
@@ -148,8 +148,7 @@ Parse pathway files and build the knowledge graph.
 metakg-build --data ./pathways \
              --db .metakg/meta.sqlite \
              --lancedb .metakg/lancedb \
-             --model all-MiniLM-L6-v2 \
-             --wipe
+             --model all-MiniLM-L6-v2
 
 Options:
   --data PATH              Directory containing pathway files (required)
@@ -157,7 +156,15 @@ Options:
   --lancedb PATH           LanceDB directory (default: .metakg/lancedb)
   --model NAME             Sentence-transformer model (default: all-MiniLM-L6-v2)
   --no-index               Skip building LanceDB vector index
-  --wipe                   Wipe existing data before building
+  --no-wipe                Skip wiping existing data (default: wipe before build)
+```
+
+### `metakg-update`
+
+Incrementally merge new pathway files into an existing database without wiping.
+
+```bash
+metakg-update --data ./new_pathways
 ```
 
 ### `metakg-viz`

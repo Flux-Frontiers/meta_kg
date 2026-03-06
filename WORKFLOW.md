@@ -22,7 +22,7 @@ wire_enzymes.py                ← one-time; already applied to data/hsa_pathway
 data/hsa_pathways/*.kgml  (patched)
      │
      ▼
-metakg-build --data data/hsa_pathways/  ← run once (or --wipe to rebuild)
+metakg-build --data data/hsa_pathways/  ← wipes and rebuilds by default
      │  KGMLParser → MetaNode/MetaEdge
      ├──► .metakg/meta.sqlite   (SQLite knowledge graph)
      └──► .metakg/lancedb/      (vector index for semantic search)
@@ -88,12 +88,14 @@ ingesting newly downloaded or refreshed KGML files.
 ## Phase 2 — Build Both Databases & Seed Kinetics
 
 ```bash
-# First build (creates .metakg/ automatically)
-# ✓ Builds SQLite + LanceDB + seeds kinetic parameters automatically
+# Full rebuild — wipes existing data first (default behaviour)
 metakg-build --data data/hsa_pathways/
 
-# Rebuild from scratch (drops existing data + re-seeds kinetics)
-metakg-build --data data/hsa_pathways/ --wipe
+# Incremental update — merge new files without wiping
+metakg-update --data data/hsa_pathways/
+
+# Keep existing data (equivalent to metakg-update; explicit flag)
+metakg-build --data data/hsa_pathways/ --no-wipe
 
 # Build without the LanceDB vector index (faster, no semantic search)
 metakg-build --data data/hsa_pathways/ --no-index
@@ -269,7 +271,7 @@ Exposes 9 tools to the connected agent:
 pip install metakg[simulate,mcp]
 
 # data/hsa_pathways/ already in repo — skip collect/wire if using available files
-metakg-build --data data/hsa_pathways/ --wipe
+metakg-build --data data/hsa_pathways/
 # ✓ Kinetic parameters are now seeded automatically during build
 metakg-analyze --output analysis.md
 metakg-simulate fba --pathway hsa00010 --output fba.md
