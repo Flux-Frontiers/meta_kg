@@ -3,6 +3,7 @@ Tests for code_kg.metakg.store — MetaStore SQLite persistence layer.
 """
 
 import json
+import sqlite3
 
 import pytest
 
@@ -11,6 +12,8 @@ from metakg.primitives import (
     KIND_ENZYME,
     KIND_PATHWAY,
     KIND_REACTION,
+    PATHWAY_CATEGORY_DISEASE,
+    PATHWAY_CATEGORY_METABOLIC,
     MetaEdge,
     MetaNode,
     node_id,
@@ -205,3 +208,87 @@ class TestFindPath:
         pwy_id = node_id(KIND_PATHWAY, "kegg", "hsa00010")
         result = store.find_shortest_path(glucose_id, pwy_id, max_hops=2)
         assert "error" in result
+
+
+class TestNodeCategory:
+    """Tests for category persistence and all_nodes(category=) filtering."""
+
+    def _pathway_with_category(self, cat: str | None) -> MetaNode:
+        suffix = cat or "none"
+        return MetaNode(
+            id=f"pwy:kegg:hsa_test_{suffix}",
+            kind=KIND_PATHWAY,
+            name=f"Test pathway {suffix}",
+            source_format="kgml",
+            category=cat,
+        )
+
+    def test_category_persisted_and_retrieved(self, store):
+        pwy = self._pathway_with_category(PATHWAY_CATEGORY_METABOLIC)
+        store.write([pwy], [])
+        row = store.node(pwy.id)
+        assert row is not None
+        assert row["category"] == PATHWAY_CATEGORY_METABOLIC
+
+    def test_category_none_persisted_as_null(self, store):
+        cpd = MetaNode(
+            id=node_id(KIND_COMPOUND, "kegg", "C00022"),
+            kind=KIND_COMPOUND,
+            name="Pyruvate",
+        )
+        store.write([cpd], [])
+        row = store.node(cpd.id)
+        assert row["category"] is None
+
+    def test_all_nodes_filter_by_category(self, store):
+        m = self._pathway_with_category(PATHWAY_CATEGORY_METABOLIC)
+        d = self._pathway_with_category(PATHWAY_CATEGORY_DISEASE)
+        store.write([m, d], [])
+        metabolic = store.all_nodes(category=PATHWAY_CATEGORY_METABOLIC)
+        assert len(metabolic) == 1
+        assert metabolic[0]["id"] == m.id
+
+    def test_all_nodes_filter_kind_and_category(self, store):
+        m_pwy = self._pathway_with_category(PATHWAY_CATEGORY_METABOLIC)
+        cpd = MetaNode(
+            id=node_id(KIND_COMPOUND, "kegg", "C00031"),
+            kind=KIND_COMPOUND,
+            name="D-Glucose",
+        )
+        store.write([m_pwy, cpd], [])
+        result = store.all_nodes(kind=KIND_PATHWAY, category=PATHWAY_CATEGORY_METABOLIC)
+        assert len(result) == 1
+        assert result[0]["kind"] == KIND_PATHWAY
+
+    def test_all_nodes_no_filter_returns_all(self, store):
+        nodes = _make_nodes()
+        store.write(nodes, [])
+        all_n = store.all_nodes()
+        assert len(all_n) == len(nodes)
+
+    def test_migration_adds_category_column_to_existing_db(self, tmp_path):
+        """Opening an old DB without the category column should auto-migrate."""
+        db_path = tmp_path / "legacy.sqlite"
+        # Create an old-style DB without the category column
+        conn = sqlite3.connect(str(db_path))
+        conn.execute(
+            """
+            CREATE TABLE meta_nodes (
+                id TEXT PRIMARY KEY, kind TEXT NOT NULL, name TEXT NOT NULL,
+                description TEXT, formula TEXT, charge INTEGER,
+                ec_number TEXT, stoichiometry TEXT, xrefs TEXT,
+                source_format TEXT, source_file TEXT
+            )
+            """
+        )
+        conn.execute("INSERT INTO meta_nodes (id, kind, name) VALUES ('x', 'compound', 'X')")
+        conn.commit()
+        conn.close()
+
+        # Open via MetaStore — migration should add the column
+        store = MetaStore(db_path)
+        row = store.node("x")
+        assert row is not None
+        assert "category" in row
+        assert row["category"] is None
+        store.close()

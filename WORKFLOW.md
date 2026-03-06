@@ -22,7 +22,7 @@ wire_enzymes.py                ← one-time; already applied to data/hsa_pathway
 data/hsa_pathways/*.kgml  (patched)
      │
      ▼
-metakg-build --data data/hsa_pathways/  ← run once (or --wipe to rebuild)
+metakg-build --data data/hsa_pathways/  ← wipes and rebuilds by default
      │  KGMLParser → MetaNode/MetaEdge
      ├──► .metakg/meta.sqlite   (SQLite knowledge graph)
      └──► .metakg/lancedb/      (vector index for semantic search)
@@ -70,28 +70,38 @@ After downloading fresh KGML files, re-run the enzyme wiring step:
 
 ```bash
 # Inject enzyme="N" attributes so the parser can emit CATALYZES edges
-python scripts/wire_enzymes.py
+python scripts/wire_kegg_enzymes.py
+
+# Dry-run to preview changes without writing
+python scripts/wire_kegg_enzymes.py --data data/hsa_pathways --dry-run
 ```
 
-`wire_enzymes.py` is a one-time data-preparation tool.  It adds a MetaKG
-extension attribute (`enzyme="N"`) to each `<reaction>` element, linking it
-to the catalysing gene entry by KGML integer ID.  The patch has already been
-applied to all files currently in `data/hsa_pathways/` — only re-run it when ingesting
-newly downloaded or refreshed KGML files.
+`wire_kegg_enzymes.py` is a one-time data-preparation tool.  It scans all
+KGML files and patches `<reaction>` elements that have no enzyme coverage by
+adding an `enzyme="N"` attribute pointing to the correct gene/ortholog entry
+ID, which lets the parser emit CATALYZES edges.  The patch has already been
+applied to all files currently in `data/hsa_pathways/` — only re-run it when
+ingesting newly downloaded or refreshed KGML files.
 
 ---
 
-## Phase 2 — Build Both Databases
+## Phase 2 — Build Both Databases & Seed Kinetics
 
 ```bash
-# First build (creates .metakg/ automatically)
+# Full rebuild — wipes existing data first (default behaviour)
 metakg-build --data data/hsa_pathways/
 
-# Rebuild from scratch (drops existing data)
-metakg-build --data data/hsa_pathways/ --wipe
+# Incremental update — merge new files without wiping
+metakg-update --data data/hsa_pathways/
+
+# Keep existing data (equivalent to metakg-update; explicit flag)
+metakg-build --data data/hsa_pathways/ --no-wipe
 
 # Build without the LanceDB vector index (faster, no semantic search)
 metakg-build --data data/hsa_pathways/ --no-index
+
+# Skip kinetic seeding (rarely needed)
+metakg-build --data data/hsa_pathways/ --no-seed-kinetics
 
 # Custom paths or embedding model
 metakg-build --data data/hsa_pathways/ \
@@ -100,7 +110,12 @@ metakg-build --data data/hsa_pathways/ \
              --model all-MiniLM-L6-v2
 ```
 
-Both the SQLite graph and LanceDB vector index are built by default.
+By default, `metakg-build` automatically:
+1. Parses pathway KGML files → SQLite graph
+2. Builds xref index
+3. Builds LanceDB vector index (if `--no-index` not set)
+4. **Seeds kinetic parameters from literature** (if `--no-seed-kinetics` not set)
+
 The build prints a stat block on completion:
 
 ```
@@ -109,28 +124,27 @@ edges: 891 (SUBSTRATE_OF: 234, PRODUCT_OF: 234, CATALYZES: 87, CONTAINS: 336)
 xref_index: 621 rows
 lancedb: 255 rows indexed (dim=384)
 parse_errors: 0
+kinetic_parameters: 26 rows
+regulatory_interactions: 13 rows
 ```
 
 ---
 
-## Phase 3 — Seed Kinetic Parameters
+## Phase 3 — Manual Kinetic Parameter Updates (Optional)
+
+If you need to re-seed or force-overwrite kinetic parameters:
 
 ```bash
-# Populate from curated literature values (safe to run multiple times)
-metakg-simulate seed
-
 # Overwrite existing rows (use after updating kinetics_fetch.py)
 metakg-simulate seed --force
 ```
 
-This populates two tables in the SQLite database:
+Kinetics are automatically populated with 26 key reactions and 13 allosteric regulatory rules from curated literature sources (Mulquiney & Kuchel, BRENDA, eQuilibrator).
 
 | Table | Content |
 |-------|---------|
-| `kinetic_parameters` | Km, kcat, Vmax, Ki, ΔG°', Keq for 26 key reactions |
-| `regulatory_interactions` | 13 allosteric rules (PFK, PK, HK, CS, IDH, G6PD) |
-
-Run once after every `metakg-build --wipe`.
+| `kinetic_parameters` | Km, kcat, Vmax, Ki, ΔG°', Keq |
+| `regulatory_interactions` | Allosteric rules (PFK, PK, HK, CS, IDH, G6PD) |
 
 ---
 
@@ -257,8 +271,8 @@ Exposes 9 tools to the connected agent:
 pip install metakg[simulate,mcp]
 
 # data/hsa_pathways/ already in repo — skip collect/wire if using available files
-metakg-build --data data/hsa_pathways/ --wipe
-metakg-simulate seed
+metakg-build --data data/hsa_pathways/
+# ✓ Kinetic parameters are now seeded automatically during build
 metakg-analyze --output analysis.md
 metakg-simulate fba --pathway hsa00010 --output fba.md
 metakg-mcp

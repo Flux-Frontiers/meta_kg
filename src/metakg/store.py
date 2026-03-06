@@ -47,7 +47,8 @@ CREATE TABLE IF NOT EXISTS meta_nodes (
     stoichiometry TEXT,
     xrefs         TEXT,
     source_format TEXT,
-    source_file   TEXT
+    source_file   TEXT,
+    category      TEXT
 );
 
 CREATE TABLE IF NOT EXISTS meta_edges (
@@ -129,13 +130,22 @@ class MetaStore:
         """
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(str(self.db_path))
+        self._conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._apply_schema()
 
     def _apply_schema(self) -> None:
         self._conn.executescript(_SCHEMA_SQL)
         self._conn.commit()
+        self._migrate()
+
+    def _migrate(self) -> None:
+        """Apply incremental schema additions to existing databases."""
+        cur = self._conn.execute("PRAGMA table_info(meta_nodes)")
+        existing_cols = {row[1] for row in cur.fetchall()}
+        if "category" not in existing_cols:
+            self._conn.execute("ALTER TABLE meta_nodes ADD COLUMN category TEXT")
+            self._conn.commit()
 
     # ------------------------------------------------------------------
     # Write
@@ -174,6 +184,7 @@ class MetaStore:
                 n.xrefs,
                 n.source_format,
                 n.source_file,
+                n.category,
             )
             for n in nodes
         ]
@@ -181,8 +192,8 @@ class MetaStore:
             """
             INSERT OR REPLACE INTO meta_nodes
             (id, kind, name, description, formula, charge, ec_number,
-             stoichiometry, xrefs, source_format, source_file)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?)
+             stoichiometry, xrefs, source_format, source_file, category)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             node_rows,
         )
@@ -406,7 +417,12 @@ class MetaStore:
                 if enz:
                     enzymes.append({**enz, "role": edge["rel"]})
 
-        return {**rxn, "substrates": substrates, "products": products, "enzymes": enzymes}
+        return {
+            **rxn,
+            "substrates": substrates,
+            "products": products,
+            "enzymes": enzymes,
+        }
 
     def find_shortest_path(
         self,
@@ -448,12 +464,14 @@ class MetaStore:
                 return []
             if node["kind"] == "compound":
                 cur = self._conn.execute(
-                    "SELECT dst FROM meta_edges WHERE src=? AND rel='SUBSTRATE_OF'", (nid,)
+                    "SELECT dst FROM meta_edges WHERE src=? AND rel='SUBSTRATE_OF'",
+                    (nid,),
                 )
                 return [r[0] for r in cur.fetchall()]
             if node["kind"] == "reaction":
                 cur = self._conn.execute(
-                    "SELECT dst FROM meta_edges WHERE src=? AND rel='PRODUCT_OF'", (nid,)
+                    "SELECT dst FROM meta_edges WHERE src=? AND rel='PRODUCT_OF'",
+                    (nid,),
                 )
                 return [r[0] for r in cur.fetchall()]
             return []
@@ -465,12 +483,14 @@ class MetaStore:
                 return []
             if node["kind"] == "compound":
                 cur = self._conn.execute(
-                    "SELECT src FROM meta_edges WHERE dst=? AND rel='PRODUCT_OF'", (nid,)
+                    "SELECT src FROM meta_edges WHERE dst=? AND rel='PRODUCT_OF'",
+                    (nid,),
                 )
                 return [r[0] for r in cur.fetchall()]
             if node["kind"] == "reaction":
                 cur = self._conn.execute(
-                    "SELECT src FROM meta_edges WHERE dst=? AND rel='SUBSTRATE_OF'", (nid,)
+                    "SELECT src FROM meta_edges WHERE dst=? AND rel='SUBSTRATE_OF'",
+                    (nid,),
                 )
                 return [r[0] for r in cur.fetchall()]
             return []
@@ -559,17 +579,24 @@ class MetaStore:
             "edge_counts": edge_counts,
         }
 
-    def all_nodes(self, *, kind: str | None = None) -> list[dict]:
+    def all_nodes(self, *, kind: str | None = None, category: str | None = None) -> list[dict]:
         """
-        Return all nodes, optionally filtered by kind.
+        Return all nodes, optionally filtered by kind and/or category.
 
         :param kind: If provided, only nodes of this kind are returned.
+        :param category: If provided, only nodes with this category are returned.
         :return: List of node dicts.
         """
+        conditions: list[str] = []
+        params: list[str] = []
         if kind:
-            cur = self._conn.execute("SELECT * FROM meta_nodes WHERE kind=?", (kind,))
-        else:
-            cur = self._conn.execute("SELECT * FROM meta_nodes")
+            conditions.append("kind=?")
+            params.append(kind)
+        if category:
+            conditions.append("category=?")
+            params.append(category)
+        where = f" WHERE {' AND '.join(conditions)}" if conditions else ""
+        cur = self._conn.execute(f"SELECT * FROM meta_nodes{where}", params)
         return [dict(r) for r in cur.fetchall()]
 
     # ------------------------------------------------------------------
@@ -858,16 +885,16 @@ class GraphStore(MetaStore):
         """
         return self.node(node_id)
 
-    def query_semantic(self, query: str, k: int = 10) -> list[dict]:
+    def query_text(self, query: str, k: int = 10) -> list[dict]:
         """
-        Perform a semantic search query using LanceDB embeddings.
+        Find nodes by substring match on name and description fields.
 
-        This is a simplified stub that returns nodes by name/description match.
-        For full semantic search, integrate with MetaIndex.
+        Text-filter fallback for the Streamlit visualiser.  For true semantic
+        (vector) search use :class:`~metakg.index.MetaIndex`.
 
-        :param query: Query string.
-        :param k: Number of results to return.
-        :return: List of node dicts sorted by relevance.
+        :param query: Query string (case-insensitive substring match).
+        :param k: Maximum number of results to return.
+        :return: List of node dicts sorted by relevance (name match > description match).
         """
         # Simple text-based search if embeddings are not available
         query_lower = query.lower()

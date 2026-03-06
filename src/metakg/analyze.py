@@ -50,7 +50,7 @@ from __future__ import annotations
 import sqlite3
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -704,7 +704,7 @@ class PathwayAnalyzer:
 
         return PathwayAnalysisReport(
             db_path=str(self.db_path),
-            generated_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+            generated_at=datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC"),
             total_nodes=total_nodes,
             total_edges=total_edges,
             node_counts=node_counts,

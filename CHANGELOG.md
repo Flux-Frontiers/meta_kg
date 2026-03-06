@@ -7,6 +7,129 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Pathway category provenance** (`src/metakg/primitives.py`) — New `category` field on `MetaNode` and 8 `PATHWAY_CATEGORY_*` constants (`metabolic`, `transport`, `genetic_info_processing`, `signaling`, `cellular_process`, `organismal_system`, `human_disease`, `drug_development`), derived from the 5-digit KEGG numeric suffix via `_kegg_pathway_category()`. All 369 human pathways are categorized after a fresh build.
+
+- **Category persistence in SQLite** (`src/metakg/store.py`) — `category TEXT` column added to `meta_nodes` schema. `_migrate()` runs on every open and transparently adds the column to existing databases via `ALTER TABLE`. `all_nodes()` now accepts an optional `category=` filter alongside the existing `kind=` filter.
+
+- **Category set in KGML parser** (`src/metakg/parsers/kgml.py`) — `_kegg_pathway_category()` is called when constructing each pathway `MetaNode` so category is populated at parse time.
+
+- **Strategy C enzyme wiring** (`src/metakg/parsers/kgml.py`) — New fallback wiring strategy reads the `reaction=` attribute on gene/ortholog `<entry>` elements to link enzymes to reactions when Strategies A and B fail. Eliminates the last class of unwired enzymes in real KEGG KGML files.
+
+- **CONTAINS fallback for isolated nodes** (`src/metakg/parsers/kgml.py`) — Gene, ortholog, and compound entries that are not wired into any reaction are now connected to their pathway node via `CONTAINS` edges, reducing isolated node count from 12,245 → 0.
+
+- **Agent slash commands** — New `.claude/commands/` entries (`metakg-build.md`, `metakg-simulate.md`, `metakg-viz.md`) and matching `.vscode/*.prompt.md` prompt files for all core MetaKG and CodeKG workflows.
+
+- **`SESSION-NOTES-2026-03-06.md`** — Handoff document summarising all changes made in this session for the next agent/developer.
+
+### Changed
+
+- **Enrichment default-on** (`src/metakg/cli/cmd_build.py`, `src/metakg/orchestrator.py`) — `--enrich` flag renamed to `--no-enrich` (inverted logic). Enrichment now runs by default on both `metakg-build` and `metakg-update`. `MetaKG.build(enrich=False)` default changed to `True`.
+
+- **CLAUDE.md updated** — CodeKG Commands section reverted to `codekg-*` standalone command style; Typical Workflow section updated to invoke commands directly (no `poetry run` prefix needed in activated venv).
+
+### Fixed
+
+- **`all_nodes()` category filter** (`src/metakg/store.py`) — Query now builds WHERE clause dynamically to support combined `kind` + `category` filtering without SQL injection risk.
+
+---
+
+### Changed
+
+- **`metakg-build` default behavior** — Now wipes existing database and vector index by default (safer, more predictable). Use `--no-wipe` flag to add files incrementally instead of replacing.
+  - Renamed `--wipe` flag → `--no-wipe` (inverted logic, default=True)
+  - Updated docstring to clarify wipe-by-default behavior
+  - Updated all documentation (CLAUDE.md, README.md, WORKFLOW.md) to reflect new defaults
+- **New `metakg-update` command** (`src/metakg/cli/cmd_build.py`) — Convenience alias for `metakg-build --no-wipe`. Provides explicit intent: incrementally merge new pathway files into an existing database without wiping. Supports the same enrichment and kinetics-seeding options as `build`.
+- **CLI option definition refactored** (`src/metakg/cli/options.py`) — `wipe_option` now uses Click's `flag_value=False, default=True` pattern for better clarity in inverted flags.
+
+### Added
+
+- **Enhanced 3D visualization CLI options** (`src/metakg/cli/cmd_viz3d.py`) — `metakg-viz3d` now supports:
+  - `--layout {allium|cake}` — Select spatial layout strategy (Hub-spoke Allium vs concentric LayerCake)
+  - `--width` / `--height` — Configure window dimensions (1400x900 default)
+  - `--export-html PATH` / `--export-png PATH` — Batch export to file instead of interactive window
+  - Improved error handling: check database existence before launching visualizer
+
+- **Improved Fibonacci disk layout algorithm** (`src/metakg/layout3d.py`) — Renamed `_golden_spiral_2d()` → `fibonacci_disk()` for clarity; enhanced docstrings. Tuned LayerCake parameters: layer gap 12→6 (tighter), disc radius 28→35 (wider), minimum spread 4→20 (prevent clamping on small pathways). Enzyme nodes moved to Z-level 3 (separate from compounds).
+
+- **3D Visualization Documentation** (`CLAUDE.md`) — New section covering layout modes, in-UI controls (pathway filter, layout selector, visibility toggles), and recommended workflow.
+
+- **Data Download Scripts Reference** (`CLAUDE.md`) — Documented all three KEGG download scripts with options and output formats. Clarified single-step vs multi-step enrichment pipelines.
+
+- **`scripts/download_kegg_reactions.py`** — New script for bulk downloading KEGG reaction details (name, definition, equation, EC numbers). Supports scanning local KGML files for reaction IDs (faster) or querying KEGG link endpoint. Output: `data/kegg_reaction_detail.tsv`.
+
+- **MetaKG Architecture Article** (`article/metakg_article.md`) — Comprehensive article explaining dual-layer architecture (SQLite + LanceDB), four query modalities, and comparison with existing systems (KEGG, BioCyc, Reactome, etc.).
+
+- **Architecture Infographic Guide** (`article/metakg_architecture_infographic.md`) — Visual walkthrough of system components and data flow.
+
+- **`metakg` unified CLI entry point** (`pyproject.toml`, `src/metakg/cli/main.py`) — New top-level `metakg` command registered as a `@click.group()` with `--version` support. All subcommands (`build`, `enrich`, `analyze`, `analyze-basic`, `simulate`, `mcp`, `viz`, `viz3d`) are accessible as `metakg <subcommand>` in addition to the existing standalone `metakg-*` aliases.
+
+- **`docs/INSTALL.md`** — New comprehensive step-by-step installation guide covering all install variants (core, simulate, viz, viz3d, biopax, all-extras), pathway data download, graph build, name enrichment, kinetics seeding, MCP server startup, web explorer, 3D visualizer, dev install, environment variables, upgrading, and troubleshooting.
+
+- **`docs/MCP.md`** — New guide for integrating the CodeKG MCP server with Claude Code, Claude Desktop, GitHub Copilot, and Cline; covers quick-start, per-repo `.mcp.json` / `.vscode/mcp.json` configuration, and available MCP tools.
+
+### Changed
+
+- **CLI refactored from monolithic `cli.py` to `cli/` package** (`src/metakg/cli/`) — The 642-line `src/metakg/cli.py` has been replaced by a proper package where each command group lives in its own module. All existing entry-point names and CLI behaviour are preserved.
+  - `cli/__init__.py` — re-exports the root `cli` group and all standalone entry-point aliases
+  - `cli/main.py` — root `@click.group()` with `--version`
+  - `cli/options.py` — shared reusable Click option decorators (`db_option`, `lancedb_option`, `model_option`, `wipe_option`, `data_option`)
+  - `cli/_utils.py` — shared helpers: `_timestamped_filename()`, `_parse_conc_args()`, `_parse_factor_args()`, `_write_output()`
+  - `cli/cmd_analyze.py` — `metakg analyze` / `metakg analyze-basic`
+  - `cli/cmd_build.py` — `metakg build` / `metakg enrich`
+  - `cli/cmd_mcp.py` — `metakg mcp`
+  - `cli/cmd_simulate.py` — `metakg simulate {fba,ode,whatif,seed}`
+  - `cli/cmd_viz.py` — `metakg viz`
+  - `cli/cmd_viz3d.py` — `metakg viz3d`
+
+- **`mcp` promoted to core dependency** (`pyproject.toml`) — `mcp >= 1.0.0` moved from the optional `[mcp]` extra to the core dependency list; the MCP server is now always available without extra install flags. The `[mcp]` extra has been removed; `[viz3d]` and `[all]` extras updated accordingly. `param` optional dependency removed (no longer needed).
+
+- **`mcp_tools.py` import guard removed** — Defensive `try/except ImportError` around `FastMCP` import eliminated now that `mcp` is a core dependency.
+
+- **`docs/CAPABILITIES.md` dependency tables updated** — `mcp` moved to core dependencies table; `[mcp]` extra row removed; `[viz3d]` extra updated with pinned minimum versions (`pyvista >= 0.44.0`, `pyvistaqt >= 0.11.0`, `PyQt5 >= 5.15.0`); install examples updated to reflect new extras layout; link to `docs/INSTALL.md` added.
+
+### Added
+
+- **Name enrichment pipeline** (`src/metakg/enrich.py`) — New module that replaces bare KEGG accessions (`C00031`, `R00710`) with human-readable names stored directly in `meta_nodes.name`. Phase 1 (no network): derives reaction labels from catalysing enzyme gene symbols via `CATALYZES` edges (e.g. `R00710` → `ADH1A / ADH1B / ADH1C`). Phase 2 (requires TSV files): updates compound and reaction names from downloaded KEGG name lists. Both phases are idempotent.
+
+- **`metakg-enrich` CLI command** (`src/metakg/cli.py`, `pyproject.toml`) — Standalone Click command for running name enrichment against an existing database: `metakg-enrich [--db PATH] [--data DIR]`. Also integrated as `--enrich` / `--enrich-data` flags on `metakg-build` for a single-step build+enrich workflow.
+
+- **`scripts/download_kegg_names.py`** — New bulk-download script that fetches the KEGG compound list (~19 500 entries) and reaction list (~12 400 entries) from `rest.kegg.jp/list/` and saves them as `data/kegg_compound_names.tsv` / `data/kegg_reaction_names.tsv`. Supports `--data DIR`, `--force`, `--quiet`; includes 1-second courtesy pause between requests per KEGG policy.
+
+- **`data/kegg_compound_names.tsv` / `data/kegg_reaction_names.tsv`** — Bulk KEGG name lookup tables (19 571 compounds, 12 384 reactions) committed to the repository; used by `metakg-enrich` Phase 2 and available for offline enrichment without re-downloading.
+
+- **`MetaKG.enrich()` public method** (`src/metakg/orchestrator.py`) — Exposes enrichment via the high-level orchestrator: `kg.enrich(data_dir=None) → EnrichStats`. `build()` gains `enrich=False` and `enrich_data_dir=None` parameters.
+
+### Changed
+
+- **CLI fully migrated from argparse to Click** (`src/metakg/cli.py`) — All CLI commands rewritten with Click decorators (`@click.command`, `@click.group`, `@click.option`). `metakg-simulate` is now a `@click.group()` with shared `--db/--output/--plain/--top` options passed via `ctx.obj` to `fba`, `ode`, `whatif`, and `seed` subcommands. Error handling uses `raise click.ClickException(msg)` and `click.echo(..., err=True)`. Every command and subcommand now supports `--help` automatically. `click >= 8.0` added as a core dependency.
+
+- **`docs/CAPABILITIES.md` updated to v0.2.0** — Added §5 (Name Enrichment) covering both enrichment phases, download script, CLI, and Python API. Updated ODE solver documentation from RK45 to BDF throughout with stiffness warning. Added `ode_method`, `ode_rtol`, `ode_atol`, `ode_max_step` fields to `SimulationConfig` reference. Added `click`, `matplotlib`, and `pandas` to dependency tables. Added `metakg-enrich` to CLI reference.
+
+- **Optional viz dependencies expanded** (`pyproject.toml`) — `matplotlib >= 3.8.0` and `pandas >= 2.0.0` added as optional dependencies, included in the `[viz]` and `[all]` extras.
+
+### Fixed
+
+- **SQLite threading error in Streamlit** (`src/metakg/store.py`) — `sqlite3.connect()` now passes `check_same_thread=False`, resolving "SQLite objects created in a thread can only be used in that same thread" errors that occurred when the Streamlit app cached a connection via `@st.cache_resource` and served requests from worker threads.
+
+### Changed
+
+- **`store.query_semantic()` renamed to `query_text()`** (`src/metakg/store.py`, `src/metakg/app.py`) — Method renamed to accurately reflect that it performs a text-based substring match, not a true semantic/vector search; semantic search remains in `MetaIndex`. Docstring updated to clarify the distinction and direct users to `MetaIndex` for embedding-based queries.
+
+- **CLI `simulate_main()` uses `MetaKG` orchestrator** (`src/metakg/cli.py`) — `seed`, `fba`, `ode`, and `whatif` subcommands now instantiate `MetaKG` via `with MetaKG(db_path=...) as kg:` instead of directly importing `MetaStore` and `MetabolicSimulator`. Brings CLI in line with the public API surface.
+
+- **MCP tool handlers extracted to module-level functions** (`src/metakg/mcp_tools.py`) — All per-tool logic moved from closures inside `register_tools()` to standalone `_mcp_*()` functions at module level, making them unit-testable without a live FastMCP instance. `register_tools()` now delegates to these functions and copies docstrings for MCP schema generation.
+
+- **WORKFLOW.md updated for `wire_kegg_enzymes.py`** — References to the old `wire_enzymes.py` replaced; description expanded to cover the scanning/patching approach and `--dry-run` flag.
+
+### Removed
+
+- **`pathways/` sample KGML files** (`pathways/hsa00010.xml` – `hsa00650.xml`) — 11 hand-authored KGML fixtures removed from version control; real pathway data lives in `data/hsa_pathways/` (not tracked).
+
+- **`scripts/wire_enzymes.py`** — Hardcoded one-shot enzyme wiring script retired; superseded by the more general `scripts/wire_kegg_enzymes.py` (which auto-detects missing enzyme coverage across all KGML files).
+
 ### Fixed
 
 - **KGML multi-gene entry grouping** (`src/metakg/parsers/kgml.py`) — A single KGML `<entry type="gene">` often lists multiple gene IDs (e.g. pyruvate dehydrogenase complex `hsa:5160 hsa:5161 hsa:5162`). The previous parser created one enzyme node per gene but only wired the last-processed gene to its reaction via a CATALYZES edge, leaving all others as orphaned nodes with no edges. Fix: create one canonical group node per entry (keyed on the first gene ID, labelled with KEGG graphics name); all member gene IDs stored as a list in the node's `xrefs` JSON; `entry_map` points to the single node so CATALYZES wiring is correct and complete. Effect across full human KEGG dataset: ~1,797 fewer enzyme nodes, CATALYZES edge count unchanged at 4,165, ~5,255 previously orphaned enzyme nodes eliminated.
@@ -58,6 +181,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Fixed
+
+- **Name enrichment Phase 2 now loads canonical KEGG reaction names** (`src/metakg/enrich.py`) — The enrichment pipeline had an architectural flaw: Phase 1 would rename reactions from bare accessions (e.g., `R00710`) to gene symbols (e.g., `ADH1A / ADH1B / ADH1C`), then Phase 2 would skip them because it only recognized bare accessions, preventing 1,771 canonical KEGG reaction function names from ever being loaded. Fixed by extracting the KEGG accession directly from the immutable node ID (format: `rxn:kegg:R00710`) instead of relying on the volatile `name` field. This implements the intended **dual-layer design**: Phase 2 now always overrides Phase 1, ensuring canonical structural names take priority over enriched gene labels. Phase 1 names are preserved only when no canonical KEGG name exists. Result: 1,771 additional reaction names now loaded (was 0 before). Example: `R00710` now displays as `"acetaldehyde:NAD+ oxidoreductase"` instead of gene symbols.
+
+- **3D visualization now displays KEGG reaction function names in enzyme sidebar** (`src/metakg/viz3d.py`) — When picking an enzyme node, the sidebar now shows the reactions it catalyzes with their canonical KEGG function names (e.g., `"alcohol dehydrogenase (NAD+)"`, `"3-ketosteroid 1-dehydrogenase"`). This is now possible thanks to the enrichment fix above. Changes: (1) Load KEGG reaction names TSV at startup (lines 154–173), (2) Update enzyme display to show catalyzed reactions with KEGG function names (lines 252–280), (3) Gracefully fallback to bare accession if no KEGG name available, (4) Clarify labels: `"Enzyme"` → `"Gene symbol"` for clarity. This fixes the user request: instead of bare gene symbols like `ADH1A`, the sidebar now describes what each enzyme does.
 
 - **Pylint configuration and test fixture naming** (`.pylintrc`, `tests/test_simulation.py`) — Created `.pylintrc` with proper configuration for the codebase; fixed unrecognized `max-lines` option (changed to `max-module-lines`). Renamed fixture `kg_with_minimal_pathway` to `kkg_with_minimal_pathway` to eliminate false pylint `redefined-outer-name` warnings in pytest test functions.
 

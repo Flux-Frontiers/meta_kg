@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
 
+from metakg.enrich import EnrichStats
+from metakg.enrich import enrich as _enrich
 from metakg.graph import MetabolicGraph
 from metakg.index import MetaIndex
 from metakg.kinetics_fetch import seed_kinetics as _seed_kinetics
@@ -60,10 +62,11 @@ class MetabolicBuildStats:
     indexed_rows: int | None = None
     index_dim: int | None = None
     parse_errors: list[dict] | None = None
+    enrich_stats: EnrichStats | None = None
 
     def to_dict(self) -> dict:
         """Serialise to a plain dict."""
-        return {
+        d = {
             "data_root": self.data_root,
             "db_path": self.db_path,
             "total_nodes": self.total_nodes,
@@ -75,6 +78,13 @@ class MetabolicBuildStats:
             "index_dim": self.index_dim,
             "parse_errors": self.parse_errors or [],
         }
+        if self.enrich_stats is not None:
+            d["enrich_stats"] = {
+                "reactions_from_graph": self.enrich_stats.reactions_from_graph,
+                "compounds_from_tsv": self.enrich_stats.compounds_from_tsv,
+                "reactions_from_tsv": self.enrich_stats.reactions_from_tsv,
+            }
+        return d
 
     def __str__(self) -> str:
         lines = [
@@ -86,6 +96,8 @@ class MetabolicBuildStats:
         ]
         if self.indexed_rows is not None:
             lines.append(f"indexed     : {self.indexed_rows} vectors  dim={self.index_dim}")
+        if self.enrich_stats is not None:
+            lines.append(f"enriched    : {self.enrich_stats}")
         if self.parse_errors:
             lines.append(f"parse_errors: {len(self.parse_errors)}")
         return "\n".join(lines)
@@ -254,14 +266,24 @@ class MetaKG:
         *,
         wipe: bool = False,
         build_index: bool = True,
+        enrich: bool = True,
+        enrich_data_dir: str | Path | None = None,
+        seed_kinetics: bool = True,
     ) -> MetabolicBuildStats:
         """
-        Full pipeline: parse → SQLite → LanceDB.
+        Full pipeline: parse → SQLite → enrich → LanceDB → seed kinetics.
 
         :param data_dir: Directory of pathway files.  If omitted, only the
             SQLite → LanceDB step is run (useful for re-indexing existing data).
         :param wipe: Clear existing data before writing.
         :param build_index: Whether to build the LanceDB vector index.
+        :param enrich: Run name enrichment after parsing (Phase 1 always; Phase
+            2 if KEGG name TSV files are present in *enrich_data_dir*).
+        :param enrich_data_dir: Directory containing ``kegg_compound_names.tsv``
+            and ``kegg_reaction_names.tsv``.  Defaults to the repo-level
+            ``data/`` directory.
+        :param seed_kinetics: Populate kinetic parameters from literature
+            after building. Safe to call multiple times (idempotent by default).
         :return: :class:`MetabolicBuildStats`.
         """
         parse_errors: list[dict] = []
@@ -274,6 +296,11 @@ class MetaKG:
             self.store.write(nodes, edges, wipe=wipe)
 
         xref_rows = self.store.build_xref_index()
+
+        enrich_result: EnrichStats | None = None
+        if enrich:
+            enrich_result = _enrich(self.store, enrich_data_dir)
+
         s = self.store.stats()
 
         idx_rows: int | None = None
@@ -282,6 +309,9 @@ class MetaKG:
             idx_stats = self.index.build(self.store, wipe=wipe)
             idx_rows = idx_stats["indexed_rows"]
             idx_dim = idx_stats["dim"]
+
+        if seed_kinetics:
+            self.seed_kinetics(force=wipe)
 
         return MetabolicBuildStats(
             data_root=str(data_dir) if data_dir else "",
@@ -294,7 +324,22 @@ class MetaKG:
             indexed_rows=idx_rows,
             index_dim=idx_dim,
             parse_errors=parse_errors,
+            enrich_stats=enrich_result,
         )
+
+    def enrich(self, data_dir: str | Path | None = None) -> EnrichStats:
+        """
+        Enrich node names in the existing graph without rebuilding.
+
+        Runs Phase 1 (reaction labels from CATALYZES edges) and, if KEGG name
+        TSV files are present, Phase 2 (compound and reaction names from
+        downloaded KEGG lists).
+
+        :param data_dir: Directory containing ``kegg_compound_names.tsv`` and
+            ``kegg_reaction_names.tsv``.  Defaults to the repo-level ``data/``.
+        :return: :class:`~metakg.enrich.EnrichStats` with counts of updates.
+        """
+        return _enrich(self.store, data_dir)
 
     # ------------------------------------------------------------------
     # Query

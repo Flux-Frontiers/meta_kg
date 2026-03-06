@@ -9,20 +9,20 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
         args: [--maxkb=1000]
-        exclude: '^(docs|article)/.*\.(png|jpg|jpeg|gif|pdf)$|^\.codekg/'
+        exclude: '^(docs|article)/.*\.(png|jpg|jpeg|gif|pdf)$|^\.codekg/|^data/kegg_.*\.tsv$'
       - id: debug-statements
 
   - repo: local
     hooks:
       - id: mypy
         name: mypy
-        entry: poetry run mypy src/
+        entry: /Users/egs/.local/bin/poetry run mypy src/
         language: system
         pass_filenames: false
         always_run: true
       - id: pytest
         name: pytest
-        entry: poetry run pytest --tb=short -q
+        entry: /Users/egs/.local/bin/poetry run pytest --tb=short -q
         language: system
         pass_filenames: false
         always_run: true

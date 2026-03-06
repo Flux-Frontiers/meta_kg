@@ -8,13 +8,21 @@ import textwrap
 
 import pytest
 
-from metakg.primitives import KIND_COMPOUND, KIND_ENZYME, KIND_PATHWAY, KIND_REACTION
+from metakg.primitives import (
+    KIND_COMPOUND,
+    KIND_ENZYME,
+    KIND_PATHWAY,
+    KIND_REACTION,
+    PATHWAY_CATEGORY_METABOLIC,
+    _kegg_pathway_category,
+)
 
 # ---------------------------------------------------------------------------
 # KGML parser
 # ---------------------------------------------------------------------------
 
-KGML_SAMPLE = textwrap.dedent("""\
+KGML_SAMPLE = textwrap.dedent(
+    """\
 <?xml version="1.0"?>
 <pathway name="path:hsa00010" org="hsa" number="00010"
          title="Glycolysis / Gluconeogenesis">
@@ -32,9 +40,11 @@ KGML_SAMPLE = textwrap.dedent("""\
     <product name="cpd:C00022"/>
   </reaction>
 </pathway>
-""")
+"""
+)
 
-SBML_SAMPLE = textwrap.dedent("""\
+SBML_SAMPLE = textwrap.dedent(
+    """\
 <?xml version="1.0"?>
 <sbml xmlns="http://www.sbml.org/sbml/level2" level="2" version="1">
   <model id="glycolysis" name="Glycolysis">
@@ -54,13 +64,16 @@ SBML_SAMPLE = textwrap.dedent("""\
     </listOfReactions>
   </model>
 </sbml>
-""")
+"""
+)
 
-CSV_SAMPLE = textwrap.dedent("""\
+CSV_SAMPLE = textwrap.dedent(
+    """\
 reaction_id,reaction_name,substrate,product,enzyme,stoich_substrate,stoich_product,pathway,ec_number
 R001,Hexokinase reaction,D-Glucose,Glucose-6-phosphate,Hexokinase,1,1,Glycolysis,2.7.1.1
 R002,PGI reaction,Glucose-6-phosphate,Fructose-6-phosphate,Phosphoglucose isomerase,1,1,Glycolysis,5.3.1.9
-""")
+"""
+)
 
 
 class TestKGMLParser:
@@ -152,6 +165,28 @@ class TestKGMLParser:
         assert len(pwy_nodes) == 1
         xrefs = pwy_nodes[0].xrefs_dict()
         assert "kegg" in xrefs
+
+    def test_pathway_category_metabolic(self, tmp_path):
+        from metakg.parsers.kgml import KGMLParser
+
+        # KGML_SAMPLE encodes hsa00010 — a metabolic pathway
+        f = tmp_path / "hsa00010.xml"
+        f.write_text(KGML_SAMPLE)
+        nodes, _ = KGMLParser().parse(f)
+        pwy_nodes = [n for n in nodes if n.kind == KIND_PATHWAY]
+        assert len(pwy_nodes) == 1
+        assert pwy_nodes[0].category == PATHWAY_CATEGORY_METABOLIC
+
+    def test_pathway_category_disease(self, tmp_path):
+        from metakg.parsers.kgml import KGMLParser
+
+        # Swap the pathway ID to a disease pathway (hsa05010)
+        kgml_disease = KGML_SAMPLE.replace('name="path:hsa00010"', 'name="path:hsa05010"')
+        f = tmp_path / "hsa05010.xml"
+        f.write_text(kgml_disease)
+        nodes, _ = KGMLParser().parse(f)
+        pwy = next(n for n in nodes if n.kind == KIND_PATHWAY)
+        assert pwy.category == _kegg_pathway_category("hsa05010")
 
 
 class TestSBMLParser:

@@ -1,14 +1,20 @@
-chore: add pylint configuration and fix test fixture naming
+feat(graph): pathway categories, zero isolated nodes, agent slash commands
 
-Add `.pylintrc` with comprehensive linting rules tailored to the MetaKG codebase,
-including settings for scientific code with higher complexity thresholds.
+Add pathway category provenance, eliminate isolated nodes, and add
+MetaKG/CodeKG slash command files for Claude Code and GitHub Copilot.
 
-Fix unrecognized pylint option: change `max-lines` to `max-module-lines` for
-proper configuration of maximum lines per module.
+Changes:
+- primitives.py: MetaNode.category field + 8 PATHWAY_CATEGORY_* constants
+  + _kegg_pathway_category() mapping KEGG 5-digit suffix → category
+- store.py: category TEXT column, _migrate() for backward compat,
+  all_nodes(category=) filter
+- parsers/kgml.py: Strategy C enzyme wiring (reaction= attr fallback)
+  + CONTAINS fallback for all unwired gene/compound entries
+  → isolated nodes: 12,245 → 0
+- cli/cmd_build.py + orchestrator.py: --enrich → --no-enrich (default on)
+- CLAUDE.md: codekg-* command style restored, poetry run removed
+- .claude/commands/: metakg-build.md, metakg-simulate.md, metakg-viz.md
+- .vscode/: full set of *.prompt.md slash commands for GitHub Copilot
+- tests: 97 → 123 tests covering category, migration, KGML wiring
 
-Rename test fixture `kg_with_minimal_pathway` to `kkg_with_minimal_pathway` in
-`tests/test_simulation.py` to eliminate false pylint `redefined-outer-name`
-warnings. This is a common pytest pattern where fixture parameters have the
-same name as their fixtures, and renaming prevents misleading linting warnings.
-
-Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
+Co-Authored-By: GitHub Copilot <noreply@github.com>

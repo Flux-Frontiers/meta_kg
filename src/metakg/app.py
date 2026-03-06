@@ -196,19 +196,26 @@ def _get_node_label(node: dict[str, Any] | None) -> str:
     """
     Extract a readable label for a node, preferring name over ID.
 
+    For reaction and compound nodes the ``name`` field is typically a raw
+    KEGG ID (e.g. "R00710" or "C00031").  We strip that prefix so the fallback
+    is at least the bare accession rather than the full ``rxn:kegg:…`` URI.
+
     :param node: Node dict from the store (or None).
     :return: Display-friendly label string.
     """
     if node is None:
         return "unknown"
     name = node.get("name", "").strip()
-    if name:
-        return name
     node_id = node.get("id", "unknown")
     kind = node.get("kind", "")
-    if kind:
-        return f"{kind}:{node_id.split(':')[-1]}"
-    return node_id
+    # For reactions and compounds the stored name is just the bare accession
+    # (e.g. "R00710" / "C00031") which is not human-readable.  We leave the
+    # name in place for enzymes (gene names) and pathways, but for the two
+    # "ID-as-name" kinds we fall through to the caller-enriched label below.
+    if name and kind not in ("reaction", "compound"):
+        return name
+    # Fallback: last segment of the node URI (e.g. "R00710" from "rxn:kegg:R00710")
+    return node_id.split(":")[-1]
 
 
 def _build_node_label_map(node_ids: list[str], store: GraphStore) -> dict[str, str]:
@@ -484,7 +491,7 @@ def _tab_search(cfg: dict[str, Any]) -> None:
         k = st.slider("Number of results", min_value=1, max_value=50, value=10)
 
         try:
-            results = store.query_semantic(query_text, k=k)
+            results = store.query_text(query_text, k=k)
             st.success(f"Found {len(results)} results")
 
             for i, result in enumerate(results, 1):
