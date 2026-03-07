@@ -204,3 +204,4 @@ dmypy.json
 
 # venv
 .venv
+.codekg/graph.sqlite
