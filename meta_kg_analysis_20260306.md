@@ -1,11 +1,11 @@
 > **Analysis Report Metadata**
-> - **Generated:** 2026-03-06T22:58:06Z
+> - **Generated:** 2026-03-06T23:48:42Z
 > - **Version:** code-kg 0.5.0
-> - **Commit:** 2229292 (develop)
+> - **Commit:** 5bf6bad (main)
 
 # codeKG_analysis
 
-**Generated:** 2026-03-06 22:58:06 UTC
+**Generated:** 2026-03-06 23:48:42 UTC
 
 ---
 
@@ -19,21 +19,21 @@ This report provides a comprehensive architectural analysis of the Python reposi
 
 | Metric | Value |
 |--------|-------|
-| **Total Nodes** | 6355 |
-| **Total Edges** | 6128 |
+| **Total Nodes** | 6377 |
+| **Total Edges** | 6060 |
 | **Modules** | 7 |
-| **Functions** | 194 |
-| **Classes** | 56 |
-| **Methods** | 200 |
+| **Functions** | 181 |
+| **Classes** | 59 |
+| **Methods** | 228 |
 
 ### Edge Distribution
 
 | Relationship Type | Count |
 |-------------------|-------|
-| CALLS | 2010 |
-| CONTAINS | 450 |
-| IMPORTS | 375 |
-| ATTR_ACCESS | 1855 |
+| CALLS | 1972 |
+| CONTAINS | 468 |
+| IMPORTS | 387 |
+| ATTR_ACCESS | 1856 |
 | INHERITS | 10 |
 
 ---
@@ -44,21 +44,21 @@ Most-called functions are potential bottlenecks or core functionality. These fun
 
 | # | Function | Module | Callers | Risk Level |
 |---|----------|--------|---------|-----------|
-| 1 | `simulate_whatif()` | src/metakg/cli.py | **6** | 🟢 LOW |
-| 2 | `_parse_factor_args()` | src/metakg/cli.py | **2** | 🟢 LOW |
-| 3 | `render_fba_result()` | src/metakg/simulate.py | **2** | 🟢 LOW |
-| 4 | `render_whatif_result()` | src/metakg/simulate.py | **2** | 🟢 LOW |
-| 5 | `_parse_args()` | scripts/download_kegg_reactions.py | **1** | 🟢 LOW |
-| 6 | `_risk()` | src/metakg/analyze.py | **1** | 🟢 LOW |
-| 7 | `_parse_factor_args()` | src/metakg/cli/_utils.py | **1** | 🟢 LOW |
-| 8 | `register_tools()` | src/metakg/mcp_tools.py | **1** | 🟢 LOW |
-| 9 | `main()` | scripts/article_examples.py | **0** | 🟢 LOW |
-| 10 | `main()` | scripts/download_kegg_names.py | **0** | 🟢 LOW |
-| 11 | `main()` | scripts/download_kegg_reactions.py | **0** | 🟢 LOW |
-| 12 | `main()` | scripts/simulation_demo.py | **0** | 🟢 LOW |
-| 13 | `whatif()` | src/metakg/cli/cmd_simulate.py | **0** | 🟢 LOW |
-| 14 | `test_ode_bdf_performance()` | tests/test_simulation.py | **0** | 🟢 LOW |
-| 15 | `test_simulate_whatif_fba_baseline()` | tests/test_simulation.py | **0** | 🟢 LOW |
+| 1 | `_parse_args()` | scripts/download_kegg_reactions.py | **1** | 🟢 LOW |
+| 2 | `_risk()` | src/metakg/analyze.py | **1** | 🟢 LOW |
+| 3 | `_parse_factor_args()` | src/metakg/cli/_utils.py | **1** | 🟢 LOW |
+| 4 | `register_tools()` | src/metakg/mcp_tools.py | **1** | 🟢 LOW |
+| 5 | `render_fba_result()` | src/metakg/simulate.py | **1** | 🟢 LOW |
+| 6 | `render_whatif_result()` | src/metakg/simulate.py | **1** | 🟢 LOW |
+| 7 | `main()` | scripts/article_examples.py | **0** | 🟢 LOW |
+| 8 | `main()` | scripts/download_kegg_names.py | **0** | 🟢 LOW |
+| 9 | `main()` | scripts/download_kegg_reactions.py | **0** | 🟢 LOW |
+| 10 | `main()` | scripts/simulation_demo.py | **0** | 🟢 LOW |
+| 11 | `whatif()` | src/metakg/cli/cmd_simulate.py | **0** | 🟢 LOW |
+| 12 | `test_ode_bdf_performance()` | tests/test_simulation.py | **0** | 🟢 LOW |
+| 13 | `test_simulate_whatif_fba_baseline()` | tests/test_simulation.py | **0** | 🟢 LOW |
+| 14 | `test_simulate_whatif_fba_knockout()` | tests/test_simulation.py | **0** | 🟢 LOW |
+| 15 | `__enter__()` | src/metakg/orchestrator.py | **0** | 🟢 LOW |
 
 
 **Insight:** Functions with high fan-in are either core APIs or bottlenecks. Review these for:
@@ -82,13 +82,13 @@ Top modules by dependency coupling and cohesion.
 
 | Module | Functions | Classes | Incoming | Outgoing | Cohesion |
 |--------|-----------|---------|----------|----------|----------|
-| `src/metakg/cli/cmd_build.py` | 0 | 0 | 1 | 6 | 0.80 |
-| `src/metakg/cli/__init__.py` | 0 | 0 | 0 | 8 | 0.90 |
+| `src/metakg/cli/cmd_build.py` | 0 | 0 | 1 | 7 | 0.80 |
+| `src/metakg/cli/__init__.py` | 0 | 0 | 0 | 9 | 0.90 |
 | `src/metakg/cli/_utils.py` | 0 | 0 | 0 | 8 | 0.90 |
-| `src/metakg/cli/main.py` | 0 | 0 | 0 | 6 | 0.90 |
+| `src/metakg/cli/main.py` | 0 | 0 | 0 | 6 | 0.89 |
 | `tests/__init__.py` | 0 | 0 | 0 | 3 | 0.90 |
 | `tests/test_parsers.py` | 0 | 0 | 0 | 1 | 0.67 |
-| `tests/test_primitives.py` | 0 | 0 | 0 | 2 | 0.67 |
+| `tests/test_primitives.py` | 0 | 0 | 0 | 2 | 0.75 |
 
 ---
 
@@ -96,34 +96,34 @@ Top modules by dependency coupling and cohesion.
 
 Deepest call chains in the codebase. These represent critical execution paths.
 
-**Chain 1** (depth: 4)
+**Chain 1** (depth: 2)
 
 ```
-simulate_whatif → test_simulate_whatif_fba_baseline → test_simulate_whatif_fba_knockout → test_simulate_whatif_fba_inhibition
+_parse_args → main
 ```
 
-**Chain 2** (depth: 3)
+**Chain 2** (depth: 2)
 
 ```
-_parse_factor_args → simulate_whatif → whatif
+_risk → render_report
 ```
 
-**Chain 3** (depth: 3)
+**Chain 3** (depth: 2)
 
 ```
-render_fba_result → simulate_fba → fba
+_parse_factor_args → whatif
 ```
 
-**Chain 4** (depth: 3)
+**Chain 4** (depth: 2)
 
 ```
-render_whatif_result → simulate_whatif → whatif
+register_tools → create_server
 ```
 
 **Chain 5** (depth: 2)
 
 ```
-_parse_args → main
+render_fba_result → fba
 ```
 
 ---
@@ -132,9 +132,8 @@ _parse_args → main
 
 Identified public APIs (module-level functions with high usage).
 
-| Function | Module | Fan-In | Type |
-|----------|--------|--------|------|
-| `simulate_whatif()` | src/metakg/cli.py | 6 | function |
+No public APIs identified.
+
 ---
 
 ## 📝 Docstring Coverage
@@ -146,13 +145,13 @@ value only when a docstring is present.
 
 | Kind | Documented | Total | Coverage |
 |------|-----------|-------|----------|
-| `function` | 142 | 194 | 🟡 73.2% |
-| `method` | 116 | 200 | 🟡 58.0% |
-| `class` | 44 | 56 | 🟡 78.6% |
-| `module` | 47 | 48 | 🟢 97.9% |
-| **total** | **349** | **498** | **🟡 70.1%** |
+| `function` | 127 | 181 | 🟡 70.2% |
+| `method` | 118 | 228 | 🟡 51.8% |
+| `class` | 46 | 59 | 🟡 78.0% |
+| `module` | 46 | 47 | 🟢 97.9% |
+| **total** | **337** | **515** | **🟡 65.4%** |
 
-> **Recommendation:** 149 nodes lack docstrings. Prioritize documenting high-fan-in functions and public API surface first — these have the highest impact on query accuracy.
+> **Recommendation:** 178 nodes lack docstrings. Prioritize documenting high-fan-in functions and public API surface first — these have the highest impact on query accuracy.
 
 
 
@@ -160,8 +159,8 @@ value only when a docstring is present.
 
 ## ⚠️  Code Quality Issues
 
-- ⚠️  Moderate docstring coverage (70.1%) — semantic retrieval quality is degraded for undocumented nodes; BM25 is as effective as embeddings without docstrings
-- ⚠️  10 orphaned functions found — consider archiving or documenting
+- ⚠️  Moderate docstring coverage (65.4%) — semantic retrieval quality is degraded for undocumented nodes; BM25 is as effective as embeddings without docstrings
+- ⚠️  11 orphaned functions found — consider archiving or documenting
 
 ---
 
@@ -208,6 +207,7 @@ Functions with zero callers (potential dead code):
 | `supported_extensions()` | src/metakg/parsers/biopax.py | 1 |
 | `supported_extensions()` | src/metakg/parsers/kgml.py | 1 |
 | `supported_extensions()` | src/metakg/parsers/sbml.py | 1 |
+| `test_metabolic_low_end()` | tests/test_primitives.py | 1 |
 
 
 ---

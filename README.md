@@ -75,22 +75,6 @@ metakg-viz --port 8500
 # Opens interactive browser at http://localhost:8500
 ```
 
-### Launch 3D Visualizer
-
-```bash
-metakg-viz3d --layout allium
-
-# Opens interactive 3D viewer with metabolic pathway visualization
-```
-
-### Start MCP Server
-
-```bash
-metakg-mcp --transport stdio
-
-# Exposes knowledge graph to Claude and other AI assistants
-```
-
 ## Architecture
 
 ![MetaKG Architecture Diagram](docs/metaKG_arch.png)
