@@ -194,7 +194,7 @@ dmypy.json
 *.synctex.gz
 
 # CodeKG generated artifacts (derived, rebuildable)
-.codekg
+.codekg/*
 
 # Local MCP configuration (contains absolute paths)
 .mcp.json
@@ -204,4 +204,3 @@ dmypy.json
 
 # venv
 .venv
-.codekg/graph.sqlite
